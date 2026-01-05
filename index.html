@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Semanales PRO</title>
+<title>Guardias Alsi</title>
 
 <!-- ===== PWA CONFIGURACIÓN ===== -->
 <link rel="manifest" href="/manifest.json">
@@ -76,7 +76,7 @@ textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1
 <button id="toggleNight" style="position:fixed;top:10px;right:10px;z-index:200;padding:8px 12px;border:none;border-radius:10px;background:#555;color:#fff;cursor:pointer;">🌙</button>
 
 <header>
-<h1>Guardias Semanales PRO</h1>
+<h1>Guardias Alsi</h1>
 <div class="subtitulo" id="subtitulo-semana">Semana actual</div>
 </header>
 
@@ -124,8 +124,8 @@ if(!isAdmin){
 }
 
 // ===== DATOS =====
-let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
-let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
+let electricos=["Abde","Dani","Jose","Fran Ruiz","Hicham"];
+let mecanicos=["Ramon","Santy","Traian","Manu","Fran alba","Cele"];
 let ausentes=[];
 let weekOffset=0;
 
@@ -152,39 +152,52 @@ function obtenerGuardia(lista,semana){
 function renderCarousel(){
   const c=document.getElementById("carouselArea");
   c.innerHTML="";
+
+  // Fechas de la semana central
+  const lunesSemanaActual = sumarDias(obtenerLunes(), weekOffset*7);
+  const viernesSemanaActual = sumarDias(lunesSemanaActual,4);
+  document.getElementById('subtitulo-semana').textContent=
+    `Semana: ${formatFecha(lunesSemanaActual)} - ${formatFecha(viernesSemanaActual)}`;
+
   for(let i=-1;i<=1;i++){
-    const lunes=sumarDias(obtenerLunes(),(weekOffset+i)*7);
-    const viernes=sumarDias(lunes,4);
-    const sem=lunes.getWeekNumber();
-    let elec=obtenerGuardia(electricos,sem);
-    let mec=obtenerGuardia(mecanicos,sem);
+    const lunes = sumarDias(obtenerLunes(), (weekOffset+i)*7);
+    const viernes = sumarDias(lunes, 4);
+    const sem = lunes.getWeekNumber();
+
+    let elec = obtenerGuardia(electricos, sem);
+    let mec = obtenerGuardia(mecanicos, sem);
+
     const daysHTML=[0,1,2,3,4].map(d=>{
       const today=(new Date().getDay()===d+1 && i===0)?'today':'';
       const dayNames=['Lun','Mar','Mié','Jue','Vie'];
       return `<div class="day ${today}">${dayNames[d]}</div>`;
     }).join('');
+
     c.innerHTML+=`
-    <div class="card">
-      <div class="card-header">${formatFecha(lunes)} - ${formatFecha(viernes)}</div>
-      <div class="guardias">
-        <div class="guardia">
-          <div class="icono">⚡</div>
-          <div class="nombre">${elec}</div>
-          <div class="duracion">L-V</div>
-          <div class="indicator ${ausentes.includes(elec)?'ind-ausente':'ind-actual'}">${ausentes.includes(elec)?'Ausente':'En Guardia'}</div>
-          <div class="days">${daysHTML}</div>
+      <div class="card">
+        <div class="card-header">${formatFecha(lunes)} - ${formatFecha(viernes)}</div>
+        <div class="guardias">
+          <div class="guardia">
+            <div class="icono">⚡</div>
+            <div class="nombre">${elec}</div>
+            <div class="duracion">L-V</div>
+            <div class="indicator ${ausentes.includes(elec)?'ind-ausente':'ind-actual'}">
+              ${ausentes.includes(elec)?'Ausente':'En Guardia'}
+            </div>
+            <div class="days">${daysHTML}</div>
+          </div>
+          <div class="guardia">
+            <div class="icono">🔧</div>
+            <div class="nombre">${mec}</div>
+            <div class="duracion">L-V</div>
+            <div class="indicator ${ausentes.includes(mec)?'ind-ausente':'ind-actual'}">
+              ${ausentes.includes(mec)?'Ausente':'En Guardia'}
+            </div>
+            <div class="days">${daysHTML}</div>
+          </div>
         </div>
-        <div class="guardia">
-          <div class="icono">🔧</div>
-          <div class="nombre">${mec}</div>
-          <div class="duracion">L-V</div>
-          <div class="indicator ${ausentes.includes(mec)?'ind-ausente':'ind-actual'}">${ausentes.includes(mec)?'Ausente':'En Guardia'}</div>
-          <div class="days">${daysHTML}</div>
-        </div>
-      </div>
-    </div>`;
+      </div>`;
   }
-  document.getElementById('subtitulo-semana').textContent=`Semana: ${formatFecha(sumarDias(obtenerLunes(),weekOffset*7))} - ${formatFecha(sumarDias(obtenerLunes(),weekOffset*7+4))}`;
 }
 
 // ===== NAV =====
@@ -223,6 +236,7 @@ if('serviceWorker' in navigator){
 
 </body>
 </html>
+
 
 
 
