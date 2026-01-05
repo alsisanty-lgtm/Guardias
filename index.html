@@ -91,11 +91,11 @@ textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1
 <details id="adminPanel">
 <summary>⚙️ Panel Administrador</summary>
 <p>Técnicos Eléctricos (coma separadas):</p>
-<textarea id="electricos">Abde, Fran, Dani, Jose, FranRuiz, Hicham</textarea>
+<textarea id="electricos">Abde, Fran, Dani, Jose, Fran Ruiz, Hicham</textarea>
 <p>Técnicos Mecánicos (coma separadas):</p>
 <textarea id="mecanicos">Ramon, Santy, Traian, Manu, Fran Alba, Cele</textarea>
 <p>Ausentes esta semana:</p>
-<input id="ausentes" placeholder="Ej: Juan, Carlos">
+<input id="ausentes" placeholder="Ej: Abde, Ramon">
 <button id="guardarBtn">💾 Guardar y Actualizar</button>
 </details>
 
@@ -124,7 +124,7 @@ if(!isAdmin){
 }
 
 // ===== DATOS =====
-let electricos=["Abde","Fran","Danai","Jose","Fran Ruiz","Hicham"];
+let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
 let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
 let ausentes=[];
 let weekOffset=0;
@@ -223,6 +223,7 @@ if('serviceWorker' in navigator){
 
 </body>
 </html>
+
 
 
 
