@@ -1,4 +1,4 @@
-const CACHE_NAME = "guardias-pwa-v1";
+const CACHE_NAME = "guardias-pwa-v5";
 
 const FILES_TO_CACHE = [
   "/",
@@ -27,6 +27,7 @@ self.addEventListener("fetch", event => {
     caches.match(event.request).then(res => res || fetch(event.request))
   );
 });
+
 
 
 
