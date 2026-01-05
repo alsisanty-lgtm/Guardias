@@ -129,10 +129,12 @@ document.getElementById('nextWeek').onclick=()=>{weekOffset++;render();}
 document.getElementById('guardarBtn').onclick=()=>{render();}
 render();
 
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/service-worker.js');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+    .then(() => console.log('Service Worker registrado'));
 }
 </script>
 
 </body>
 </html>
+
