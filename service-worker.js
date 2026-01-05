@@ -1,4 +1,4 @@
-const CACHE_NAME="guardias-pro-cache-v3";
+const CACHE_NAME="guardias-pro-cache-v4";
 const urlsToCache=["/index.html","/manifest.json","icon-192.png","icon-512.png"];
 
 self.addEventListener("install",e=>{
@@ -8,5 +8,6 @@ self.addEventListener("install",e=>{
 self.addEventListener("fetch",e=>{
   e.respondWith(caches.match(e.request).then(resp=>resp||fetch(e.request)));
 });
+
 
 
