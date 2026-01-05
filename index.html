@@ -3,28 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardias Semanales PRO</title>
 
-<title>Guardias Semanales - PRO</title>
-
-<!-- ===== PWA CONFIGURACIÓN (CORRECTA PARA ANDROID) ===== -->
+<!-- ===== PWA CONFIGURACIÓN ===== -->
 <link rel="manifest" href="/manifest.json">
-
 <meta name="theme-color" content="#007bff">
-
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
 <link rel="apple-touch-icon" href="/icon-192.png">
-
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<!-- =================================================== -->
+<!-- ============================= -->
 
 <style>
-:root{
-  --primary:#007bff; --secondary:#6c757d; --success:#28a745;
-  --warning:#ffc107; --danger:#dc3545; --bg:#f5f6fa; --text:#333;
-  --card-bg:#fff; --shadow:0 8px 25px rgba(0,0,0,0.15);
-  --today:#ffea00;
+:root {
+  --primary: #007bff;
+  --secondary: #6c757d;
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --bg: #f5f6fa;
+  --text: #333;
+  --card-bg: #fff;
+  --shadow: 0 8px 25px rgba(0,0,0,0.15);
+  --today: #ffea00;
+}
+body.dark-mode {
+  --primary: #1e88e5;
+  --secondary: #b0bec5;
+  --success: #43a047;
+  --warning: #fdd835;
+  --danger: #e53935;
+  --bg: #121212;
+  --text: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --shadow: 0 8px 25px rgba(0,0,0,0.5);
+  --today: #ffd600;
 }
 body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
 header{background: linear-gradient(135deg,var(--primary),#0056b3); color:#fff;text-align:center;padding:20px;position:sticky;top:0;z-index:100;}
@@ -36,25 +50,30 @@ h1{margin:0;font-size:1.8em;}
 .card:hover{transform:scale(1.03);}
 .card-header{font-weight:700;font-size:1.3em;text-align:center;margin-bottom:10px;}
 .guardias{display:flex;justify-content:space-around;flex-wrap:wrap;gap:15px;}
-.guardia{flex:1;min-width:120px;background:#fff;border-radius:15px;padding:15px;text-align:center;position:relative;}
+.guardia{flex:1;min-width:120px;background:var(--card-bg);border-radius:15px;padding:15px;text-align:center;position:relative;}
 .icono{font-size:2.8em;margin-bottom:10px;}
 .dept{font-weight:600;opacity:0.8;}
 .nombre{font-weight:700;margin:5px 0;font-size:1.2em;}
 .duracion{font-weight:600;color:var(--primary);}
 .indicator{position:absolute;top:5px;right:5px;padding:3px 8px;border-radius:15px;font-size:0.7em;font-weight:bold;color:#fff;}
 .ind-actual{background:var(--warning);color:#212529;}
+.ind-ausente{background:var(--danger);}
+.ind-reemplazo{background:var(--success);}
 .days{display:flex;justify-content:space-between;margin-top:10px;}
 .day{font-size:0.8em;padding:3px 5px;border-radius:5px;}
 .today{background:var(--today);}
 .nav-buttons{display:flex;justify-content:space-between;margin:10px 0;}
 button{padding:8px 15px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
-details{margin-top:15px;background:#fff;padding:15px;border-radius:15px;box-shadow:var(--shadow);}
+details{margin-top:15px;background:var(--card-bg);padding:15px;border-radius:15px;box-shadow:var(--shadow);}
 textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1px solid #ced4da;}
 @media(max-width:600px){.guardias{flex-direction:column;}}
 </style>
 </head>
 
 <body>
+
+<!-- Botón modo nocturno -->
+<button id="toggleNight" style="position:fixed;top:10px;right:10px;z-index:200;padding:8px 12px;border:none;border-radius:10px;background:#555;color:#fff;cursor:pointer;">🌙</button>
 
 <header>
 <h1>Guardias Semanales PRO</h1>
@@ -71,18 +90,46 @@ textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1
 
 <details id="adminPanel">
 <summary>⚙️ Panel Administrador</summary>
-<textarea id="electricos">Fran, Abde, Dani, Hicham, Jose, Fran Ruiz</textarea>
-<textarea id="mecanicos">Santy, Traian, Fran Alba, Manu, Ramon</textarea>
-<input id="ausentes" placeholder="Ausentes">
-<button id="guardarBtn">💾 Guardar</button>
+<p>Técnicos Eléctricos (coma separadas):</p>
+<textarea id="electricos">Juan, María, Pedro, Ana, Luis</textarea>
+<p>Técnicos Mecánicos (coma separadas):</p>
+<textarea id="mecanicos">Carlos, Laura, Miguel, Sofía, Diego</textarea>
+<p>Ausentes esta semana:</p>
+<input id="ausentes" placeholder="Ej: Juan, Carlos">
+<button id="guardarBtn">💾 Guardar y Actualizar</button>
 </details>
 
 <script>
-let electricos=["Fran","Abde","Dani","Hicham","Jose","Fran Ruiz"];
-let mecanicos=["Santy","Traian","Fran Alba","Manu","Ramon"];
+// ===== MODO NOCTURNO =====
+const toggleNight = document.getElementById("toggleNight");
+if(localStorage.getItem("darkMode")==="true") document.body.classList.add("dark-mode");
+toggleNight.onclick=()=>{
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("darkMode",document.body.classList.contains("dark-mode"));
+};
+
+// ===== ADMIN OCULTO =====
+const ADMIN_PASSWORD = "guardias2026"; // Cambia tu contraseña
+let isAdmin = localStorage.getItem("isAdmin")==="true";
+const adminPanel = document.getElementById("adminPanel");
+if(!isAdmin){
+  adminPanel.style.display="none";
+  setTimeout(()=>{
+    const pass=prompt("Modo administrador: introduce contraseña");
+    if(pass===ADMIN_PASSWORD){
+      localStorage.setItem("isAdmin","true");
+      location.reload();
+    }
+  },800);
+}
+
+// ===== DATOS =====
+let electricos=["Juan","María","Pedro","Ana","Luis"];
+let mecanicos=["Carlos","Laura","Miguel","Sofía","Diego"];
 let ausentes=[];
 let weekOffset=0;
 
+// ===== FUNCIONES DE FECHA =====
 function obtenerLunes(d=new Date()){
   const day=d.getDay();
   const diff=day===0?d.getDate()-6:d.getDate()-day+1;
@@ -96,45 +143,86 @@ Date.prototype.getWeekNumber=function(){
   return Math.ceil((((d-y)/86400000)+1)/7);
 }
 function obtenerGuardia(lista,semana){
-  return lista[(semana-1)%lista.length];
+  let disponibles=lista.filter(n=>!ausentes.includes(n));
+  if(disponibles.length===0) return "Nadie disponible";
+  return disponibles[(semana-1)%disponibles.length];
 }
 
-function render(){
-  const c=document.getElementById('carouselArea');
-  c.innerHTML='';
+// ===== RENDER CALENDARIO =====
+function renderCarousel(){
+  const c=document.getElementById("carouselArea");
+  c.innerHTML="";
   for(let i=-1;i<=1;i++){
     const lunes=sumarDias(obtenerLunes(),(weekOffset+i)*7);
     const viernes=sumarDias(lunes,4);
     const sem=lunes.getWeekNumber();
+    let elec=obtenerGuardia(electricos,sem);
+    let mec=obtenerGuardia(mecanicos,sem);
+    const daysHTML=[0,1,2,3,4].map(d=>{
+      const today=(new Date().getDay()===d+1 && i===0)?'today':'';
+      const dayNames=['Lun','Mar','Mié','Jue','Vie'];
+      return `<div class="day ${today}">${dayNames[d]}</div>`;
+    }).join('');
     c.innerHTML+=`
     <div class="card">
       <div class="card-header">${formatFecha(lunes)} - ${formatFecha(viernes)}</div>
       <div class="guardias">
         <div class="guardia">
           <div class="icono">⚡</div>
-          <div class="nombre">${obtenerGuardia(electricos,sem)}</div>
+          <div class="nombre">${elec}</div>
           <div class="duracion">L-V</div>
+          <div class="indicator ${ausentes.includes(elec)?'ind-ausente':'ind-actual'}">${ausentes.includes(elec)?'Ausente':'En Guardia'}</div>
+          <div class="days">${daysHTML}</div>
         </div>
         <div class="guardia">
           <div class="icono">🔧</div>
-          <div class="nombre">${obtenerGuardia(mecanicos,sem)}</div>
+          <div class="nombre">${mec}</div>
           <div class="duracion">L-V</div>
+          <div class="indicator ${ausentes.includes(mec)?'ind-ausente':'ind-actual'}">${ausentes.includes(mec)?'Ausente':'En Guardia'}</div>
+          <div class="days">${daysHTML}</div>
         </div>
       </div>
     </div>`;
   }
+  document.getElementById('subtitulo-semana').textContent=`Semana: ${formatFecha(sumarDias(obtenerLunes(),weekOffset*7))} - ${formatFecha(sumarDias(obtenerLunes(),weekOffset*7+4))}`;
 }
-document.getElementById('prevWeek').onclick=()=>{weekOffset--;render();}
-document.getElementById('nextWeek').onclick=()=>{weekOffset++;render();}
-document.getElementById('guardarBtn').onclick=()=>{render();}
-render();
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js')
-    .then(() => console.log('Service Worker registrado'));
+// ===== NAV =====
+document.getElementById("prevWeek").onclick=()=>{weekOffset--;renderCarousel();}
+document.getElementById("nextWeek").onclick=()=>{weekOffset++;renderCarousel();}
+
+// ===== ADMIN GUARDAR =====
+document.getElementById("guardarBtn").onclick=()=>{
+  electricos=document.getElementById("electricos").value.split(',').map(s=>s.trim()).filter(s=>s);
+  mecanicos=document.getElementById("mecanicos").value.split(',').map(s=>s.trim()).filter(s=>s);
+  ausentes=document.getElementById("ausentes").value.split(',').map(s=>s.trim()).filter(s=>s);
+  localStorage.setItem("electricos",document.getElementById("electricos").value);
+  localStorage.setItem("mecanicos",document.getElementById("mecanicos").value);
+  localStorage.setItem("ausentes",document.getElementById("ausentes").value);
+  renderCarousel();
+  alert("✅ Guardias actualizadas");
+}
+
+// ===== CARGAR LOCALSTORAGE =====
+document.addEventListener("DOMContentLoaded",()=>{
+  const e=localStorage.getItem("electricos");
+  const m=localStorage.getItem("mecanicos");
+  const a=localStorage.getItem("ausentes");
+  if(e) electricos=e.split(',').map(s=>s.trim());
+  if(m) mecanicos=m.split(',').map(s=>s.trim());
+  if(a) ausentes=a.split(',').map(s=>s.trim());
+  renderCarousel();
+  if("Notification" in window && Notification.permission!=="granted") Notification.requestPermission();
+});
+
+// ===== SERVICE WORKER =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/service-worker.js').then(()=>console.log('SW registrado'));
 }
 </script>
 
 </body>
 </html>
+
+
 
