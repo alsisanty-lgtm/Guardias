@@ -1,4 +1,4 @@
-const CACHE_NAME = "guardias-v32";
+const CACHE_NAME = "guardias-v33";
 const FILES = [
   "/",
   "/index.html",
@@ -23,6 +23,7 @@ self.addEventListener("fetch", event => {
     caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
+
 
 
 
