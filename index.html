@@ -248,10 +248,64 @@ if('serviceWorker' in navigator){
 
   .then(()=>console.log('SW registrado'));
 }
+  // ===== SWIPE SEMANAL (DESLIZAR CON EL DEDO) =====
+let startX = 0;
+let currentX = 0;
+let isDragging = false;
+
+const carousel = document.getElementById("carouselArea");
+
+carousel.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+  isDragging = true;
+});
+
+carousel.addEventListener("touchmove", e => {
+  if (!isDragging) return;
+  currentX = e.touches[0].clientX;
+});
+
+carousel.addEventListener("touchend", () => {
+  if (!isDragging) return;
+  const diff = currentX - startX;
+
+  if (diff > 50) {
+    weekOffset--;
+    renderCarousel();
+  } else if (diff < -50) {
+    weekOffset++;
+    renderCarousel();
+  }
+
+  isDragging = false;
+});
+
+// ===== SWIPE CON RATÓN (PC) =====
+carousel.addEventListener("mousedown", e => {
+  startX = e.clientX;
+  isDragging = true;
+});
+
+carousel.addEventListener("mouseup", e => {
+  if (!isDragging) return;
+  const diff = e.clientX - startX;
+
+  if (diff > 50) {
+    weekOffset--;
+    renderCarousel();
+  } else if (diff < -50) {
+    weekOffset++;
+    renderCarousel();
+  }
+
+  isDragging = false;
+});
+
 </script>
 
 </body>
 </html>
+
 
 
 
