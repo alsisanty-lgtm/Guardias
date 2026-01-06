@@ -71,6 +71,16 @@ button{padding:8px 15px;border:none;border-radius:10px;background:var(--primary)
 details{margin-top:15px;background:var(--card-bg);padding:15px;border-radius:15px;box-shadow:var(--shadow);}
 textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1px solid #ced4da;}
 @media(max-width:600px){.guardias{flex-direction:column;}}
+  .carousel {
+  display: flex;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.carousel:active {
+  cursor: grabbing;
+}
+
 </style>
 </head>
 
@@ -242,6 +252,7 @@ if('serviceWorker' in navigator){
 
 </body>
 </html>
+
 
 
 
