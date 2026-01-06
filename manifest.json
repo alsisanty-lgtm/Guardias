@@ -1,7 +1,7 @@
 {
-  "name": "Guardias Semanales PRO",
+  "name": "Guardias Alsi",
   "short_name": "Guardias",
-  "description": "Calendario de guardias semanales para técnicos eléctricos y mecánicos",
+  "description": "Calendario de guardias semanales Alsi",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#121212",
