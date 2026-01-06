@@ -44,7 +44,7 @@ header{background: linear-gradient(135deg,var(--primary),#0056b3); color:#fff;te
 h1{margin:0;font-size:1.8em;}
 .subtitulo{font-size:1em;opacity:0.8;margin-top:5px;}
 .container{max-width:900px;margin:20px auto;position:relative;overflow:hidden;}
-.carousel{display:flex;transition:transform 0.4s ease;}
+.carousel{display:flex;transition:transform 0.5s ease;touch-action: pan-x;}
 .card{min-width:300px;margin:0 10px;background:var(--card-bg);border-radius:20px;box-shadow:var(--shadow);padding:20px;position:relative;flex-shrink:0;transition:transform 0.3s;}
 .card:hover{transform:scale(1.03);}
 .card-header{font-weight:700;font-size:1.3em;text-align:center;margin-bottom:10px;}
@@ -65,6 +65,7 @@ h1{margin:0;font-size:1.8em;}
 button{padding:8px 15px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
 details{margin-top:15px;background:var(--card-bg);padding:15px;border-radius:15px;box-shadow:var(--shadow);}
 textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1px solid #ced4da;}
+#nextWeekInfo{margin-top:15px;padding:10px;border-radius:10px;background:var(--card-bg);box-shadow:var(--shadow);}
 @media(max-width:600px){.guardias{flex-direction:column;}}
 </style>
 </head>
@@ -96,6 +97,12 @@ textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1
 <p>Ausentes esta semana:</p>
 <input id="ausentes" placeholder="Ej: Abde, Ramon">
 <button id="guardarBtn">💾 Guardar y Actualizar</button>
+
+<!-- Información de la siguiente semana -->
+<div id="nextWeekInfo">
+  <strong>Siguiente Semana:</strong>
+  <div id="nextWeekText">Cargando...</div>
+</div>
 </details>
 
 <script>
@@ -108,7 +115,7 @@ toggleNight.onclick=()=>{
 };
 
 // ===== ADMIN OCULTO =====
-const ADMIN_PASSWORD = "guardias2026"; 
+const ADMIN_PASSWORD = "guardias2026";
 let isAdmin = localStorage.getItem("isAdmin")==="true";
 const adminPanel = document.getElementById("adminPanel");
 if(!isAdmin){
@@ -128,7 +135,7 @@ let mecanicos=["Ramon","Santy","Traian","Manu","Fran alba","Cele"];
 let ausentes=[];
 let weekOffset=0;
 
-// ===== FUNCIONES DE FECHA =====
+// ===== FUNCIONES FECHA =====
 function obtenerLunes(d=new Date()){
   const day=d.getDay();
   const diff=day===0?d.getDate()-6:d.getDate()-day+1;
@@ -196,15 +203,27 @@ function renderCarousel(){
         </div>
       </div>`;
   }
+  actualizarSiguienteSemana();
+}
 
-  // centra la semana actual
-  const cardWidth = c.querySelector('.card').offsetWidth + 20;
-  c.style.transform = `translateX(-${cardWidth}px)`;
+// ===== ACTUALIZAR SIGUIENTE SEMANA =====
+function actualizarSiguienteSemana(){
+  const lunesNext = sumarDias(obtenerLunes(), (weekOffset+1)*7);
+  const viernesNext = sumarDias(lunesNext, 4);
+  const semNext = lunesNext.getWeekNumber();
+  const elecNext = obtenerGuardia(electricos, semNext);
+  const mecNext = obtenerGuardia(mecanicos, semNext);
+  const fechaTexto = `${formatFecha(lunesNext)} - ${formatFecha(viernesNext)}`;
+  document.getElementById("nextWeekText").innerHTML = `
+    Semana: <strong>${fechaTexto}</strong><br>
+    ⚡ Eléctrico: <strong>${elecNext}</strong><br>
+    🔧 Mecánico: <strong>${mecNext}</strong>
+  `;
 }
 
 // ===== NAV BOTONES =====
-document.getElementById("prevWeek").onclick=()=>{weekOffset--;renderCarousel();}
-document.getElementById("nextWeek").onclick=()=>{weekOffset++;renderCarousel();}
+document.getElementById("prevWeek").onclick=()=>{weekOffset--; renderCarousel();}
+document.getElementById("nextWeek").onclick=()=>{weekOffset++; renderCarousel();}
 
 // ===== ADMIN GUARDAR =====
 document.getElementById("guardarBtn").onclick=()=>{
@@ -232,31 +251,26 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 // ===== SERVICE WORKER =====
 if('serviceWorker' in navigator){
- navigator.serviceWorker.register('/Guardias/service-worker.js').then(()=>console.log('SW registrado'));
+ navigator.serviceWorker.register('/Guardias/service-worker.js')
+  .then(()=>console.log('SW registrado'));
 }
 
-// ===== DESLIZAR CON DEDO =====
+// ===== SWIPE TÁCTIL =====
 let startX=0, currentX=0, isDragging=false;
-carousel.addEventListener('touchstart', e=>{startX=e.touches[0].clientX; isDragging=true;});
-carousel.addEventListener('touchmove', e=>{
-  if(!isDragging) return;
-  currentX = e.touches[0].clientX;
-  const dx = currentX - startX;
-  const cardWidth = carousel.querySelector('.card').offsetWidth + 20;
-  carousel.style.transform = `translateX(${-cardWidth + dx}px)`;
-});
+const carousel=document.getElementById('carouselArea');
+carousel.addEventListener('touchstart', e=>{startX=e.touches[0].clientX;isDragging=true;});
+carousel.addEventListener('touchmove', e=>{if(!isDragging) return; currentX=e.touches[0].clientX;});
 carousel.addEventListener('touchend', e=>{
-  isDragging=false;
-  const dx=currentX - startX;
-  const threshold=50;
-  if(dx > threshold){ weekOffset--; }
-  else if(dx < -threshold){ weekOffset++; }
-  renderCarousel();
+  if(!isDragging) return; isDragging=false;
+  const diff=startX-currentX;
+  if(diff>50){weekOffset++; renderCarousel();}
+  else if(diff<-50){weekOffset--; renderCarousel();}
 });
 </script>
 
 </body>
 </html>
+
 
 
 
