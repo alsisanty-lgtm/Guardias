@@ -1,4 +1,4 @@
-const CACHE_NAME = "guardias-v34";
+const CACHE_NAME = "guardias-alsi-v1";
 const FILES = [
   "/",
   "/index.html",
@@ -20,9 +20,10 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request).then(r => r || fetch(event.request))
   );
 });
+
 
 
 
