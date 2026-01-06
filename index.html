@@ -7,17 +7,12 @@
 
 <!-- ===== PWA CONFIGURACIÓN ===== -->
 <link rel="manifest" href="/Guardias/manifest.json">
-
 <meta name="theme-color" content="#1e88e5">
-
 <link rel="icon" type="image/png" sizes="192x192" href="/Guardias/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/Guardias/icon-512.png">
 <link rel="apple-touch-icon" href="/Guardias/icon-192.png">
-
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-
-<!-- ============================= -->
 
 <style>
 :root {
@@ -49,7 +44,7 @@ header{background: linear-gradient(135deg,var(--primary),#0056b3); color:#fff;te
 h1{margin:0;font-size:1.8em;}
 .subtitulo{font-size:1em;opacity:0.8;margin-top:5px;}
 .container{max-width:900px;margin:20px auto;position:relative;overflow:hidden;}
-.carousel{display:flex;transition:transform 0.5s ease;}
+.carousel{display:flex;transition:transform 0.4s ease;}
 .card{min-width:300px;margin:0 10px;background:var(--card-bg);border-radius:20px;box-shadow:var(--shadow);padding:20px;position:relative;flex-shrink:0;transition:transform 0.3s;}
 .card:hover{transform:scale(1.03);}
 .card-header{font-weight:700;font-size:1.3em;text-align:center;margin-bottom:10px;}
@@ -71,16 +66,6 @@ button{padding:8px 15px;border:none;border-radius:10px;background:var(--primary)
 details{margin-top:15px;background:var(--card-bg);padding:15px;border-radius:15px;box-shadow:var(--shadow);}
 textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1px solid #ced4da;}
 @media(max-width:600px){.guardias{flex-direction:column;}}
-  .carousel {
-  display: flex;
-  touch-action: pan-y;
-  cursor: grab;
-}
-
-.carousel:active {
-  cursor: grabbing;
-}
-
 </style>
 </head>
 
@@ -123,7 +108,7 @@ toggleNight.onclick=()=>{
 };
 
 // ===== ADMIN OCULTO =====
-const ADMIN_PASSWORD = "guardias2026"; // Cambia tu contraseña
+const ADMIN_PASSWORD = "guardias2026"; 
 let isAdmin = localStorage.getItem("isAdmin")==="true";
 const adminPanel = document.getElementById("adminPanel");
 if(!isAdmin){
@@ -167,7 +152,6 @@ function renderCarousel(){
   const c=document.getElementById("carouselArea");
   c.innerHTML="";
 
-  // Fechas de la semana central
   const lunesSemanaActual = sumarDias(obtenerLunes(), weekOffset*7);
   const viernesSemanaActual = sumarDias(lunesSemanaActual,4);
   document.getElementById('subtitulo-semana').textContent=
@@ -212,9 +196,13 @@ function renderCarousel(){
         </div>
       </div>`;
   }
+
+  // centra la semana actual
+  const cardWidth = c.querySelector('.card').offsetWidth + 20;
+  c.style.transform = `translateX(-${cardWidth}px)`;
 }
 
-// ===== NAV =====
+// ===== NAV BOTONES =====
 document.getElementById("prevWeek").onclick=()=>{weekOffset--;renderCarousel();}
 document.getElementById("nextWeek").onclick=()=>{weekOffset++;renderCarousel();}
 
@@ -244,67 +232,33 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 // ===== SERVICE WORKER =====
 if('serviceWorker' in navigator){
- navigator.serviceWorker.register('/Guardias/service-worker.js')
-
-  .then(()=>console.log('SW registrado'));
+ navigator.serviceWorker.register('/Guardias/service-worker.js').then(()=>console.log('SW registrado'));
 }
-  // ===== SWIPE SEMANAL (DESLIZAR CON EL DEDO) =====
-let startX = 0;
-let currentX = 0;
-let isDragging = false;
 
-const carousel = document.getElementById("carouselArea");
-
-carousel.addEventListener("touchstart", e => {
-  startX = e.touches[0].clientX;
-  isDragging = true;
-});
-
-carousel.addEventListener("touchmove", e => {
-  if (!isDragging) return;
+// ===== DESLIZAR CON DEDO =====
+let startX=0, currentX=0, isDragging=false;
+carousel.addEventListener('touchstart', e=>{startX=e.touches[0].clientX; isDragging=true;});
+carousel.addEventListener('touchmove', e=>{
+  if(!isDragging) return;
   currentX = e.touches[0].clientX;
+  const dx = currentX - startX;
+  const cardWidth = carousel.querySelector('.card').offsetWidth + 20;
+  carousel.style.transform = `translateX(${-cardWidth + dx}px)`;
 });
-
-carousel.addEventListener("touchend", () => {
-  if (!isDragging) return;
-  const diff = currentX - startX;
-
-  if (diff > 50) {
-    weekOffset--;
-    renderCarousel();
-  } else if (diff < -50) {
-    weekOffset++;
-    renderCarousel();
-  }
-
-  isDragging = false;
+carousel.addEventListener('touchend', e=>{
+  isDragging=false;
+  const dx=currentX - startX;
+  const threshold=50;
+  if(dx > threshold){ weekOffset--; }
+  else if(dx < -threshold){ weekOffset++; }
+  renderCarousel();
 });
-
-// ===== SWIPE CON RATÓN (PC) =====
-carousel.addEventListener("mousedown", e => {
-  startX = e.clientX;
-  isDragging = true;
-});
-
-carousel.addEventListener("mouseup", e => {
-  if (!isDragging) return;
-  const diff = e.clientX - startX;
-
-  if (diff > 50) {
-    weekOffset--;
-    renderCarousel();
-  } else if (diff < -50) {
-    weekOffset++;
-    renderCarousel();
-  }
-
-  isDragging = false;
-});
-
 </script>
 
 </body>
 </html>
+
+
 
 
 
