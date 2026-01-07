@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Alsi</title>
+<title>Guardias Alsi PRO</title>
 
 <link rel="manifest" href="/Guardias/manifest.json">
 <meta name="theme-color" content="#1e88e5">
@@ -19,17 +19,22 @@
   --text:#222;
   --card:#fff;
   --shadow:0 8px 20px rgba(0,0,0,.15);
+  --highlight:#ffd700;
 }
 body.dark{
   --bg:#121212;
   --text:#eee;
   --card:#1e1e1e;
+  --highlight:#ffea00;
 }
 body{margin:0;font-family:Segoe UI;background:var(--bg);color:var(--text);}
-header{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;padding:20px;text-align:center;position:sticky;top:0;}
-.container{max-width:900px;margin:auto;overflow:hidden;}
-.carousel{display:flex;transition:.35s ease;touch-action:pan-y;}
-.card{min-width:320px;margin:10px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px;}
+header{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;padding:20px;text-align:center;position:sticky;top:0;z-index:100;}
+h1{margin:0;font-size:1.8em;}
+#subtitle{opacity:0.8;margin-top:5px;}
+.container{max-width:900px;margin:auto;overflow:hidden;position:relative;}
+.carousel{display:flex;gap:10px;overflow-x:scroll;scroll-snap-type:x mandatory;scroll-behavior:smooth; -webkit-overflow-scrolling: touch; padding-bottom:20px;}
+.card{min-width:300px;flex-shrink:0;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px;scroll-snap-align:center;transition:transform .3s ease;}
+.card-header{font-weight:700;font-size:1.3em;text-align:center;margin-bottom:10px;}
 .guardias{display:flex;gap:15px;flex-wrap:wrap;}
 .guardia{flex:1;background:var(--card);border-radius:15px;padding:15px;text-align:center;}
 .icono{font-size:2.5em;}
@@ -41,16 +46,20 @@ details{margin:20px;background:var(--card);padding:15px;border-radius:15px;}
 textarea,input{width:100%;padding:8px;border-radius:10px;margin-top:8px;}
 #weekSelector{margin:10px;text-align:center;}
 #weekSelector input{padding:6px 8px;border-radius:8px;border:1px solid #ccc;}
+.day.today{background:var(--highlight);border-radius:5px;padding:2px 6px;}
+#indicators{display:flex;justify-content:center;margin-top:5px;gap:5px;}
+.dot{width:10px;height:10px;border-radius:50%;background:#ccc;transition:0.3s;}
+.dot.active{background:var(--primary);}
 </style>
 </head>
 
 <body>
 
-<button id="night" style="position:fixed;top:10px;right:10px">🌙</button>
+<button id="night" style="position:fixed;top:10px;right:10px;z-index:200">🌙</button>
 
 <header>
-<h1>Guardias Alsi</h1>
-<div id="subtitle"></div>
+<h1>Guardias Alsi PRO</h1>
+<div id="subtitle">Semana actual</div>
 </header>
 
 <div id="weekSelector">
@@ -59,12 +68,14 @@ textarea,input{width:100%;padding:8px;border-radius:10px;margin-top:8px;}
 <button id="goWeek">Ir</button>
 </div>
 
+<div class="nav">
+<button id="prev">⬅ Semana anterior</button>
+<button id="next">Semana siguiente ➡</button>
+</div>
+
 <div class="container">
-  <div class="nav">
-    <button id="prev">⬅ Semana anterior</button>
-    <button id="next">Semana siguiente ➡</button>
-  </div>
   <div class="carousel" id="carousel"></div>
+  <div id="indicators"></div>
 </div>
 
 <details id="admin">
@@ -98,30 +109,46 @@ const fd=d=>d.toLocaleDateString();
 // guardia rotativa
 const guardia=(l,o)=>l[((o%l.length)+l.length)%l.length];
 
-// render
+// render carrusel
 function render(){
  const car=document.getElementById("carousel");
  car.innerHTML="";
- let base=lunes(new Date());
- let ini=new Date(base); ini.setDate(base.getDate()+offset*7);
- let fin=new Date(ini); fin.setDate(ini.getDate()+4);
+ const base=lunes(new Date());
+ const ini=new Date(base); ini.setDate(ini.getDate()+offset*7);
+ const fin=new Date(ini); fin.setDate(fin.getDate()+4);
  document.getElementById("subtitle").textContent=`${fd(ini)} - ${fd(fin)}`;
 
- // Carrusel 3 semanas
+ let weeks = [];
  for(let i=-1;i<=1;i++){
   let l=new Date(ini); l.setDate(l.getDate()+i*7);
   let v=new Date(l); v.setDate(v.getDate()+4);
+  const daysHTML=[0,1,2,3,4].map(d=>{
+    const today=(new Date().getDay()===d+1 && i===0)?'today':'';
+    const names=['Lun','Mar','Mié','Jue','Vie'];
+    return `<div class="day ${today}">${names[d]}</div>`;
+  }).join('');
   car.innerHTML+=`
   <div class="card">
-    <h3>${fd(l)} - ${fd(v)}</h3>
+    <div class="card-header">${fd(l)} - ${fd(v)}</div>
     <div class="guardias">
-      <div class="guardia"><div class="icono">⚡</div><div class="nombre">${guardia(electricos,offset+i)}</div></div>
-      <div class="guardia"><div class="icono">🔧</div><div class="nombre">${guardia(mecanicos,offset+i)}</div></div>
+      <div class="guardia"><div class="icono">⚡</div><div class="nombre">${guardia(electricos,offset+i)}</div><div class="days">${daysHTML}</div></div>
+      <div class="guardia"><div class="icono">🔧</div><div class="nombre">${guardia(mecanicos,offset+i)}</div><div class="days">${daysHTML}</div></div>
     </div>
   </div>`;
+  weeks.push(offset+i);
  }
 
- requestAnimationFrame(()=>{car.style.transform=`translateX(-${car.children[0].offsetWidth+20}px)`});
+ // indicadores puntitos
+ const indContainer = document.getElementById("indicators");
+ indContainer.innerHTML="";
+ weeks.forEach((w,i)=>{
+   const dot = document.createElement("div");
+   dot.className="dot"+(i===1?" active":"");
+   indContainer.appendChild(dot);
+ });
+
+ // centro automático en semana actual
+ requestAnimationFrame(()=>{car.scrollLeft=(car.children[0].offsetWidth+10);});
 
  // Próxima semana
  let pl=new Date(ini); pl.setDate(pl.getDate()+7);
@@ -131,7 +158,7 @@ function render(){
  ⚡ ${guardia(electricos,offset+1)} · 🔧 ${guardia(mecanicos,offset+1)}<br>
  ${fd(pl)} - ${fd(pv)}`;
 
- // notificación
+ // notificación si cambia guardia
 if(Notification.permission==="granted"){
  new Notification("Guardias Alsi 📆",{
    body:`Esta semana: ⚡ ${guardia(electricos,offset)} · 🔧 ${guardia(mecanicos,offset)}\n${fd(ini)} - ${fd(fin)}`,
@@ -143,16 +170,6 @@ if(Notification.permission==="granted"){
 // botones
 document.getElementById("prev").onclick=()=>{offset--; render();}
 document.getElementById("next").onclick=()=>{offset++; render();}
-
-// swipe
-let x=0;
-const carousel=document.getElementById("carousel");
-carousel.addEventListener("touchstart",e=>x=e.touches[0].clientX);
-carousel.addEventListener("touchend",e=>{
- let d=e.changedTouches[0].clientX-x;
- if(d>60){offset--;render();}
- if(d<-60){offset++;render();}
-});
 
 // selector de semana
 const selectWeek=document.getElementById("selectWeek");
@@ -191,6 +208,8 @@ if("Notification"in window && Notification.permission!=="granted")
 
 </body>
 </html>
+
+
 
 
 
