@@ -7,56 +7,67 @@
 
 <style>
 :root{
-  --primary:#1e88e5;
-  --bg:#f4f6fa;
-  --text:#222;
-  --card:#fff;
-  --shadow:0 8px 20px rgba(0,0,0,.15);
-  --highlight:#ffd700;
+ --primary:#1e88e5;
+ --bg:#f4f6fa;
+ --text:#222;
+ --card:#fff;
+ --shadow:0 8px 20px rgba(0,0,0,.15);
 }
 body.dark{
-  --bg:#121212;
-  --text:#eee;
-  --card:#1e1e1e;
-  --highlight:#ffea00;
+ --bg:#121212;
+ --text:#eee;
+ --card:#1e1e1e;
 }
 body{margin:0;font-family:Segoe UI;background:var(--bg);color:var(--text);}
-header{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;padding:20px;text-align:center;position:sticky;top:0;z-index:100;}
-h1{margin:0;}
-.container{max-width:900px;margin:auto;overflow:hidden;}
-.carousel{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
-.card{min-width:300px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px;scroll-snap-align:center;}
-.guardias{display:flex;gap:10px;}
-.guardia{flex:1;text-align:center;}
+header{background:#1e88e5;color:#fff;padding:20px;text-align:center;}
+.carousel{
+ display:flex;
+ gap:12px;
+ overflow-x:auto;
+ scroll-snap-type:x mandatory;
+ -webkit-overflow-scrolling:touch;
+ padding:20px;
+}
+.card{
+ min-width:280px;
+ background:var(--card);
+ border-radius:16px;
+ box-shadow:var(--shadow);
+ padding:15px;
+ scroll-snap-align:center;
+}
+.guardias{display:flex;justify-content:space-around;margin-top:10px;}
 .nombre{font-weight:bold;font-size:1.2em;}
-button{border:none;border-radius:12px;padding:10px 14px;background:var(--primary);color:#fff;font-weight:600;}
+button{
+ border:none;
+ border-radius:10px;
+ padding:10px 14px;
+ background:var(--primary);
+ color:#fff;
+ font-weight:600;
+}
 .nav{display:flex;justify-content:space-between;padding:10px;}
 #admin{margin:20px;background:var(--card);padding:15px;border-radius:15px;}
-label{display:block;margin:5px 0;}
 </style>
 </head>
 
 <body>
 
-<!-- BOTONES SUPERIORES -->
-<button id="night" style="position:fixed;top:10px;right:10px;z-index:200">🌙</button>
-<button id="adminBtn" style="position:fixed;top:10px;right:60px;z-index:200">🔒</button>
+<button id="night" style="position:fixed;top:10px;right:10px">🌙</button>
+<button id="adminBtn" style="position:fixed;top:10px;right:60px">🔒</button>
 
 <header>
-<h1>Guardias Alsi PRO</h1>
+<h1>Guardias Alsi</h1>
 <div id="subtitle"></div>
 </header>
 
 <div class="nav">
-<button onclick="offset--;render()">⬅ Anterior</button>
-<button onclick="offset++;render()">Siguiente ➡</button>
+<button onclick="offset--;render()">⬅</button>
+<button onclick="offset++;render()">➡</button>
 </div>
 
-<div class="container">
 <div class="carousel" id="carousel"></div>
-</div>
 
-<!-- ADMIN -->
 <details id="admin" style="display:none">
 <summary>⚙️ Administrador</summary>
 <div id="adminPanel"></div>
@@ -71,15 +82,14 @@ night.onclick=()=>{
 };
 if(localStorage.dark==="true") document.body.classList.add("dark");
 
-// 🔐 contraseña admin
+// 🔐 admin
 adminBtn.onclick=()=>{
- if(admin.open){admin.open=false;return;}
- const p=prompt("Contraseña administrador");
+ const p=prompt("Contraseña admin");
  if(p==="admin2026"){
-   admin.style.display="block";
-   admin.open=true;
-   renderAdmin();
- }else alert("Incorrecta");
+  admin.style.display="block";
+  admin.open=true;
+  renderAdmin();
+ }
 };
 
 // datos
@@ -89,18 +99,13 @@ let electricos=JSON.parse(localStorage.electricos||"null")||[
  {nombre:"Abde",activo:true},
  {nombre:"Fran",activo:true},
  {nombre:"Dani",activo:true},
- {nombre:"Jose",activo:true},
- {nombre:"Fran Ruiz",activo:true},
- {nombre:"Hicham",activo:true}
+ {nombre:"Jose",activo:true}
 ];
 
 let mecanicos=JSON.parse(localStorage.mecanicos||"null")||[
  {nombre:"Ramon",activo:true},
  {nombre:"Santy",activo:true},
- {nombre:"Traian",activo:true},
- {nombre:"Manu",activo:true},
- {nombre:"Fran Alba",activo:true},
- {nombre:"Cele",activo:true}
+ {nombre:"Manu",activo:true}
 ];
 
 // fechas
@@ -112,14 +117,14 @@ const lunes=d=>{
 };
 const fd=d=>d.toLocaleDateString();
 
-// rotación
+// rotación segura
 function guardia(lista,o){
  const a=lista.filter(p=>p.activo);
- if(a.length===0) return "—";
+ if(a.length===0) return "Sin guardia";
  return a[((o%a.length)+a.length)%a.length].nombre;
 }
 
-// render principal
+// render
 function render(){
  const car=document.getElementById("carousel");
  car.innerHTML="";
@@ -133,34 +138,34 @@ function render(){
   const v=new Date(l); v.setDate(v.getDate()+4);
   car.innerHTML+=`
   <div class="card">
-   <div><b>${fd(l)} - ${fd(v)}</b></div>
+   <b>${fd(l)} - ${fd(v)}</b>
    <div class="guardias">
-    <div class="guardia">⚡<div class="nombre">${guardia(electricos,offset+i)}</div></div>
-    <div class="guardia">🔧<div class="nombre">${guardia(mecanicos,offset+i)}</div></div>
+    <div>⚡<div class="nombre">${guardia(electricos,offset+i)}</div></div>
+    <div>🔧<div class="nombre">${guardia(mecanicos,offset+i)}</div></div>
    </div>
   </div>`;
  }
- requestAnimationFrame(()=>car.scrollLeft=car.children[1].offsetLeft);
 }
 
-// ADMIN PANEL
+// admin panel
 function renderAdmin(){
- const p=document.getElementById("adminPanel");
- p.innerHTML="<h3>⚡ Eléctricos</h3>";
+ adminPanel.innerHTML="<h3>⚡ Eléctricos</h3>";
  electricos.forEach((e,i)=>{
-  p.innerHTML+=`
-   <label>
-    <input type="checkbox" ${e.activo?"checked":""} onchange="electricos[${i}].activo=this.checked">
-    ${e.nombre}
-   </label>`;
+  adminPanel.innerHTML+=`
+  <label>
+   <input type="checkbox" ${e.activo?"checked":""}
+   onchange="electricos[${i}].activo=this.checked">
+   ${e.nombre}
+  </label><br>`;
  });
- p.innerHTML+="<h3>🔧 Mecánicos</h3>";
+ adminPanel.innerHTML+="<h3>🔧 Mecánicos</h3>";
  mecanicos.forEach((m,i)=>{
-  p.innerHTML+=`
-   <label>
-    <input type="checkbox" ${m.activo?"checked":""} onchange="mecanicos[${i}].activo=this.checked">
-    ${m.nombre}
-   </label>`;
+  adminPanel.innerHTML+=`
+  <label>
+   <input type="checkbox" ${m.activo?"checked":""}
+   onchange="mecanicos[${i}].activo=this.checked">
+   ${m.nombre}
+  </label><br>`;
  });
 }
 
@@ -176,6 +181,8 @@ render();
 
 </body>
 </html>
+
+
 
 
 
