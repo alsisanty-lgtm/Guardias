@@ -44,7 +44,7 @@ header{background: linear-gradient(135deg,var(--primary),#0056b3); color:#fff;te
 h1{margin:0;font-size:1.8em;}
 .subtitulo{font-size:1em;opacity:0.8;margin-top:5px;}
 .container{max-width:900px;margin:20px auto;position:relative;overflow:hidden;}
-.carousel{display:flex;transition:transform 0.5s ease;touch-action: pan-y;}
+.carousel{display:flex;transition:transform 0.4s ease;will-change:transform;touch-action: pan-y;}
 .card{min-width:300px;margin:0 10px;background:var(--card-bg);border-radius:20px;box-shadow:var(--shadow);padding:20px;position:relative;flex-shrink:0;transition:transform 0.3s;}
 .card:hover{transform:scale(1.03);}
 .card-header{font-weight:700;font-size:1.3em;text-align:center;margin-bottom:10px;}
@@ -72,7 +72,6 @@ textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1
 
 <body>
 
-<!-- Botón modo nocturno -->
 <button id="toggleNight" style="position:fixed;top:10px;right:10px;z-index:200;padding:8px 12px;border:none;border-radius:10px;background:#555;color:#fff;cursor:pointer;">🌙</button>
 
 <header>
@@ -98,7 +97,6 @@ textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1
 <input id="ausentes" placeholder="Ej: Abde, Ramon">
 <button id="guardarBtn">💾 Guardar y Actualizar</button>
 
-<!-- Siguiente guardia -->
 <div id="siguienteGuardia"><strong>Siguiente semana:</strong> <span id="proximaGuardia"></span></div>
 </details>
 
@@ -132,24 +130,12 @@ let mecanicos=["Ramon","Santy","Traian","Manu","Fran alba","Cele"];
 let ausentes=[];
 let weekOffset=0;
 
-// ===== FUNCIONES DE FECHA =====
-function obtenerLunes(d=new Date()){
-  const day=d.getDay();
-  const diff=day===0?d.getDate()-6:d.getDate()-day+1;
-  return new Date(d.getFullYear(),d.getMonth(),diff);
-}
+// ===== FUNCIONES FECHA =====
+function obtenerLunes(d=new Date()){const day=d.getDay();const diff=day===0?d.getDate()-6:d.getDate()-day+1;return new Date(d.getFullYear(),d.getMonth(),diff);}
 function sumarDias(f,d){let r=new Date(f);r.setDate(r.getDate()+d);return r;}
 function formatFecha(f){return f.toLocaleDateString();}
-Date.prototype.getWeekNumber=function(){
-  let d=new Date(this);d.setDate(d.getDate()+4-(d.getDay()||7));
-  let y=new Date(d.getFullYear(),0,1);
-  return Math.ceil((((d-y)/86400000)+1)/7);
-}
-function obtenerGuardia(lista,semana){
-  let disponibles=lista.filter(n=>!ausentes.includes(n));
-  if(disponibles.length===0) return "Nadie disponible";
-  return disponibles[(semana-1)%disponibles.length];
-}
+Date.prototype.getWeekNumber=function(){let d=new Date(this);d.setDate(d.getDate()+4-(d.getDay()||7));let y=new Date(d.getFullYear(),0,1);return Math.ceil((((d-y)/86400000)+1)/7);}
+function obtenerGuardia(lista,semana){let disponibles=lista.filter(n=>!ausentes.includes(n));return disponibles.length?disponibles[(semana-1)%disponibles.length]:"Nadie disponible";}
 
 // ===== RENDER CALENDARIO =====
 function renderCarousel(){
@@ -162,51 +148,32 @@ function renderCarousel(){
 
   for(let i=-1;i<=1;i++){
     const lunes = sumarDias(obtenerLunes(), (weekOffset+i)*7);
-    const viernes = sumarDias(lunes, 4);
+    const viernes = sumarDias(lunes,4);
     const sem = lunes.getWeekNumber();
-
     let elec = obtenerGuardia(electricos, sem);
     let mec = obtenerGuardia(mecanicos, sem);
-
-    const daysHTML=[0,1,2,3,4].map(d=>{
-      const today=(new Date().getDay()===d+1 && i===0)?'today':'';
-      const dayNames=['Lun','Mar','Mié','Jue','Vie'];
-      return `<div class="day ${today}">${dayNames[d]}</div>`;
-    }).join('');
-
+    const daysHTML=[0,1,2,3,4].map(d=>{const today=(new Date().getDay()===d+1 && i===0)?'today':'';const dayNames=['Lun','Mar','Mié','Jue','Vie'];return `<div class="day ${today}">${dayNames[d]}</div>`;}).join('');
     c.innerHTML+=`
       <div class="card">
         <div class="card-header">${formatFecha(lunes)} - ${formatFecha(viernes)}</div>
         <div class="guardias">
-          <div class="guardia">
-            <div class="icono">⚡</div>
-            <div class="nombre">${elec}</div>
-            <div class="duracion">L-V</div>
-            <div class="indicator ${ausentes.includes(elec)?'ind-ausente':'ind-actual'}">
-              ${ausentes.includes(elec)?'Ausente':'En Guardia'}
-            </div>
-            <div class="days">${daysHTML}</div>
-          </div>
-          <div class="guardia">
-            <div class="icono">🔧</div>
-            <div class="nombre">${mec}</div>
-            <div class="duracion">L-V</div>
-            <div class="indicator ${ausentes.includes(mec)?'ind-ausente':'ind-actual'}">
-              ${ausentes.includes(mec)?'Ausente':'En Guardia'}
-            </div>
-            <div class="days">${daysHTML}</div>
-          </div>
+          <div class="guardia"><div class="icono">⚡</div><div class="nombre">${elec}</div><div class="duracion">L-V</div><div class="indicator ${ausentes.includes(elec)?'ind-ausente':'ind-actual'}">${ausentes.includes(elec)?'Ausente':'En Guardia'}</div><div class="days">${daysHTML}</div></div>
+          <div class="guardia"><div class="icono">🔧</div><div class="nombre">${mec}</div><div class="duracion">L-V</div><div class="indicator ${ausentes.includes(mec)?'ind-ausente':'ind-actual'}">${ausentes.includes(mec)?'Ausente':'En Guardia'}</div><div class="days">${daysHTML}</div></div>
         </div>
       </div>`;
   }
 
-  // ===== ACTUALIZAR SIGUIENTE GUARDIA =====
+  // siguiente guardia
   const proxLunes = sumarDias(obtenerLunes(), (weekOffset+1)*7);
   const semSig = proxLunes.getWeekNumber();
   const nextElec = obtenerGuardia(electricos, semSig);
   const nextMec = obtenerGuardia(mecanicos, semSig);
   document.getElementById("proximaGuardia").innerHTML=
     `Eléctrico: ${nextElec} - Mecánico: ${nextMec} (${formatFecha(proxLunes)} - ${formatFecha(sumarDias(proxLunes,4))})`;
+
+  // animación carrusel
+  const cardWidth = c.querySelector('.card').offsetWidth + 20;
+  c.style.transform = `translateX(-${cardWidth}px)`;
 }
 
 // ===== NAV BOTONES =====
@@ -256,6 +223,8 @@ if('serviceWorker' in navigator){
 
 </body>
 </html>
+
+
 
 
 
