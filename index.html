@@ -32,13 +32,15 @@ header{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;padding:20p
 .card{min-width:320px;margin:10px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px;}
 .guardias{display:flex;gap:15px;flex-wrap:wrap;}
 .guardia{flex:1;background:var(--card);border-radius:15px;padding:15px;text-align:center;}
-.icono{font-size:2.5em}
-.nombre{font-size:1.2em;font-weight:700}
-.nav{display:flex;justify-content:space-between;padding:10px}
-button{border:none;border-radius:12px;padding:10px 16px;background:var(--primary);color:#fff;font-weight:600}
-#nextInfo{margin:20px;background:var(--card);padding:20px;border-radius:20px;box-shadow:var(--shadow);text-align:center}
-details{margin:20px;background:var(--card);padding:15px;border-radius:15px}
-textarea,input{width:100%;padding:8px;border-radius:10px}
+.icono{font-size:2.5em;}
+.nombre{font-size:1.2em;font-weight:700;}
+.nav{display:flex;justify-content:space-between;padding:10px;}
+button{border:none;border-radius:12px;padding:10px 16px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
+#nextInfo{margin:20px;background:var(--card);padding:20px;border-radius:20px;box-shadow:var(--shadow);text-align:center;}
+details{margin:20px;background:var(--card);padding:15px;border-radius:15px;}
+textarea,input{width:100%;padding:8px;border-radius:10px;margin-top:8px;}
+#weekSelector{margin:10px;text-align:center;}
+#weekSelector input{padding:6px 8px;border-radius:8px;border:1px solid #ccc;}
 </style>
 </head>
 
@@ -51,10 +53,16 @@ textarea,input{width:100%;padding:8px;border-radius:10px}
 <div id="subtitle"></div>
 </header>
 
+<div id="weekSelector">
+<label for="selectWeek">Ir a semana: </label>
+<input type="date" id="selectWeek">
+<button id="goWeek">Ir</button>
+</div>
+
 <div class="container">
   <div class="nav">
-    <button id="prev">⬅</button>
-    <button id="next">➡</button>
+    <button id="prev">⬅ Semana anterior</button>
+    <button id="next">Semana siguiente ➡</button>
   </div>
   <div class="carousel" id="carousel"></div>
 </div>
@@ -72,11 +80,9 @@ textarea,input{width:100%;padding:8px;border-radius:10px}
 
 <script>
 // 🌙 modo noche
-night.onclick=()=>{
- document.body.classList.toggle("dark");
- localStorage.dark=document.body.classList.contains("dark");
-}
-if(localStorage.dark==="true")document.body.classList.add("dark");
+const night=document.getElementById("night");
+night.onclick=()=>{document.body.classList.toggle("dark"); localStorage.dark=document.body.classList.contains("dark");};
+if(localStorage.dark==="true") document.body.classList.add("dark");
 
 // 🔐 admin por URL ?admin=alsi2026
 if(new URLSearchParams(location.search).get("admin")!=="alsi2026")
@@ -86,9 +92,7 @@ if(new URLSearchParams(location.search).get("admin")!=="alsi2026")
 let electricos=[], mecanicos=[], offset=0;
 
 // fechas
-const lunes=d=>{
- d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d
-}
+const lunes=d=>{d=new Date(d); let n=d.getDay(); d.setDate(d.getDate()-(n===0?6:n-1)); return d;}
 const fd=d=>d.toLocaleDateString();
 
 // guardia rotativa
@@ -99,13 +103,14 @@ function render(){
  const car=document.getElementById("carousel");
  car.innerHTML="";
  let base=lunes(new Date());
- let ini=new Date(base);ini.setDate(base.getDate()+offset*7);
- let fin=new Date(ini);fin.setDate(ini.getDate()+4);
- subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
+ let ini=new Date(base); ini.setDate(base.getDate()+offset*7);
+ let fin=new Date(ini); fin.setDate(ini.getDate()+4);
+ document.getElementById("subtitle").textContent=`${fd(ini)} - ${fd(fin)}`;
 
+ // Carrusel 3 semanas
  for(let i=-1;i<=1;i++){
-  let l=new Date(ini);l.setDate(l.getDate()+i*7);
-  let v=new Date(l);v.setDate(l.getDate()+4);
+  let l=new Date(ini); l.setDate(l.getDate()+i*7);
+  let v=new Date(l); v.setDate(v.getDate()+4);
   car.innerHTML+=`
   <div class="card">
     <h3>${fd(l)} - ${fd(v)}</h3>
@@ -116,50 +121,78 @@ function render(){
   </div>`;
  }
 
- requestAnimationFrame(()=>{
-  car.style.transform=`translateX(-${car.children[0].offsetWidth+20}px)`
- });
+ requestAnimationFrame(()=>{car.style.transform=`translateX(-${car.children[0].offsetWidth+20}px)`});
 
- let pl=new Date(ini);pl.setDate(pl.getDate()+7);
- let pv=new Date(pl);pv.setDate(pv.getDate()+4);
- nextInfo.innerHTML=`<h3>🔜 Próxima semana</h3>
+ // Próxima semana
+ let pl=new Date(ini); pl.setDate(pl.getDate()+7);
+ let pv=new Date(pl); pv.setDate(pv.getDate()+4);
+ document.getElementById("nextInfo").innerHTML=
+ `<h3>🔜 Próxima semana</h3>
  ⚡ ${guardia(electricos,offset+1)} · 🔧 ${guardia(mecanicos,offset+1)}<br>
  ${fd(pl)} - ${fd(pv)}`;
+
+ // notificación
+if(Notification.permission==="granted"){
+ new Notification("Guardias Alsi 📆",{
+   body:`Esta semana: ⚡ ${guardia(electricos,offset)} · 🔧 ${guardia(mecanicos,offset)}\n${fd(ini)} - ${fd(fin)}`,
+   icon:"/Guardias/icon-192.png"
+ });
+}
 }
 
 // botones
-prev.onclick=()=>{offset--;render()}
-next.onclick=()=>{offset++;render()}
+document.getElementById("prev").onclick=()=>{offset--; render();}
+document.getElementById("next").onclick=()=>{offset++; render();}
 
 // swipe
 let x=0;
+const carousel=document.getElementById("carousel");
 carousel.addEventListener("touchstart",e=>x=e.touches[0].clientX);
 carousel.addEventListener("touchend",e=>{
  let d=e.changedTouches[0].clientX-x;
- if(d>60){offset--;render()}
- if(d<-60){offset++;render()}
+ if(d>60){offset--;render();}
+ if(d<-60){offset++;render();}
 });
 
-// guardar
-save.onclick=()=>{
- electricos=elec.value.split(",").map(e=>e.trim());
- mecanicos=mec.value.split(",").map(e=>e.trim());
- localStorage.e=elec.value;localStorage.m=mec.value;
+// selector de semana
+const selectWeek=document.getElementById("selectWeek");
+const goWeek=document.getElementById("goWeek");
+goWeek.onclick=()=>{
+ const f=new Date(selectWeek.value);
+ if(isNaN(f)) return;
+ const base=lunes(new Date());
+ const diff=Math.floor((f-base)/(1000*60*60*24));
+ offset=Math.floor(diff/7);
  render();
-}
+};
 
-// cargar
-electricos=(localStorage.e||elec.value).split(",").map(e=>e.trim());
-mecanicos=(localStorage.m||mec.value).split(",").map(e=>e.trim());
+// guardar admin
+document.getElementById("save").onclick=()=>{
+ electricos=document.getElementById("elec").value.split(",").map(e=>e.trim());
+ mecanicos=document.getElementById("mec").value.split(",").map(e=>e.trim());
+ localStorage.e=document.getElementById("elec").value;
+ localStorage.m=document.getElementById("mec").value;
+ render();
+};
+
+// cargar desde localstorage
+electricos=(localStorage.e||document.getElementById("elec").value).split(",").map(e=>e.trim());
+mecanicos=(localStorage.m||document.getElementById("mec").value).split(",").map(e=>e.trim());
 render();
 
 // SW
 if("serviceWorker"in navigator)
  navigator.serviceWorker.register("/Guardias/service-worker.js");
+
+// pedir permisos notificaciones
+if("Notification"in window && Notification.permission!=="granted")
+ Notification.requestPermission();
 </script>
 
 </body>
 </html>
+
+
 
 
 
