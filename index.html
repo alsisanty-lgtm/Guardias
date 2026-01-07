@@ -14,32 +14,28 @@
 
 <style>
 :root {
-  --primary: #007bff;
-  --secondary: #6c757d;
-  --bg: #f5f6fa;
-  --text: #333;
-  --card-bg: #fff;
-  --shadow: 0 8px 25px rgba(0,0,0,0.15);
-  --today: #ffea00;
+  --primary:#007bff;
+  --secondary:#6c757d;
+  --bg:#f5f6fa;
+  --text:#333;
+  --card-bg:#fff;
+  --shadow:0 8px 25px rgba(0,0,0,0.15);
+  --today:#ffea00;
 }
 body.dark-mode {
-  --primary: #1e88e5;
-  --secondary: #b0bec5;
-  --bg: #121212;
-  --text: #e0e0e0;
-  --card-bg: #1e1e1e;
-  --shadow: 0 8px 25px rgba(0,0,0,0.5);
-  --today: #ffd600;
+  --bg:#121212;
+  --text:#e0e0e0;
+  --card-bg:#1e1e1e;
+  --shadow:0 8px 25px rgba(0,0,0,0.5);
+  --today:#ffd600;
 }
-
 body {margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
 header {background: linear-gradient(135deg,var(--primary),#0056b3); color:#fff;text-align:center;padding:20px;position:sticky;top:0;z-index:100;}
 h1 {margin:0;font-size:1.8em;}
 .subtitulo {font-size:1em;opacity:0.8;margin-top:5px;}
 .container {max-width:900px;margin:20px auto;position:relative;overflow:hidden;}
-.carousel {display:flex;transition:transform 0.5s ease;touch-action: pan-y;}
-.card {min-width:300px;margin:0 10px;background:var(--card-bg);border-radius:20px;box-shadow:var(--shadow);padding:20px;position:relative;flex-shrink:0;transition:transform 0.3s;}
-.card:hover {transform:scale(1.03);}
+.carousel {display:flex;transition:transform 0.4s ease;will-change:transform;touch-action: pan-y;}
+.card {min-width:300px;margin:0 10px;background:var(--card-bg);border-radius:20px;box-shadow:var(--shadow);padding:20px;flex-shrink:0;}
 .card-header {font-weight:700;font-size:1.3em;text-align:center;margin-bottom:10px;}
 .guardias {display:flex;justify-content:space-around;flex-wrap:wrap;gap:15px;}
 .guardia {flex:1;min-width:120px;background:var(--card-bg);border-radius:15px;padding:15px;text-align:center;position:relative;}
@@ -50,17 +46,16 @@ h1 {margin:0;font-size:1.8em;}
 .ind-actual {background:var(--today);color:#212529;}
 .ind-ausente {background:var(--secondary);}
 .days {display:flex;justify-content:space-between;margin-top:10px;}
-.day {font-size:0.8em;padding:3px 5px;border-radius:5px;cursor:pointer;}
+.day {font-size:0.8em;padding:3px 5px;border-radius:5px;}
 .today {background:var(--today);}
 .nav-buttons {display:flex;justify-content:space-between;margin:10px 0;}
 button {padding:8px 15px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
 details {margin-top:15px;background:var(--card-bg);padding:15px;border-radius:15px;box-shadow:var(--shadow);}
 textarea,input {width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1px solid #ced4da;}
-#siguienteGuardia {margin-top:15px;background:var(--card-bg);padding:12px;border-radius:12px;box-shadow:var(--shadow);}
+#siguienteGuardia {margin-top:20px;background:var(--card-bg);padding:15px;border-radius:15px;box-shadow:var(--shadow);text-align:center;}
 @media(max-width:600px){.guardias{flex-direction:column;}}
 </style>
 </head>
-
 <body>
 
 <button id="toggleNight" style="position:fixed;top:10px;right:10px;z-index:200;padding:8px 12px;border:none;border-radius:10px;background:#555;color:#fff;cursor:pointer;">🌙</button>
@@ -78,6 +73,8 @@ textarea,input {width:100%;padding:8px;margin-top:8px;border-radius:10px;border:
   <div class="carousel" id="carouselArea"></div>
 </div>
 
+<div id="siguienteGuardia"><strong>Próxima semana:</strong> <span id="proximaGuardia"></span></div>
+
 <details id="adminPanel">
 <summary>⚙️ Panel Administrador</summary>
 <p>Técnicos Eléctricos (coma separadas):</p>
@@ -87,32 +84,30 @@ textarea,input {width:100%;padding:8px;margin-top:8px;border-radius:10px;border:
 <p>Ausentes / vacaciones:</p>
 <textarea id="ausentes" placeholder="Ej: Abde, Ramon"></textarea>
 <button id="guardarBtn">💾 Guardar y Actualizar</button>
-
-<div id="siguienteGuardia"><strong>Siguiente semana:</strong> <span id="proximaGuardia"></span></div>
 </details>
 
 <script>
 // ===== MODO NOCTURNO =====
 const toggleNight = document.getElementById("toggleNight");
 if(localStorage.getItem("darkMode")==="true") document.body.classList.add("dark-mode");
-toggleNight.onclick=()=>{
+toggleNight.onclick = () => {
   document.body.classList.toggle("dark-mode");
-  localStorage.setItem("darkMode",document.body.classList.contains("dark-mode"));
+  localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
 };
 
 // ===== ADMIN OCULTO =====
 const ADMIN_PASSWORD = "guardias2026";
-let isAdmin = localStorage.getItem("isAdmin")==="true";
+let isAdmin = localStorage.getItem("isAdmin") === "true";
 const adminPanel = document.getElementById("adminPanel");
 if(!isAdmin){
   adminPanel.style.display="none";
   setTimeout(()=>{
     const pass = prompt("Modo administrador: introduce contraseña");
-    if(pass === ADMIN_PASSWORD){
+    if(pass===ADMIN_PASSWORD){
       localStorage.setItem("isAdmin","true");
       location.reload();
     }
-  },800);
+  },500);
 }
 
 // ===== DATOS =====
@@ -121,7 +116,7 @@ let mecanicos = ["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
 let ausentes = [];
 let weekOffset = 0;
 
-// ===== FUNCIONES FECHA =====
+// ===== FUNCIONES =====
 function obtenerLunes(d=new Date()){
   const day=d.getDay();
   const diff=day===0?d.getDate()-6:d.getDate()-day+1;
@@ -130,26 +125,25 @@ function obtenerLunes(d=new Date()){
 function sumarDias(f,d){let r=new Date(f);r.setDate(r.getDate()+d);return r;}
 function formatFecha(f){return f.toLocaleDateString();}
 function obtenerGuardia(lista, offset){
-  let disponibles=lista.filter(n=>!ausentes.includes(n));
+  const disponibles=lista.filter(n=>!ausentes.includes(n));
   if(disponibles.length===0) return "Nadie disponible";
-  return disponibles[((offset % disponibles.length) + disponibles.length) % disponibles.length];
+  return disponibles[((offset%disponibles.length)+disponibles.length)%disponibles.length];
 }
 
-// ===== RENDER CARRUSEL =====
+// ===== RENDER =====
 function renderCarousel(){
   const c = document.getElementById("carouselArea");
   c.innerHTML="";
 
-  const lunesSemanaActual = sumarDias(obtenerLunes(), weekOffset*7);
-  const viernesSemanaActual = sumarDias(lunesSemanaActual,4);
-  document.getElementById('subtitulo-semana').textContent=
-    `Semana: ${formatFecha(lunesSemanaActual)} - ${formatFecha(viernesSemanaActual)}`;
+  const lunesActual = sumarDias(obtenerLunes(), weekOffset*7);
+  const viernesActual = sumarDias(lunesActual,4);
+  document.getElementById('subtitulo-semana').textContent = `${formatFecha(lunesActual)} - ${formatFecha(viernesActual)}`;
 
   for(let i=-1;i<=1;i++){
     const lunes = sumarDias(obtenerLunes(), (weekOffset+i)*7);
     const viernes = sumarDias(lunes,4);
-    let elec = obtenerGuardia(electricos, weekOffset+i);
-    let mec  = obtenerGuardia(mecanicos, weekOffset+i);
+    const elec = obtenerGuardia(electricos, weekOffset+i);
+    const mec  = obtenerGuardia(mecanicos, weekOffset+i);
 
     const daysHTML=[0,1,2,3,4].map(d=>{
       const today=(new Date().getDay()===d+1 && i===0)?'today':'';
@@ -158,52 +152,47 @@ function renderCarousel(){
     }).join('');
 
     c.innerHTML += `
-      <div class="card">
-        <div class="card-header">${formatFecha(lunes)} - ${formatFecha(viernes)}</div>
-        <div class="guardias">
-          <div class="guardia">
-            <div class="icono">⚡</div>
-            <div class="nombre">${elec}</div>
-            <div class="duracion">L-V</div>
-            <div class="indicator ${ausentes.includes(elec)?'ind-ausente':'ind-actual'}">
-              ${ausentes.includes(elec)?'Ausente':'En Guardia'}
-            </div>
-            <div class="days">${daysHTML}</div>
-          </div>
-          <div class="guardia">
-            <div class="icono">🔧</div>
-            <div class="nombre">${mec}</div>
-            <div class="duracion">L-V</div>
-            <div class="indicator ${ausentes.includes(mec)?'ind-ausente':'ind-actual'}">
-              ${ausentes.includes(mec)?'Ausente':'En Guardia'}
-            </div>
-            <div class="days">${daysHTML}</div>
-          </div>
+    <div class="card">
+      <div class="card-header">${formatFecha(lunes)} - ${formatFecha(viernes)}</div>
+      <div class="guardias">
+        <div class="guardia">
+          <div class="icono">⚡</div>
+          <div class="nombre">${elec}</div>
+          <div class="duracion">L-V</div>
+          <div class="indicator ${ausentes.includes(elec)?'ind-ausente':'ind-actual'}">${ausentes.includes(elec)?'Ausente':'En Guardia'}</div>
+          <div class="days">${daysHTML}</div>
         </div>
-      </div>`;
+        <div class="guardia">
+          <div class="icono">🔧</div>
+          <div class="nombre">${mec}</div>
+          <div class="duracion">L-V</div>
+          <div class="indicator ${ausentes.includes(mec)?'ind-ausente':'ind-actual'}">${ausentes.includes(mec)?'Ausente':'En Guardia'}</div>
+          <div class="days">${daysHTML}</div>
+        </div>
+      </div>
+    </div>`;
   }
 
-  // siguiente guardia
+  // próxima semana
   const proxLunes = sumarDias(obtenerLunes(), (weekOffset+1)*7);
   const nextElec = obtenerGuardia(electricos, weekOffset+1);
   const nextMec  = obtenerGuardia(mecanicos, weekOffset+1);
-  document.getElementById("proximaGuardia").innerHTML=
-    `Eléctrico: ${nextElec} - Mecánico: ${nextMec} (${formatFecha(proxLunes)} - ${formatFecha(sumarDias(proxLunes,4))})`;
+  document.getElementById("proximaGuardia").innerHTML = `⚡ ${nextElec} · 🔧 ${nextMec} (${formatFecha(proxLunes)} - ${formatFecha(sumarDias(proxLunes,4))})`;
 
   // centrar carrusel
   const cardWidth = c.querySelector('.card')?.offsetWidth || 300;
   c.style.transform = `translateX(-${cardWidth}px)`;
 }
 
-// ===== BOTONES NAV =====
+// ===== BOTONES =====
 document.getElementById("prevWeek").onclick=()=>{weekOffset--;renderCarousel();}
 document.getElementById("nextWeek").onclick=()=>{weekOffset++;renderCarousel();}
 
 // ===== SWIPE =====
 let startX=0;
 const carousel=document.getElementById("carouselArea");
-carousel.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;});
-carousel.addEventListener('touchend',e=>{
+carousel.addEventListener('touchstart', e=>{startX=e.touches[0].clientX;});
+carousel.addEventListener('touchend', e=>{
   const dx=e.changedTouches[0].clientX-startX;
   if(dx>50){weekOffset--;renderCarousel();}
   if(dx<-50){weekOffset++;renderCarousel();}
@@ -211,9 +200,9 @@ carousel.addEventListener('touchend',e=>{
 
 // ===== ADMIN GUARDAR =====
 document.getElementById("guardarBtn").onclick=()=>{
-  electricos=document.getElementById("electricos").value.split(',').map(s=>s.trim()).filter(s=>s);
-  mecanicos=document.getElementById("mecanicos").value.split(',').map(s=>s.trim()).filter(s=>s);
-  ausentes=document.getElementById("ausentes").value.split(',').map(s=>s.trim()).filter(s=>s);
+  electricos=document.getElementById("electricos").value.split(',').map(s=>s.trim());
+  mecanicos=document.getElementById("mecanicos").value.split(',').map(s=>s.trim());
+  ausentes=document.getElementById("ausentes").value.split(',').map(s=>s.trim());
   localStorage.setItem("electricos",document.getElementById("electricos").value);
   localStorage.setItem("mecanicos",document.getElementById("mecanicos").value);
   localStorage.setItem("ausentes",document.getElementById("ausentes").value);
@@ -222,24 +211,20 @@ document.getElementById("guardarBtn").onclick=()=>{
 }
 
 // ===== CARGAR LOCALSTORAGE =====
-document.addEventListener("DOMContentLoaded",()=>{
-  const e=localStorage.getItem("electricos");
-  const m=localStorage.getItem("mecanicos");
-  const a=localStorage.getItem("ausentes");
+document.addEventListener("DOMContentLoaded", ()=>{
+  const e = localStorage.getItem("electricos");
+  const m = localStorage.getItem("mecanicos");
+  const a = localStorage.getItem("ausentes");
   if(e) electricos=e.split(',').map(s=>s.trim());
   if(m) mecanicos=m.split(',').map(s=>s.trim());
   if(a) ausentes=a.split(',').map(s=>s.trim());
   renderCarousel();
 });
-
-// ===== SERVICE WORKER =====
-if('serviceWorker' in navigator){
- navigator.serviceWorker.register('/Guardias/service-worker.js').then(()=>console.log('SW registrado'));
-}
 </script>
-
 </body>
 </html>
+
+
 
 
 
