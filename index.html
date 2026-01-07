@@ -109,20 +109,16 @@ toggleNight.onclick=()=>{
   localStorage.setItem("darkMode",document.body.classList.contains("dark-mode"));
 };
 
-// ===== ADMIN OCULTO =====
-const ADMIN_PASSWORD = "guardias2026";
-let isAdmin = localStorage.getItem("isAdmin")==="true";
+// ===== ADMIN POR URL SECRETA =====
+const ADMIN_KEY = "alsi2026"; // 🔐 puedes cambiarla
+const params = new URLSearchParams(window.location.search);
+const isAdmin = params.get("admin") === ADMIN_KEY;
+
 const adminPanel = document.getElementById("adminPanel");
-if(!isAdmin){
-  adminPanel.style.display="none";
-  setTimeout(()=>{
-    const pass=prompt("Modo administrador: introduce contraseña");
-    if(pass===ADMIN_PASSWORD){
-      localStorage.setItem("isAdmin","true");
-      location.reload();
-    }
-  },800);
+if (!isAdmin) {
+  adminPanel.style.display = "none";
 }
+
 
 // ===== DATOS =====
 let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
@@ -223,6 +219,7 @@ if('serviceWorker' in navigator){
 
 </body>
 </html>
+
 
 
 
