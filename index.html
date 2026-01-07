@@ -125,6 +125,7 @@ let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
 let mecanicos=["Ramon","Santy","Traian","Manu","Fran alba","Cele"];
 let ausentes=[];
 let weekOffset=0;
+const FECHA_BASE = new Date(2026, 0, 5); // Lunes 5/1/2026
 
 // ===== FUNCIONES FECHA =====
 function obtenerLunes(d=new Date()){const day=d.getDay();const diff=day===0?d.getDate()-6:d.getDate()-day+1;return new Date(d.getFullYear(),d.getMonth(),diff);}
@@ -219,6 +220,7 @@ if('serviceWorker' in navigator){
 
 </body>
 </html>
+
 
 
 
