@@ -195,14 +195,40 @@ document.getElementById("prevWeek").onclick=()=>{weekOffset--;renderCarousel();}
 document.getElementById("nextWeek").onclick=()=>{weekOffset++;renderCarousel();}
 
 // ===== SWIPE =====
-let startX=0;
-const carousel=document.getElementById("carouselArea");
-carousel.addEventListener('touchstart', e=>{startX=e.touches[0].clientX;});
-carousel.addEventListener('touchend', e=>{
-  const dx=e.changedTouches[0].clientX-startX;
-  if(dx>50){weekOffset--;renderCarousel();}
-  if(dx<-50){weekOffset++;renderCarousel();}
+<script>
+// ===== SWIPE REAL PARA MÓVIL =====
+let startX = 0;
+let isSwiping = false;
+
+const carousel = document.getElementById("carouselArea");
+
+carousel.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+  isSwiping = true;
+}, { passive: true });
+
+carousel.addEventListener("touchmove", e => {
+  if (!isSwiping) return;
+}, { passive: true });
+
+carousel.addEventListener("touchend", e => {
+  if (!isSwiping) return;
+
+  const endX = e.changedTouches[0].clientX;
+  const diff = endX - startX;
+
+  if (diff > 60) {
+    weekOffset--;
+    renderCarousel();
+  } 
+  else if (diff < -60) {
+    weekOffset++;
+    renderCarousel();
+  }
+
+  isSwiping = false;
 });
+
 
 // ===== ADMIN GUARDAR =====
 document.getElementById("guardarBtn").onclick=()=>{
@@ -229,6 +255,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
