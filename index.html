@@ -204,10 +204,46 @@ if("serviceWorker"in navigator)
 // pedir permisos notificaciones
 if("Notification"in window && Notification.permission!=="granted")
  Notification.requestPermission();
+  <script>
+// ===== ADMIN CON BOTÓN Y CONTRASEÑA =====
+const ADMIN_PASSWORD = "alsi2026";
+const adminPanel = document.getElementById("admin");
+const adminBtn = document.getElementById("adminBtn");
+
+// estado admin guardado
+let isAdmin = localStorage.getItem("isAdmin") === "true";
+
+// estado inicial
+adminPanel.style.display = isAdmin ? "block" : "none";
+
+// click botón admin
+adminBtn.onclick = () => {
+  if (isAdmin) {
+    // cerrar sesión admin
+    if (confirm("¿Salir del modo administrador?")) {
+      localStorage.removeItem("isAdmin");
+      isAdmin = false;
+      adminPanel.style.display = "none";
+    }
+  } else {
+    const pass = prompt("Introduce contraseña de administrador:");
+    if (pass === ADMIN_PASSWORD) {
+      localStorage.setItem("isAdmin", "true");
+      isAdmin = true;
+      adminPanel.style.display = "block";
+      alert("Modo administrador activado ✅");
+    } else if (pass !== null) {
+      alert("Contraseña incorrecta ❌");
+    }
+  }
+};
+</script>
+
 </script>
 
 </body>
 </html>
+
 
 
 
