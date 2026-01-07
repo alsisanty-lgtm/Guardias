@@ -34,7 +34,13 @@ header {background: linear-gradient(135deg,var(--primary),#0056b3); color:#fff;t
 h1 {margin:0;font-size:1.8em;}
 .subtitulo {font-size:1em;opacity:0.8;margin-top:5px;}
 .container {max-width:900px;margin:20px auto;position:relative;overflow:hidden;}
-.carousel {display:flex;transition:transform 0.4s ease;will-change:transform;touch-action: pan-y;}
+.carousel { 
+  display:flex; 
+  transition:transform 0.35s ease;
+  will-change:transform;
+  touch-action: none;   /* 👈 CLAVE PARA EL SWIPE */
+}
+
 .card {min-width:300px;margin:0 10px;background:var(--card-bg);border-radius:20px;box-shadow:var(--shadow);padding:20px;flex-shrink:0;}
 .card-header {font-weight:700;font-size:1.3em;text-align:center;margin-bottom:10px;}
 .guardias {display:flex;justify-content:space-around;flex-wrap:wrap;gap:15px;}
@@ -223,6 +229,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 </script>
 </body>
 </html>
+
 
 
 
