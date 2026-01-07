@@ -99,6 +99,14 @@ textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1
 
 <div id="siguienteGuardia"><strong>Siguiente semana:</strong> <span id="proximaGuardia"></span></div>
 </details>
+<div id="proximaGuardia" style="
+  margin:20px;
+  padding:20px;
+  background:var(--card-bg);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  text-align:center;">
+</div>
 
 <script>
 // ===== MODO NOCTURNO =====
@@ -132,33 +140,68 @@ function obtenerLunes(d=new Date()){const day=d.getDay();const diff=day===0?d.ge
 function sumarDias(f,d){let r=new Date(f);r.setDate(r.getDate()+d);return r;}
 function formatFecha(f){return f.toLocaleDateString();}
 Date.prototype.getWeekNumber=function(){let d=new Date(this);d.setDate(d.getDate()+4-(d.getDay()||7));let y=new Date(d.getFullYear(),0,1);return Math.ceil((((d-y)/86400000)+1)/7);}
-function obtenerGuardia(lista,semana){let disponibles=lista.filter(n=>!ausentes.includes(n));return disponibles.length?disponibles[(semana-1)%disponibles.length]:"Nadie disponible";}
+function obtenerGuardia(lista, offset){
+  let disponibles = lista.filter(n=>!ausentes.includes(n));
+  if(disponibles.length === 0) return "Nadie disponible";
+  return disponibles[((offset % disponibles.length) + disponibles.length) % disponibles.length];
+}
+
 
 // ===== RENDER CALENDARIO =====
 function renderCarousel(){
-  const c=document.getElementById("carouselArea");
-  c.innerHTML="";
-  const lunesSemanaActual = sumarDias(obtenerLunes(), weekOffset*7);
-  const viernesSemanaActual = sumarDias(lunesSemanaActual,4);
-  document.getElementById('subtitulo-semana').textContent=
+  const c = document.getElementById("carouselArea");
+  c.innerHTML = "";
+
+  const lunesSemanaActual = sumarDias(obtenerLunes(), weekOffset * 7);
+  const viernesSemanaActual = sumarDias(lunesSemanaActual, 4);
+
+  document.getElementById('subtitulo-semana').textContent =
     `Semana: ${formatFecha(lunesSemanaActual)} - ${formatFecha(viernesSemanaActual)}`;
 
-  for(let i=-1;i<=1;i++){
-    const lunes = sumarDias(obtenerLunes(), (weekOffset+i)*7);
-    const viernes = sumarDias(lunes,4);
-    const sem = lunes.getWeekNumber();
-    let elec = obtenerGuardia(electricos, sem);
-    let mec = obtenerGuardia(mecanicos, sem);
-    const daysHTML=[0,1,2,3,4].map(d=>{const today=(new Date().getDay()===d+1 && i===0)?'today':'';const dayNames=['Lun','Mar','Mié','Jue','Vie'];return `<div class="day ${today}">${dayNames[d]}</div>`;}).join('');
-    c.innerHTML+=`
+  for(let i = -1; i <= 1; i++){
+    const lunes = sumarDias(obtenerLunes(), (weekOffset + i) * 7);
+    const viernes = sumarDias(lunes, 4);
+
+    let elec = obtenerGuardia(electricos, weekOffset + i);
+    let mec  = obtenerGuardia(mecanicos, weekOffset + i);
+
+    const daysHTML = [0,1,2,3,4].map(d => {
+      const today = (new Date().getDay() === d + 1 && i === 0) ? 'today' : '';
+      const dayNames = ['Lun','Mar','Mié','Jue','Vie'];
+      return `<div class="day ${today}">${dayNames[d]}</div>`;
+    }).join('');
+
+    c.innerHTML += `
       <div class="card">
-        <div class="card-header">${formatFecha(lunes)} - ${formatFecha(viernes)}</div>
+        <div class="card-header">
+          ${formatFecha(lunes)} - ${formatFecha(viernes)}
+        </div>
+
         <div class="guardias">
-          <div class="guardia"><div class="icono">⚡</div><div class="nombre">${elec}</div><div class="duracion">L-V</div><div class="indicator ${ausentes.includes(elec)?'ind-ausente':'ind-actual'}">${ausentes.includes(elec)?'Ausente':'En Guardia'}</div><div class="days">${daysHTML}</div></div>
-          <div class="guardia"><div class="icono">🔧</div><div class="nombre">${mec}</div><div class="duracion">L-V</div><div class="indicator ${ausentes.includes(mec)?'ind-ausente':'ind-actual'}">${ausentes.includes(mec)?'Ausente':'En Guardia'}</div><div class="days">${daysHTML}</div></div>
+          <div class="guardia">
+            <div class="icono">⚡</div>
+            <div class="nombre">${elec}</div>
+            <div class="duracion">L-V</div>
+            <div class="indicator ${ausentes.includes(elec) ? 'ind-ausente' : 'ind-actual'}">
+              ${ausentes.includes(elec) ? 'Ausente' : 'En Guardia'}
+            </div>
+            <div class="days">${daysHTML}</div>
+          </div>
+
+          <div class="guardia">
+            <div class="icono">🔧</div>
+            <div class="nombre">${mec}</div>
+            <div class="duracion">L-V</div>
+            <div class="indicator ${ausentes.includes(mec) ? 'ind-ausente' : 'ind-actual'}">
+              ${ausentes.includes(mec) ? 'Ausente' : 'En Guardia'}
+            </div>
+            <div class="days">${daysHTML}</div>
+          </div>
         </div>
       </div>`;
   }
+}
+
 
   // siguiente guardia
   const proxLunes = sumarDias(obtenerLunes(), (weekOffset+1)*7);
@@ -216,10 +259,36 @@ if('serviceWorker' in navigator){
  navigator.serviceWorker.register('/Guardias/service-worker.js')
   .then(()=>console.log('SW registrado'));
 }
+  let startX = 0;
+let isDragging = false;
+
+const container = document.querySelector(".container");
+
+container.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+  isDragging = true;
+});
+
+container.addEventListener("touchend", e => {
+  if (!isDragging) return;
+  let endX = e.changedTouches[0].clientX;
+  let diff = endX - startX;
+
+  if (diff > 60) {
+    weekOffset--;
+    renderCarousel();
+  } else if (diff < -60) {
+    weekOffset++;
+    renderCarousel();
+  }
+  isDragging = false;
+});
+
 </script>
 
 </body>
 </html>
+
 
 
 
