@@ -13,173 +13,190 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
 <style>
-:root{
-  --primary:#1e88e5;
-  --bg:#f4f6fa;
-  --text:#222;
-  --card:#fff;
-  --shadow:0 8px 20px rgba(0,0,0,.15);
-  --today:#ffd600;
+:root {
+  --primary: #1e88e5;
+  --bg: #f5f6fa;
+  --text: #333;
+  --card-bg: #fff;
+  --shadow: 0 8px 25px rgba(0,0,0,0.15);
+  --today: #ffea00;
 }
-body.dark{
+body.dark-mode {
   --bg:#121212;
-  --text:#eee;
-  --card:#1e1e1e;
+  --text:#e0e0e0;
+  --card-bg:#1e1e1e;
+  --shadow:0 8px 25px rgba(0,0,0,0.5);
 }
-body{margin:0;font-family:Segoe UI,sans-serif;background:var(--bg);color:var(--text);}
-header{background:linear-gradient(135deg,var(--primary),#1565c0);color:#fff;padding:20px;text-align:center;position:sticky;top:0;z-index:100;}
-.container{max-width:900px;margin:auto;overflow:hidden;position:relative;}
-.carousel{display:flex;transition:.35s ease;touch-action:pan-y;}
-.card{min-width:320px;margin:10px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px;}
-.card-header{text-align:center;font-weight:700;margin-bottom:10px;}
-.guardias{display:flex;gap:15px;flex-wrap:wrap;}
-.guardia{flex:1;background:var(--card);border-radius:15px;padding:15px;text-align:center;position:relative;}
-.icono{font-size:2.5em;}
-.nombre{font-weight:700;margin-top:5px;}
-.indicator{position:absolute;top:5px;right:5px;padding:3px 8px;border-radius:12px;font-size:0.75em;color:#fff;}
-.ind-actual{background:#28a745;}
-.ind-ausente{background:#dc3545;}
-.nav{display:flex;justify-content:space-between;padding:10px;}
-button{border:none;border-radius:12px;padding:10px 16px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
-#nextInfo{margin:20px;background:var(--card);padding:20px;border-radius:20px;box-shadow:var(--shadow);text-align:center;}
-details{margin:20px;background:var(--card);padding:15px;border-radius:15px;}
-textarea,input{width:100%;padding:8px;border-radius:10px;margin-top:5px;}
+body{margin:0;font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
+header{background: linear-gradient(135deg,var(--primary),#0056b3); color:#fff;text-align:center;padding:20px;position:sticky;top:0;z-index:100;}
+h1{margin:0;font-size:1.8em;}
+.subtitulo{font-size:1em;opacity:0.8;margin-top:5px;}
+.container{max-width:900px;margin:20px auto;position:relative;overflow:hidden;}
+.carousel{display:flex;transition:transform 0.4s ease;touch-action: pan-y;}
+.card{min-width:300px;margin:0 10px;background:var(--card-bg);border-radius:20px;box-shadow:var(--shadow);padding:20px;flex-shrink:0;transition:transform 0.3s;}
+.card:hover{transform:scale(1.03);}
+.card-header{font-weight:700;font-size:1.2em;text-align:center;margin-bottom:10px;}
+.guardias{display:flex;justify-content:space-around;flex-wrap:wrap;gap:10px;}
+.guardia{flex:1;min-width:120px;background:var(--card-bg);border-radius:15px;padding:15px;text-align:center;position:relative;}
+.icono{font-size:2.5em;margin-bottom:8px;}
+.nombre{font-weight:700;margin:5px 0;font-size:1.1em;}
+.days{display:flex;justify-content:space-between;margin-top:8px;}
+.day{flex:1;margin:2px;padding:5px;border-radius:6px;text-align:center;background:#ddd;user-select:none;}
+.day.active{background:var(--primary);color:#fff;}
+.nav-buttons{display:flex;justify-content:space-between;margin:10px 0;}
+button{padding:6px 12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
+details{margin-top:15px;background:var(--card-bg);padding:15px;border-radius:15px;box-shadow:var(--shadow);}
+textarea,input{width:100%;padding:8px;margin-top:8px;border-radius:10px;border:1px solid #ced4da;}
+#siguienteGuardia{margin-top:15px;background:var(--card-bg);padding:12px;border-radius:12px;box-shadow:var(--shadow);}
 </style>
 </head>
-
 <body>
 
-<!-- Botón modo nocturno -->
-<button id="night" style="position:fixed;top:10px;right:10px;z-index:200">🌙</button>
+<button id="toggleNight" style="position:fixed;top:10px;right:10px;z-index:200;">🌙</button>
 
 <header>
 <h1>Guardias Alsi</h1>
-<div id="subtitle">Semana actual</div>
+<div class="subtitulo" id="subtitulo-semana">Semana actual</div>
 </header>
 
 <div class="container">
-  <div class="nav">
-    <button id="prev">⬅ Semana anterior</button>
-    <button id="next">Semana siguiente ➡</button>
+  <div class="nav-buttons">
+    <button id="prevWeek">⬅ Semana anterior</button>
+    <button id="nextWeek">Semana siguiente ➡</button>
   </div>
-  <div class="carousel" id="carousel"></div>
+  <div class="carousel" id="carouselArea"></div>
 </div>
 
-<!-- Panel administrador -->
 <details id="adminPanel">
-<summary>⚙️ Administrador</summary>
-<p>Eléctricos:</p>
-<textarea id="elec">Abde,Fran,Dani,Jose,Fran Ruiz,Hicham</textarea>
-<p>Mecánicos:</p>
-<textarea id="mec">Ramon,Santy,Traian,Manu,Fran Alba,Cele</textarea>
-<p>Ausentes / vacaciones / viajes:</p>
-<input id="ausentes" placeholder="Ej: Abde,Ramon">
-<button id="save">💾 Guardar y Actualizar</button>
-<div id="nextInfo"></div>
+<summary>⚙️ Panel Administrador</summary>
+<p>Técnicos Eléctricos:</p>
+<textarea id="electricos">Abde, Fran, Dani, Jose, Fran Ruiz, Hicham</textarea>
+<p>Técnicos Mecánicos:</p>
+<textarea id="mecanicos">Ramon, Santy, Traian, Manu, Fran Alba, Cele</textarea>
+<p>Ausentes / vacaciones (toca los días para activar):</p>
+<div id="diasAdmin"></div>
+<button id="guardarBtn">💾 Guardar cambios</button>
+<div id="siguienteGuardia"><strong>Próxima semana:</strong> <span id="proximaGuardia"></span></div>
 </details>
 
 <script>
-// 🌙 Modo nocturno
-const night=document.getElementById("night");
-night.onclick=()=>{
- document.body.classList.toggle("dark");
- localStorage.dark=document.body.classList.contains("dark");
+// ===== MODO NOCTURNO =====
+const toggleNight = document.getElementById("toggleNight");
+if(localStorage.getItem("darkMode")==="true") document.body.classList.add("dark-mode");
+toggleNight.onclick=()=>{
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("darkMode",document.body.classList.contains("dark-mode"));
 };
-if(localStorage.dark==="true") document.body.classList.add("dark");
 
-// 🔐 Admin por contraseña
-const ADMIN_PASSWORD="guardias2026"; // cambiar si quieres
-let isAdmin=localStorage.getItem("isAdmin")==="true";
-const adminPanel=document.getElementById("adminPanel");
-if(!isAdmin){
-  adminPanel.style.display="none";
-  setTimeout(()=>{
-    const pass=prompt("🔑 Panel Administrador: introduce contraseña");
-    if(pass===ADMIN_PASSWORD){
-      localStorage.setItem("isAdmin","true");
-      location.reload();
-    }
-  },500);
+// ===== ADMIN CON CONTRASEÑA =====
+const ADMIN_PASSWORD = "guardias2026";
+let isAdmin = false;
+const adminPanel = document.getElementById("adminPanel");
+if(confirm("¿Eres administrador? Introduce la contraseña.")){
+  let pass = prompt("Contraseña admin:");
+  if(pass === ADMIN_PASSWORD){
+    isAdmin = true;
+    adminPanel.style.display="block";
+  }
+}
+if(!isAdmin) adminPanel.style.display="none";
+
+// ===== DATOS =====
+let electricos = [], mecanicos = [], ausentes = {}, weekOffset = 0;
+electricos = localStorage.getItem("electricos") ? localStorage.getItem("electricos").split(",") : ["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
+mecanicos = localStorage.getItem("mecanicos") ? localStorage.getItem("mecanicos").split(",") : ["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
+ausentes = localStorage.getItem("ausentes") ? JSON.parse(localStorage.getItem("ausentes")) : {};
+
+// ===== FUNCIONES FECHA =====
+function lunes(d=new Date()){const day=d.getDay();d.setDate(d.getDate()-(day===0?6:day-1));return d;}
+function sumarDias(f,d){let r=new Date(f);r.setDate(r.getDate()+d);return r;}
+function formatFecha(f){return f.toLocaleDateString();}
+function obtenerGuardia(lista, offset){
+  const disponibles = lista.filter(n => !ausentes[n]?.includes(offset));
+  if(disponibles.length===0) return "Nadie disponible";
+  return disponibles[((offset%disponibles.length)+disponibles.length)%disponibles.length];
 }
 
-// Datos
-let electricos=[], mecanicos=[], ausentes=[], offset=0;
+// ===== RENDER CALENDARIO =====
+function renderCarousel(){
+  const c = document.getElementById("carouselArea");
+  c.innerHTML = "";
 
-// Fechas
-const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d;}
-const fd=d=>d.toLocaleDateString();
+  const lunesActual = sumarDias(lunes(), weekOffset*7);
+  const viernesActual = sumarDias(lunesActual,4);
+  document.getElementById('subtitulo-semana').textContent = `${formatFecha(lunesActual)} - ${formatFecha(viernesActual)}`;
 
-// Guardia rotativa
-const guardia=(l,o)=>l.filter(x=>!ausentes.includes(x))[((o%l.length)+l.length)%l.length];
+  for(let i=-1;i<=1;i++){
+    const l = sumarDias(lunes(), (weekOffset+i)*7);
+    const v = sumarDias(l,4);
+    const elec = obtenerGuardia(electricos, weekOffset+i);
+    const mec  = obtenerGuardia(mecanicos, weekOffset+i);
 
-// Render
-function render(){
- const car=document.getElementById("carousel");
- car.innerHTML="";
- let base=lunes(new Date());
- let ini=new Date(base);ini.setDate(base.getDate()+offset*7);
- let fin=new Date(ini);fin.setDate(ini.getDate()+4);
- document.getElementById("subtitle").textContent=`${fd(ini)} - ${fd(fin)}`;
+    const daysHTML=[0,1,2,3,4].map(d=>{
+      const today=(new Date().getDay()===d+1 && i===0)?'today':'';
+      const dayNames=['Lun','Mar','Mié','Jue','Vie'];
+      return `<div class="day ${today}">${dayNames[d]}</div>`;
+    }).join('');
 
- for(let i=-1;i<=1;i++){
-   let l=new Date(ini);l.setDate(l.getDate()+i*7);
-   let v=new Date(l);v.setDate(l.getDate()+4);
-   car.innerHTML+=`
-   <div class="card">
-     <div class="card-header">${fd(l)} - ${fd(v)}</div>
-     <div class="guardias">
-       <div class="guardia"><div class="icono">⚡</div><div class="nombre">${guardia(electricos,offset+i)}</div><div class="indicator ${ausentes.includes(guardia(electricos,offset+i))?"ind-ausente":"ind-actual"}">${ausentes.includes(guardia(electricos,offset+i))?"Ausente":"En Guardia"}</div></div>
-       <div class="guardia"><div class="icono">🔧</div><div class="nombre">${guardia(mecanicos,offset+i)}</div><div class="indicator ${ausentes.includes(guardia(mecanicos,offset+i))?"ind-ausente":"ind-actual"}">${ausentes.includes(guardia(mecanicos,offset+i))?"Ausente":"En Guardia"}</div></div>
-     </div>
-   </div>`;
- }
+    c.innerHTML += `
+      <div class="card">
+        <div class="card-header">${formatFecha(l)} - ${formatFecha(v)}</div>
+        <div class="guardias">
+          <div class="guardia"><div class="icono">⚡</div><div class="nombre">${elec}</div><div class="days">${daysHTML}</div></div>
+          <div class="guardia"><div class="icono">🔧</div><div class="nombre">${mec}</div><div class="days">${daysHTML}</div></div>
+        </div>
+      </div>`;
+  }
 
- // Próxima semana
- let pl=new Date(ini); pl.setDate(pl.getDate()+7);
- let pv=new Date(pl); pv.setDate(pv.getDate()+4);
- document.getElementById("nextInfo").innerHTML=`<h3>🔜 Próxima semana</h3>⚡ ${guardia(electricos,offset+1)} · 🔧 ${guardia(mecanicos,offset+1)}<br>${fd(pl)} - ${fd(pv)}`;
+  // próxima semana
+  const proxLunes = sumarDias(lunes(), (weekOffset+1)*7);
+  const proxViernes = sumarDias(proxLunes,4);
+  const nextElec = obtenerGuardia(electricos, weekOffset+1);
+  const nextMec  = obtenerGuardia(mecanicos, weekOffset+1);
+  document.getElementById("proximaGuardia").textContent = `⚡ ${nextElec} · 🔧 ${nextMec} (${formatFecha(proxLunes)} - ${formatFecha(proxViernes)})`;
 
- // Carrusel centrado
- requestAnimationFrame(()=>{car.style.transform=`translateX(-${car.children[0].offsetWidth+20}px)`});
+  // animación swipe
+  const cardWidth = c.querySelector('.card')?.offsetWidth || 300;
+  c.style.transform = `translateX(-${cardWidth}px)`;
 }
 
-// Botones
-document.getElementById("prev").onclick=()=>{offset--;render();}
-document.getElementById("next").onclick=()=>{offset++;render();}
+// ===== NAV =====
+document.getElementById("prevWeek").onclick = () => { weekOffset--; renderCarousel(); };
+document.getElementById("nextWeek").onclick = () => { weekOffset++; renderCarousel(); };
 
-// Swipe táctil
-let startX=0;
-const carousel=document.getElementById("carousel");
-carousel.addEventListener("touchstart",e=>{startX=e.touches[0].clientX;});
-carousel.addEventListener("touchend",e=>{
- let dx=e.changedTouches[0].clientX-startX;
- if(dx>50){offset--;render();}
- if(dx<-50){offset++;render();}
+// ===== SWIPE =====
+let startX = 0;
+const carousel = document.getElementById("carouselArea");
+carousel.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;});
+carousel.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-startX;
+  if(dx>60){weekOffset--;renderCarousel();}
+  if(dx<-60){weekOffset++;renderCarousel();}
 });
 
-// Guardar cambios
-document.getElementById("save").onclick=()=>{
- electricos=document.getElementById("elec").value.split(",").map(s=>s.trim()).filter(s=>s);
- mecanicos=document.getElementById("mec").value.split(",").map(s=>s.trim()).filter(s=>s);
- ausentes=document.getElementById("ausentes").value.split(",").map(s=>s.trim()).filter(s=>s);
- localStorage.e=document.getElementById("elec").value;
- localStorage.m=document.getElementById("mec").value;
- localStorage.a=document.getElementById("ausentes").value;
- render();
-};
+// ===== ADMIN GUARDIAS =====
+document.getElementById("guardarBtn").onclick = ()=>{
+  electricos=document.getElementById("electricos").value.split(",").map(e=>e.trim());
+  mecanicos=document.getElementById("mecanicos").value.split(",").map(e=>e.trim());
+  localStorage.setItem("electricos",electricos.join(","));
+  localStorage.setItem("mecanicos",mecanicos.join(","));
+  localStorage.setItem("ausentes",JSON.stringify(ausentes));
+  renderCarousel();
+}
 
-// Cargar desde localStorage
-electricos=(localStorage.e||document.getElementById("elec").value).split(",").map(s=>s.trim());
-mecanicos=(localStorage.m||document.getElementById("mec").value).split(",").map(s=>s.trim());
-ausentes=(localStorage.a||"").split(",").map(s=>s.trim());
-render();
+// ===== CARGAR =====
+renderCarousel();
 
-// Service Worker
-if("serviceWorker" in navigator) navigator.serviceWorker.register("/Guardias/service-worker.js");
+// ===== SERVICE WORKER =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/Guardias/service-worker.js');
+}
 </script>
 
 </body>
 </html>
+
+
 
 
 
