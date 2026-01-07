@@ -8,9 +8,6 @@
 <link rel="manifest" href="/Guardias/manifest.json">
 <meta name="theme-color" content="#1e88e5">
 <link rel="icon" href="/Guardias/icon-192.png">
-<link rel="apple-touch-icon" href="/Guardias/icon-192.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 
 <style>
 :root{
@@ -19,195 +16,137 @@
   --text:#222;
   --card:#fff;
   --shadow:0 8px 20px rgba(0,0,0,.15);
-  --highlight:#ffd700;
 }
-body.dark{
-  --bg:#121212;
-  --text:#eee;
-  --card:#1e1e1e;
-  --highlight:#ffea00;
-}
+body.dark{--bg:#121212;--text:#eee;--card:#1e1e1e;}
 body{margin:0;font-family:Segoe UI;background:var(--bg);color:var(--text);}
-header{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;padding:20px;text-align:center;position:sticky;top:0;z-index:100;}
-h1{margin:0;font-size:1.8em;}
-#subtitle{opacity:0.8;margin-top:5px;}
-.container{max-width:900px;margin:auto;overflow:hidden;position:relative;}
-.carousel{display:flex;gap:10px;overflow-x:scroll;scroll-snap-type:x mandatory;scroll-behavior:smooth; -webkit-overflow-scrolling: touch; padding-bottom:20px;}
-.card{min-width:300px;flex-shrink:0;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px;scroll-snap-align:center;transition:transform .3s ease;}
-.card-header{font-weight:700;font-size:1.3em;text-align:center;margin-bottom:10px;}
-.guardias{display:flex;gap:15px;flex-wrap:wrap;}
-.guardia{flex:1;background:var(--card);border-radius:15px;padding:15px;text-align:center;}
+header{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;padding:20px;text-align:center;position:sticky;top:0;}
+.container{max-width:900px;margin:auto;overflow:hidden;}
+.carousel{display:flex;gap:10px;overflow-x:scroll;scroll-snap-type:x mandatory;}
+.card{min-width:300px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px;scroll-snap-align:center;}
+.guardias{display:flex;gap:15px;}
+.guardia{flex:1;text-align:center;}
 .icono{font-size:2.5em;}
 .nombre{font-size:1.2em;font-weight:700;}
 .nav{display:flex;justify-content:space-between;padding:10px;}
-button{border:none;border-radius:12px;padding:10px 16px;background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
-#nextInfo{margin:20px;background:var(--card);padding:20px;border-radius:20px;box-shadow:var(--shadow);text-align:center;}
+button{border:none;border-radius:12px;padding:10px 16px;background:var(--primary);color:#fff;font-weight:600;}
 details{margin:20px;background:var(--card);padding:15px;border-radius:15px;}
-textarea,input{width:100%;padding:8px;border-radius:10px;margin-top:8px;}
-#weekSelector{margin:10px;text-align:center;}
-#weekSelector input{padding:6px 8px;border-radius:8px;border:1px solid #ccc;}
-.day.today{background:var(--highlight);border-radius:5px;padding:2px 6px;}
-#indicators{display:flex;justify-content:center;margin-top:5px;gap:5px;}
-.dot{width:10px;height:10px;border-radius:50%;background:#ccc;transition:0.3s;}
-.dot.active{background:var(--primary);}
+.admin-person{display:flex;justify-content:space-between;align-items:center;margin:5px 0;}
+select{border-radius:8px;padding:4px;}
 </style>
 </head>
 
 <body>
 
-<button id="night" style="position:fixed;top:10px;right:10px;z-index:200">🌙</button>
+<button id="night" style="position:fixed;top:10px;right:10px">🌙</button>
 
 <header>
 <h1>Guardias Alsi PRO</h1>
-<div id="subtitle">Semana actual</div>
+<div id="subtitle"></div>
 </header>
 
-<div id="weekSelector">
-<label for="selectWeek">Ir a semana: </label>
-<input type="date" id="selectWeek">
-<button id="goWeek">Ir</button>
-</div>
-
 <div class="nav">
-<button id="prev">⬅ Semana anterior</button>
-<button id="next">Semana siguiente ➡</button>
+<button id="prev">⬅</button>
+<button id="next">➡</button>
 </div>
 
 <div class="container">
-  <div class="carousel" id="carousel"></div>
-  <div id="indicators"></div>
+<div class="carousel" id="carousel"></div>
 </div>
 
 <details id="admin">
 <summary>⚙️ Administrador</summary>
-<p>Eléctricos</p>
-<textarea id="elec">Abde,Fran,Dani,Jose,Fran Ruiz,Hicham</textarea>
-<p>Mecánicos</p>
-<textarea id="mec">Ramon,Santy,Traian,Manu,Fran Alba,Cele</textarea>
-<button id="save">Guardar</button>
-</details>
 
-<div id="nextInfo"></div>
+<h3>Eléctricos</h3>
+<div id="admin-elec"></div>
+
+<h3>Mecánicos</h3>
+<div id="admin-mec"></div>
+
+<button id="save">💾 Guardar</button>
+</details>
 
 <script>
 // 🌙 modo noche
-const night=document.getElementById("night");
-night.onclick=()=>{document.body.classList.toggle("dark"); localStorage.dark=document.body.classList.contains("dark");};
-if(localStorage.dark==="true") document.body.classList.add("dark");
+night.onclick=()=>{document.body.classList.toggle("dark");localStorage.dark=document.body.classList.contains("dark")}
+if(localStorage.dark==="true")document.body.classList.add("dark");
 
-// 🔐 admin por URL ?admin=alsi2026
+// 🔐 admin por URL
 if(new URLSearchParams(location.search).get("admin")!=="alsi2026")
  document.getElementById("admin").style.display="none";
 
-// datos
-let electricos=[], mecanicos=[], offset=0;
+// datos base
+let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
+let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
+let estados=JSON.parse(localStorage.estados||"{}");
+let offset=0;
 
 // fechas
-const lunes=d=>{d=new Date(d); let n=d.getDay(); d.setDate(d.getDate()-(n===0?6:n-1)); return d;}
+const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d;}
 const fd=d=>d.toLocaleDateString();
 
-// guardia rotativa
-const guardia=(l,o)=>l[((o%l.length)+l.length)%l.length];
+// solo activos
+const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
+const guardia=(l,o)=>{let a=activos(l);return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie disponible";}
 
-// render carrusel
-function render(){
- const car=document.getElementById("carousel");
- car.innerHTML="";
- const base=lunes(new Date());
- const ini=new Date(base); ini.setDate(ini.getDate()+offset*7);
- const fin=new Date(ini); fin.setDate(fin.getDate()+4);
- document.getElementById("subtitle").textContent=`${fd(ini)} - ${fd(fin)}`;
-
- let weeks = [];
- for(let i=-1;i<=1;i++){
-  let l=new Date(ini); l.setDate(l.getDate()+i*7);
-  let v=new Date(l); v.setDate(v.getDate()+4);
-  const daysHTML=[0,1,2,3,4].map(d=>{
-    const today=(new Date().getDay()===d+1 && i===0)?'today':'';
-    const names=['Lun','Mar','Mié','Jue','Vie'];
-    return `<div class="day ${today}">${names[d]}</div>`;
-  }).join('');
-  car.innerHTML+=`
-  <div class="card">
-    <div class="card-header">${fd(l)} - ${fd(v)}</div>
-    <div class="guardias">
-      <div class="guardia"><div class="icono">⚡</div><div class="nombre">${guardia(electricos,offset+i)}</div><div class="days">${daysHTML}</div></div>
-      <div class="guardia"><div class="icono">🔧</div><div class="nombre">${guardia(mecanicos,offset+i)}</div><div class="days">${daysHTML}</div></div>
-    </div>
-  </div>`;
-  weeks.push(offset+i);
- }
-
- // indicadores puntitos
- const indContainer = document.getElementById("indicators");
- indContainer.innerHTML="";
- weeks.forEach((w,i)=>{
-   const dot = document.createElement("div");
-   dot.className="dot"+(i===1?" active":"");
-   indContainer.appendChild(dot);
- });
-
- // centro automático en semana actual
- requestAnimationFrame(()=>{car.scrollLeft=(car.children[0].offsetWidth+10);});
-
- // Próxima semana
- let pl=new Date(ini); pl.setDate(pl.getDate()+7);
- let pv=new Date(pl); pv.setDate(pv.getDate()+4);
- document.getElementById("nextInfo").innerHTML=
- `<h3>🔜 Próxima semana</h3>
- ⚡ ${guardia(electricos,offset+1)} · 🔧 ${guardia(mecanicos,offset+1)}<br>
- ${fd(pl)} - ${fd(pv)}`;
-
- // notificación si cambia guardia
-if(Notification.permission==="granted"){
- new Notification("Guardias Alsi 📆",{
-   body:`Esta semana: ⚡ ${guardia(electricos,offset)} · 🔧 ${guardia(mecanicos,offset)}\n${fd(ini)} - ${fd(fin)}`,
-   icon:"/Guardias/icon-192.png"
+// render admin
+function renderAdmin(){
+ ["elec","mec"].forEach(t=>{
+  let cont=document.getElementById("admin-"+t);
+  cont.innerHTML="";
+  (t==="elec"?electricos:mecanicos).forEach(p=>{
+   cont.innerHTML+=`
+   <div class="admin-person">
+     ${p}
+     <select onchange="estados['${p}']=this.value">
+       <option value="activo" ${estados[p]==="activo"?"selected":""}>Activo</option>
+       <option value="vacaciones" ${estados[p]==="vacaciones"?"selected":""}>Vacaciones</option>
+       <option value="baja" ${estados[p]==="baja"?"selected":""}>Baja</option>
+       <option value="viaje" ${estados[p]==="viaje"?"selected":""}>Viaje</option>
+     </select>
+   </div>`;
+  });
  });
 }
+
+// render calendario
+function render(){
+ carousel.innerHTML="";
+ let base=lunes(new Date());
+ let ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
+ subtitle.textContent=`${fd(ini)} - ${fd(new Date(ini.getTime()+4*86400000))}`;
+ for(let i=-1;i<=1;i++){
+  let l=new Date(ini);l.setDate(l.getDate()+i*7);
+  let v=new Date(l);v.setDate(v.getDate()+4);
+  carousel.innerHTML+=`
+  <div class="card">
+    <h3>${fd(l)} - ${fd(v)}</h3>
+    <div class="guardias">
+      <div class="guardia"><div class="icono">⚡</div><div class="nombre">${guardia(electricos,offset+i)}</div></div>
+      <div class="guardia"><div class="icono">🔧</div><div class="nombre">${guardia(mecanicos,offset+i)}</div></div>
+    </div>
+  </div>`;
+ }
 }
 
 // botones
-document.getElementById("prev").onclick=()=>{offset--; render();}
-document.getElementById("next").onclick=()=>{offset++; render();}
+prev.onclick=()=>{offset--;render()}
+next.onclick=()=>{offset++;render()}
 
-// selector de semana
-const selectWeek=document.getElementById("selectWeek");
-const goWeek=document.getElementById("goWeek");
-goWeek.onclick=()=>{
- const f=new Date(selectWeek.value);
- if(isNaN(f)) return;
- const base=lunes(new Date());
- const diff=Math.floor((f-base)/(1000*60*60*24));
- offset=Math.floor(diff/7);
+// guardar
+save.onclick=()=>{
+ localStorage.estados=JSON.stringify(estados);
  render();
-};
+ alert("Guardado");
+}
 
-// guardar admin
-document.getElementById("save").onclick=()=>{
- electricos=document.getElementById("elec").value.split(",").map(e=>e.trim());
- mecanicos=document.getElementById("mec").value.split(",").map(e=>e.trim());
- localStorage.e=document.getElementById("elec").value;
- localStorage.m=document.getElementById("mec").value;
- render();
-};
-
-// cargar desde localstorage
-electricos=(localStorage.e||document.getElementById("elec").value).split(",").map(e=>e.trim());
-mecanicos=(localStorage.m||document.getElementById("mec").value).split(",").map(e=>e.trim());
+renderAdmin();
 render();
-
-// SW
-if("serviceWorker"in navigator)
- navigator.serviceWorker.register("/Guardias/service-worker.js");
-
-// pedir permisos notificaciones
-if("Notification"in window && Notification.permission!=="granted")
- Notification.requestPermission();
 </script>
 
 </body>
 </html>
+
+
 
 
 
