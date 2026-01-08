@@ -43,9 +43,15 @@ button{
 .container{max-width:950px;margin:auto;padding:10px}
 
 .carousel{
-  display:flex;gap:14px;overflow-x:auto;
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
   scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
 }
+
 .card{
   min-width:320px;background:var(--card);
   border-radius:var(--radius);
@@ -92,7 +98,8 @@ select{border-radius:10px;padding:5px}
 
 <body>
 
-<button id="night">🌙</button>
+<button id="night" style="z-index:999">🌙</button>
+
 
 <header>
 <h1>Guardias Alsi</h1>
@@ -212,6 +219,7 @@ if("Notification"in window)Notification.requestPermission()
 
 </body>
 </html>
+
 
 
 
