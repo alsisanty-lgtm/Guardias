@@ -40,7 +40,13 @@ button{
 #night{position:fixed;top:12px;right:12px}
 
 .nav{display:flex;justify-content:space-between;padding:12px}
-.container{max-width:950px;margin:auto;padding:10px}
+.container{
+  max-width:950px;
+  margin:auto;
+  padding:10px;
+  overflow:visible;   /* CLAVE */
+}
+
 
 .carousel{
   display:flex;
@@ -219,6 +225,7 @@ if("Notification"in window)Notification.requestPermission()
 
 </body>
 </html>
+
 
 
 
