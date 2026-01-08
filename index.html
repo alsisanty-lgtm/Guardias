@@ -12,10 +12,9 @@
 <style>
 :root{
   --primary:#1e88e5;
-  --primary-dark:#1565c0;
   --bg:#f2f4f8;
+  --card:#fff;
   --text:#1f2937;
-  --card:#ffffff;
   --muted:#6b7280;
   --shadow:0 10px 25px rgba(0,0,0,.12);
   --radius:18px;
@@ -26,133 +25,67 @@ body.dark{
   --text:#e5e7eb;
   --muted:#9ca3af;
 }
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto;
-  background:var(--bg);
-  color:var(--text);
-}
-
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text);}
 header{
-  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
-  color:#fff;
-  padding:24px 16px;
-  text-align:center;
-  position:sticky;
-  top:0;
-  z-index:100;
-  box-shadow:var(--shadow);
+  background:linear-gradient(135deg,#1e88e5,#1565c0);
+  color:#fff;padding:22px;text-align:center;
+  position:sticky;top:0;z-index:100;
 }
-header h1{margin:0;font-size:1.8em;font-weight:800;}
-#subtitle{opacity:.9;margin-top:6px;font-size:.95em;}
+#subtitle{opacity:.9;font-size:.95em;margin-top:6px}
 
 button{
-  border:none;
-  border-radius:14px;
-  padding:10px 18px;
-  background:var(--primary);
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
-  transition:.2s;
+  background:var(--primary);color:#fff;border:none;
+  padding:10px 18px;border-radius:14px;font-weight:700;
 }
-button:hover{transform:translateY(-1px);filter:brightness(1.1)}
+#night{position:fixed;top:12px;right:12px}
 
-#night{
-  position:fixed;
-  top:12px;
-  right:12px;
-  z-index:200;
-  background:rgba(255,255,255,.2);
-  backdrop-filter:blur(6px);
-}
-
-.nav{
-  display:flex;
-  justify-content:space-between;
-  padding:14px;
-  gap:10px;
-}
-
-.container{
-  max-width:950px;
-  margin:auto;
-  padding:10px;
-}
+.nav{display:flex;justify-content:space-between;padding:12px}
+.container{max-width:950px;margin:auto;padding:10px}
 
 .carousel{
-  display:flex;
-  gap:14px;
-  overflow-x:auto;
+  display:flex;gap:14px;overflow-x:auto;
   scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling:touch;
-  padding-bottom:10px;
 }
-
 .card{
-  min-width:300px;
-  background:var(--card);
+  min-width:320px;background:var(--card);
   border-radius:var(--radius);
   box-shadow:var(--shadow);
-  padding:20px;
-  scroll-snap-align:center;
-  animation:fade .3s ease;
+  padding:20px;scroll-snap-align:center;
 }
-@keyframes fade{from{opacity:.6;transform:scale(.98)}to{opacity:1}}
+.card h3{text-align:center;margin-top:0}
 
-.card h3{
-  margin-top:0;
-  text-align:center;
-  font-weight:800;
-}
-
-.guardias{
-  display:flex;
-  gap:14px;
-  margin-top:15px;
-}
+.guardias{display:flex;gap:14px;margin-top:14px}
 .guardia{
-  flex:1;
-  text-align:center;
-  background:rgba(0,0,0,.03);
-  border-radius:14px;
-  padding:14px;
+  flex:1;text-align:center;
+  background:rgba(0,0,0,.05);
+  border-radius:14px;padding:14px;
 }
-body.dark .guardia{background:rgba(255,255,255,.05)}
+body.dark .guardia{background:rgba(255,255,255,.06)}
 
-.icono{font-size:2.4em}
-.nombre{
-  font-size:1.15em;
-  font-weight:800;
-  margin-top:6px;
-}
+.icono{font-size:2.2em}
+.nombre{font-size:1.15em;font-weight:800;margin-top:4px}
+
+.days{margin-top:8px;font-size:.85em;color:var(--muted)}
+.time{margin-top:4px;font-weight:700;font-size:.9em}
 
 details{
-  margin:20px;
-  background:var(--card);
-  padding:16px;
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
+  margin:20px;background:var(--card);
+  padding:16px;border-radius:var(--radius);
 }
-summary{
-  font-weight:800;
-  cursor:pointer;
-}
-
 .admin-person{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 0;
-  border-bottom:1px solid rgba(0,0,0,.08);
+  display:flex;justify-content:space-between;
+  padding:6px 0;border-bottom:1px solid rgba(0,0,0,.1)
 }
-.admin-person:last-child{border:none}
+select{border-radius:10px;padding:5px}
 
-select{
-  border-radius:10px;
-  padding:6px 10px;
-  border:1px solid rgba(0,0,0,.2);
+#history{
+  margin:20px;background:var(--card);
+  padding:16px;border-radius:var(--radius);
+}
+.history-item{
+  font-size:.9em;
+  padding:6px 0;
+  border-bottom:1px dashed rgba(0,0,0,.15)
 }
 </style>
 </head>
@@ -177,91 +110,110 @@ select{
 
 <details id="admin">
 <summary>⚙️ Administrador</summary>
-
-<h3>⚡ Eléctricos</h3>
-<div id="admin-elec"></div>
-
-<h3>🔧 Mecánicos</h3>
-<div id="admin-mec"></div>
-
-<br>
-<button id="save">💾 Guardar cambios</button>
+<h3>⚡ Eléctricos</h3><div id="admin-elec"></div>
+<h3>🔧 Mecánicos</h3><div id="admin-mec"></div>
+<br><button id="save">💾 Guardar</button>
 </details>
 
+<div id="history">
+<h3>📜 Historial de guardias</h3>
+<div id="historyList"></div>
+</div>
+
 <script>
-// 🌙 modo noche
 night.onclick=()=>{document.body.classList.toggle("dark");localStorage.dark=document.body.classList.contains("dark")}
-if(localStorage.dark==="true")document.body.classList.add("dark");
+if(localStorage.dark==="true")document.body.classList.add("dark")
 
-// 🔐 admin por URL
 if(new URLSearchParams(location.search).get("admin")!=="alsi2026")
- document.getElementById("admin").style.display="none";
+ admin.style.display="none"
 
-// datos
-let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
-let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
-let estados=JSON.parse(localStorage.estados||"{}");
-let offset=0;
+let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"]
+let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"]
+let estados=JSON.parse(localStorage.estados||"{}")
+let history=JSON.parse(localStorage.history||"[]")
+let offset=0
 
-// fechas
-const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d;}
-const fd=d=>d.toLocaleDateString();
+const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d}
+const fd=d=>d.toLocaleDateString()
+const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo")
+const guardia=(l,o)=>{let a=activos(l);return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie"}
 
-// rotación
-const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
-const guardia=(l,o)=>{let a=activos(l);return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie disponible";}
-
-// admin
 function renderAdmin(){
  ["elec","mec"].forEach(t=>{
-  let cont=document.getElementById("admin-"+t);
-  cont.innerHTML="";
-  (t==="elec"?electricos:mecanicos).forEach(p=>{
-   cont.innerHTML+=`
-   <div class="admin-person">
-     ${p}
-     <select onchange="estados['${p}']=this.value">
-       <option value="activo" ${estados[p]==="activo"?"selected":""}>Activo</option>
-       <option value="vacaciones" ${estados[p]==="vacaciones"?"selected":""}>Vacaciones</option>
-       <option value="baja" ${estados[p]==="baja"?"selected":""}>Baja</option>
-       <option value="viaje" ${estados[p]==="viaje"?"selected":""}>Viaje</option>
-     </select>
-   </div>`;
-  });
- });
+  let c=document.getElementById("admin-"+t);c.innerHTML=""
+  ;(t==="elec"?electricos:mecanicos).forEach(p=>{
+   c.innerHTML+=`
+   <div class="admin-person">${p}
+   <select onchange="estados['${p}']=this.value">
+   <option value="activo">Activo</option>
+   <option value="vacaciones">Vacaciones</option>
+   <option value="baja">Baja</option>
+   <option value="viaje">Viaje</option>
+   </select></div>`
+  })
+ })
 }
 
-// calendario
 function render(){
- carousel.innerHTML="";
- let base=lunes(new Date());
- let ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
- subtitle.textContent=`${fd(ini)} - ${fd(new Date(ini.getTime()+4*86400000))}`;
+ carousel.innerHTML=""
+ let base=lunes(new Date())
+ let ini=new Date(base);ini.setDate(ini.getDate()+offset*7)
+ subtitle.textContent=`${fd(ini)} - ${fd(new Date(ini.getTime()+4*86400000))}`
+
  for(let i=-1;i<=1;i++){
-  let l=new Date(ini);l.setDate(l.getDate()+i*7);
-  let v=new Date(l);v.setDate(v.getDate()+4);
+  let l=new Date(ini);l.setDate(l.getDate()+i*7)
+  let v=new Date(l);v.setDate(v.getDate()+4)
+  let e=guardia(electricos,offset+i)
+  let m=guardia(mecanicos,offset+i)
+
+  if(i===0){
+    history.unshift(`${fd(l)} → ⚡ ${e} | 🔧 ${m}`)
+    history=history.slice(0,20)
+    localStorage.history=JSON.stringify(history)
+    if(Notification.permission==="granted")
+      new Notification("Guardias Alsi",{body:`⚡ ${e} · 🔧 ${m}\n15:30–19:00`})
+  }
+
   carousel.innerHTML+=`
   <div class="card">
-    <h3>${fd(l)} - ${fd(v)}</h3>
-    <div class="guardias">
-      <div class="guardia"><div class="icono">⚡</div><div class="nombre">${guardia(electricos,offset+i)}</div></div>
-      <div class="guardia"><div class="icono">🔧</div><div class="nombre">${guardia(mecanicos,offset+i)}</div></div>
+   <h3>${fd(l)} - ${fd(v)}</h3>
+   <div class="guardias">
+    <div class="guardia">
+     <div class="icono">⚡</div>
+     <div class="nombre">${e}</div>
+     <div class="days">Lun · Mar · Mié · Jue · Vie</div>
+     <div class="time">⏰ 15:30 – 19:00</div>
     </div>
-  </div>`;
+    <div class="guardia">
+     <div class="icono">🔧</div>
+     <div class="nombre">${m}</div>
+     <div class="days">Lun · Mar · Mié · Jue · Vie</div>
+     <div class="time">⏰ 15:30 – 19:00</div>
+    </div>
+   </div>
+  </div>`
  }
+ renderHistory()
 }
 
-// eventos
+function renderHistory(){
+ historyList.innerHTML=""
+ history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`)
+}
+
 prev.onclick=()=>{offset--;render()}
 next.onclick=()=>{offset++;render()}
-save.onclick=()=>{localStorage.estados=JSON.stringify(estados);render();alert("Cambios guardados")}
+save.onclick=()=>{localStorage.estados=JSON.stringify(estados);alert("Guardado")}
 
-renderAdmin();
-render();
+renderAdmin()
+render()
+if("Notification"in window)Notification.requestPermission()
 </script>
 
 </body>
 </html>
+
+
 
 
 
