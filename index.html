@@ -12,32 +12,154 @@
 <style>
 :root{
   --primary:#1e88e5;
-  --bg:#f4f6fa;
-  --text:#222;
-  --card:#fff;
-  --shadow:0 8px 20px rgba(0,0,0,.15);
+  --primary-dark:#1565c0;
+  --bg:#f2f4f8;
+  --text:#1f2937;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --shadow:0 10px 25px rgba(0,0,0,.12);
+  --radius:18px;
 }
-body.dark{--bg:#121212;--text:#eee;--card:#1e1e1e;}
-body{margin:0;font-family:Segoe UI;background:var(--bg);color:var(--text);}
-header{background:linear-gradient(135deg,#1e88e5,#1565c0);color:#fff;padding:20px;text-align:center;position:sticky;top:0;}
-.container{max-width:900px;margin:auto;overflow:hidden;}
-.carousel{display:flex;gap:10px;overflow-x:scroll;scroll-snap-type:x mandatory;}
-.card{min-width:300px;background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:20px;scroll-snap-align:center;}
-.guardias{display:flex;gap:15px;}
-.guardia{flex:1;text-align:center;}
-.icono{font-size:2.5em;}
-.nombre{font-size:1.2em;font-weight:700;}
-.nav{display:flex;justify-content:space-between;padding:10px;}
-button{border:none;border-radius:12px;padding:10px 16px;background:var(--primary);color:#fff;font-weight:600;}
-details{margin:20px;background:var(--card);padding:15px;border-radius:15px;}
-.admin-person{display:flex;justify-content:space-between;align-items:center;margin:5px 0;}
-select{border-radius:8px;padding:4px;}
+body.dark{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto;
+  background:var(--bg);
+  color:var(--text);
+}
+
+header{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;
+  padding:24px 16px;
+  text-align:center;
+  position:sticky;
+  top:0;
+  z-index:100;
+  box-shadow:var(--shadow);
+}
+header h1{margin:0;font-size:1.8em;font-weight:800;}
+#subtitle{opacity:.9;margin-top:6px;font-size:.95em;}
+
+button{
+  border:none;
+  border-radius:14px;
+  padding:10px 18px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  transition:.2s;
+}
+button:hover{transform:translateY(-1px);filter:brightness(1.1)}
+
+#night{
+  position:fixed;
+  top:12px;
+  right:12px;
+  z-index:200;
+  background:rgba(255,255,255,.2);
+  backdrop-filter:blur(6px);
+}
+
+.nav{
+  display:flex;
+  justify-content:space-between;
+  padding:14px;
+  gap:10px;
+}
+
+.container{
+  max-width:950px;
+  margin:auto;
+  padding:10px;
+}
+
+.carousel{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:10px;
+}
+
+.card{
+  min-width:300px;
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:20px;
+  scroll-snap-align:center;
+  animation:fade .3s ease;
+}
+@keyframes fade{from{opacity:.6;transform:scale(.98)}to{opacity:1}}
+
+.card h3{
+  margin-top:0;
+  text-align:center;
+  font-weight:800;
+}
+
+.guardias{
+  display:flex;
+  gap:14px;
+  margin-top:15px;
+}
+.guardia{
+  flex:1;
+  text-align:center;
+  background:rgba(0,0,0,.03);
+  border-radius:14px;
+  padding:14px;
+}
+body.dark .guardia{background:rgba(255,255,255,.05)}
+
+.icono{font-size:2.4em}
+.nombre{
+  font-size:1.15em;
+  font-weight:800;
+  margin-top:6px;
+}
+
+details{
+  margin:20px;
+  background:var(--card);
+  padding:16px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+summary{
+  font-weight:800;
+  cursor:pointer;
+}
+
+.admin-person{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 0;
+  border-bottom:1px solid rgba(0,0,0,.08);
+}
+.admin-person:last-child{border:none}
+
+select{
+  border-radius:10px;
+  padding:6px 10px;
+  border:1px solid rgba(0,0,0,.2);
+}
 </style>
 </head>
 
 <body>
 
-<button id="night" style="position:fixed;top:10px;right:10px">🌙</button>
+<button id="night">🌙</button>
 
 <header>
 <h1>Guardias Alsi PRO</h1>
@@ -45,8 +167,8 @@ select{border-radius:8px;padding:4px;}
 </header>
 
 <div class="nav">
-<button id="prev">⬅</button>
-<button id="next">➡</button>
+<button id="prev">⬅ Anterior</button>
+<button id="next">Siguiente ➡</button>
 </div>
 
 <div class="container">
@@ -56,13 +178,14 @@ select{border-radius:8px;padding:4px;}
 <details id="admin">
 <summary>⚙️ Administrador</summary>
 
-<h3>Eléctricos</h3>
+<h3>⚡ Eléctricos</h3>
 <div id="admin-elec"></div>
 
-<h3>Mecánicos</h3>
+<h3>🔧 Mecánicos</h3>
 <div id="admin-mec"></div>
 
-<button id="save">💾 Guardar</button>
+<br>
+<button id="save">💾 Guardar cambios</button>
 </details>
 
 <script>
@@ -74,7 +197,7 @@ if(localStorage.dark==="true")document.body.classList.add("dark");
 if(new URLSearchParams(location.search).get("admin")!=="alsi2026")
  document.getElementById("admin").style.display="none";
 
-// datos base
+// datos
 let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
 let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
 let estados=JSON.parse(localStorage.estados||"{}");
@@ -84,11 +207,11 @@ let offset=0;
 const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d;}
 const fd=d=>d.toLocaleDateString();
 
-// solo activos
+// rotación
 const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
 const guardia=(l,o)=>{let a=activos(l);return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie disponible";}
 
-// render admin
+// admin
 function renderAdmin(){
  ["elec","mec"].forEach(t=>{
   let cont=document.getElementById("admin-"+t);
@@ -108,7 +231,7 @@ function renderAdmin(){
  });
 }
 
-// render calendario
+// calendario
 function render(){
  carousel.innerHTML="";
  let base=lunes(new Date());
@@ -128,16 +251,10 @@ function render(){
  }
 }
 
-// botones
+// eventos
 prev.onclick=()=>{offset--;render()}
 next.onclick=()=>{offset++;render()}
-
-// guardar
-save.onclick=()=>{
- localStorage.estados=JSON.stringify(estados);
- render();
- alert("Guardado");
-}
+save.onclick=()=>{localStorage.estados=JSON.stringify(estados);render();alert("Cambios guardados")}
 
 renderAdmin();
 render();
@@ -145,6 +262,8 @@ render();
 
 </body>
 </html>
+
+
 
 
 
