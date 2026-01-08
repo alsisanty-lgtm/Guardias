@@ -95,7 +95,7 @@ select{border-radius:10px;padding:5px}
 <button id="night">🌙</button>
 
 <header>
-<h1>Guardias Alsi PRO</h1>
+<h1>Guardias Alsi</h1>
 <div id="subtitle"></div>
 </header>
 
@@ -127,8 +127,8 @@ if(localStorage.dark==="true")document.body.classList.add("dark")
 if(new URLSearchParams(location.search).get("admin")!=="alsi2026")
  admin.style.display="none"
 
-let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"]
-let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"]
+let electricos=["Fran","Abde","Dani","Jose","Fran Ruiz","Hicham"]
+let mecanicos=["Santy","Ramon","Traian","Manu","Fran Alba","Cele"]
 let estados=JSON.parse(localStorage.estados||"{}")
 let history=JSON.parse(localStorage.history||"[]")
 let offset=0
@@ -212,6 +212,7 @@ if("Notification"in window)Notification.requestPermission()
 
 </body>
 </html>
+
 
 
 
