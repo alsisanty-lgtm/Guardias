@@ -308,10 +308,22 @@ save.onclick=()=>{
 /* ===== INIT ===== */
 renderAdmin()
 render()
+ // 🔐 Control de acceso administrador (SOLUCIÓN DEFINITIVA)
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const isAdmin = params.get("admin") === "alsi2026";
+  const adminPanel = document.getElementById("admin");
+
+  if (adminPanel) {
+    adminPanel.style.display = isAdmin ? "block" : "none";
+  }
+});
+
 </script>
 
 </body>
 </html>
+
 
 
 
