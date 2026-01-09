@@ -180,6 +180,8 @@ let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"]
 let estados=JSON.parse(localStorage.estados||"{}")
 let history=JSON.parse(localStorage.history||"[]")
 let offset=0
+ 
+let lastLoggedWeek = localStorage.lastLoggedWeek || "";
 
 /* ===== MODO OSCURO ===== */
 night.onclick=()=>{
@@ -190,11 +192,23 @@ if(localStorage.dark==="true")document.body.classList.add("dark")
 
 /* ===== ADMIN ===== */
 admin.style.display="none"
+let adminVisible=false;
+
 adminBtn.onclick=()=>{
- if(admin.open){admin.open=false;return}
- let p=prompt("Contraseña admin")
- if(p===PASS)admin.open=true
-}
+  if(adminVisible){
+    admin.open=false;
+    adminVisible=false;
+    return;
+  }
+  const p=prompt("Contraseña admin");
+  if(p===PASS){
+    admin.open=true;
+    adminVisible=true;
+  }else{
+    alert("Contraseña incorrecta");
+  }
+};
+
 
 /* ===== FECHAS ===== */
 const lunes=d=>{
@@ -242,11 +256,18 @@ function render(){
   let e=guardia(electricos,offset+i)
   let m=guardia(mecanicos,offset+i)
 
-  if(i===0){
-   history.unshift(`${fd(l)} → ⚡ ${e} | 🔧 ${m}`)
-   history=history.slice(0,30)
-   localStorage.history=JSON.stringify(history)
+if(i===0){
+  const weekKey = l.toISOString().slice(0,10); // lunes real
+
+  if(lastLoggedWeek !== weekKey){
+    history.unshift(`${fd(l)} → ⚡ ${e} | 🔧 ${m}`);
+    history = history.slice(0,30);
+    localStorage.history = JSON.stringify(history);
+    localStorage.lastLoggedWeek = weekKey;
+    lastLoggedWeek = weekKey;
   }
+}
+
 
   carousel.innerHTML+=`
   <div class="card">
@@ -291,6 +312,7 @@ render()
 
 </body>
 </html>
+
 
 
 
