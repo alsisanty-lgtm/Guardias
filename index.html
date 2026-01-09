@@ -3,326 +3,294 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Alsi</title>
+<title>Guardias Alsi PRO</title>
 
 <style>
 :root{
- --primary:#1e88e5;
- --bg:#f2f4f8;
- --card:#fff;
- --text:#1f2937;
- --muted:#6b7280;
- --shadow:0 10px 25px rgba(0,0,0,.15);
- --radius:18px;
+  --primary:#1e88e5;
+  --bg:#f2f4f8;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --shadow:0 8px 22px rgba(0,0,0,.15);
+  --radius:18px;
 }
 body.dark{
- --bg:#0f172a;
- --card:#1e293b;
- --text:#e5e7eb;
- --muted:#9ca3af;
+  --bg:#0f172a;
+  --card:#1e293b;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
 }
 body{
- margin:0;
- font-family:system-ui;
- background:var(--bg);
- color:var(--text);
- overflow-x:hidden;
+  margin:0;
+  font-family:system-ui,Segoe UI;
+  background:var(--bg);
+  color:var(--text);
 }
 header{
- background:linear-gradient(135deg,#1e88e5,#1565c0);
- color:#fff;
- padding:20px;
- text-align:center;
- position:sticky;
- top:0;
- z-index:10;
+  background:linear-gradient(135deg,#1e88e5,#1565c0);
+  color:#fff;
+  padding:18px;
+  text-align:center;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
-#subtitle{opacity:.9;font-size:.9em;margin-top:4px}
+#subtitle{opacity:.9;font-size:.9em;margin-top:6px}
 
-#night,#adminBtn{
- position:fixed;
- top:14px;
- z-index:9999;
- background:#00000055;
- color:#fff;
- border:none;
- border-radius:14px;
- padding:10px 14px;
- font-size:1.1em;
-}
-#night{right:14px}
-#adminBtn{right:64px}
-
-.nav{
- display:flex;
- justify-content:space-between;
- padding:12px;
+.topbar{
+  position:fixed;
+  top:10px;
+  right:10px;
+  display:flex;
+  gap:8px;
+  z-index:20;
 }
 button{
- background:var(--primary);
- color:#fff;
- border:none;
- border-radius:14px;
- padding:10px 18px;
- font-weight:700;
+  border:none;
+  border-radius:12px;
+  padding:8px 14px;
+  font-weight:700;
+  background:var(--primary);
+  color:#fff;
 }
 
-.container{
- max-width:900px;
- margin:auto;
- padding:10px;
-}
+.container{max-width:950px;margin:auto;padding:10px}
 
 .carousel{
- display:flex;
- gap:16px;
- overflow-x:auto;
- scroll-snap-type:x mandatory;
- -webkit-overflow-scrolling:touch;
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling: touch;
 }
 .carousel::-webkit-scrollbar{display:none}
 
 .card{
- min-width:300px;
- background:var(--card);
- border-radius:var(--radius);
- box-shadow:var(--shadow);
- padding:18px;
- scroll-snap-align:center;
+  min-width:320px;
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:18px;
+  scroll-snap-align:center;
 }
 
 .guardias{
- display:flex;
- gap:14px;
- margin-top:12px;
+  display:flex;
+  gap:14px;
+  margin-top:14px;
 }
 .guardia{
- flex:1;
- text-align:center;
- background:rgba(0,0,0,.05);
- padding:12px;
- border-radius:14px;
+  flex:1;
+  background:rgba(0,0,0,.05);
+  border-radius:14px;
+  padding:12px;
+  text-align:center;
 }
 body.dark .guardia{background:rgba(255,255,255,.06)}
 
 .icono{font-size:2.2em}
-.nombre{font-weight:800;font-size:1.1em}
+.nombre{font-size:1.15em;font-weight:800}
 .days{font-size:.85em;color:var(--muted);margin-top:4px}
-.time{font-size:.85em;font-weight:700;margin-top:2px}
+.time{font-size:.9em;font-weight:700;margin-top:4px}
 
 details{
- margin:20px;
- background:var(--card);
- padding:16px;
- border-radius:var(--radius);
+  margin:20px;
+  background:var(--card);
+  padding:16px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
 }
 .admin-person{
- display:flex;
- justify-content:space-between;
- align-items:center;
- padding:6px 0;
- border-bottom:1px solid rgba(0,0,0,.1);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px 0;
+  border-bottom:1px solid rgba(0,0,0,.1);
 }
-select{border-radius:10px;padding:5px}
+select{border-radius:8px;padding:4px}
 
 #history{
- margin:20px;
- background:var(--card);
- padding:16px;
- border-radius:var(--radius);
+  margin:20px;
+  background:var(--card);
+  padding:16px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
 }
 .history-item{
- font-size:.85em;
- padding:6px 0;
- border-bottom:1px dashed rgba(0,0,0,.15);
+  font-size:.9em;
+  padding:6px 0;
+  border-bottom:1px dashed rgba(0,0,0,.2);
 }
 </style>
 </head>
 
 <body>
 
-<button id="adminBtn">⚙️</button>
-<button id="night">🌙</button>
+<div class="topbar">
+  <button id="night">🌙</button>
+  <button id="adminBtn">Admin</button>
+</div>
 
 <header>
-<h1>Guardias Alsi</h1>
+<h1>Guardias Alsi PRO</h1>
 <div id="subtitle"></div>
 </header>
 
-<div class="nav">
-<button id="prev">⬅</button>
-<button id="next">➡</button>
-</div>
-
 <div class="container">
- <div class="carousel" id="carousel"></div>
+  <div class="carousel" id="carousel"></div>
 </div>
 
-<details id="admin">
-<summary>Administrador</summary>
-<h3>⚡ Eléctricos</h3><div id="admin-elec"></div>
-<h3>🔧 Mecánicos</h3><div id="admin-mec"></div>
+<details id="admin" style="display:none">
+<summary>⚙️ Administrador</summary>
+
+<h3>⚡ Eléctricos</h3>
+<div id="admin-elec"></div>
+
+<h3>🔧 Mecánicos</h3>
+<div id="admin-mec"></div>
+
 <br>
 <button id="save">💾 Guardar</button>
 </details>
 
 <div id="history">
-<h3>📜 Historial</h3>
+<h3>📜 Historial de guardias</h3>
 <div id="historyList"></div>
 </div>
 
 <script>
-/* ===== DATOS ===== */
-const PASS="alsi2026"
-let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"]
-let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"]
-
-let estados=JSON.parse(localStorage.estados||"{}")
-let history=JSON.parse(localStorage.history||"[]")
-let offset=0
- 
-let lastLoggedWeek = localStorage.lastLoggedWeek || "";
-
-/* ===== MODO OSCURO ===== */
+// 🌙 MODO OSCURO
 night.onclick=()=>{
- document.body.classList.toggle("dark")
- localStorage.dark=document.body.classList.contains("dark")
+ document.body.classList.toggle("dark");
+ localStorage.dark=document.body.classList.contains("dark");
 }
-if(localStorage.dark==="true")document.body.classList.add("dark")
+if(localStorage.dark==="true")document.body.classList.add("dark");
 
-/* ===== ADMIN ===== */
-admin.style.display="none"
-let adminVisible=false;
-
+// 🔐 ADMIN CON CONTRASEÑA REAL
 adminBtn.onclick=()=>{
-  if(adminVisible){
-    admin.open=false;
-    adminVisible=false;
-    return;
-  }
-  const p=prompt("Contraseña admin");
-  if(p===PASS){
-    admin.open=true;
-    adminVisible=true;
-  }else{
-    alert("Contraseña incorrecta");
-  }
+ const pass=prompt("Contraseña administrador");
+ if(pass==="alsi2026"){
+   admin.style.display="block";
+ }else{
+   alert("Contraseña incorrecta");
+ }
 };
 
+// DATOS
+let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
+let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
+let estados=JSON.parse(localStorage.estados||"{}");
+let history=JSON.parse(localStorage.history||"[]");
+let lastLoggedWeek=localStorage.lastLoggedWeek||"";
+let offset=0;
 
-/* ===== FECHAS ===== */
+// FECHAS
 const lunes=d=>{
- d=new Date(d);let n=d.getDay()
- d.setDate(d.getDate()-(n===0?6:n-1))
- return d
+ d=new Date(d);
+ let n=d.getDay();
+ d.setDate(d.getDate()-(n===0?6:n-1));
+ return d;
 }
-const fd=d=>d.toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit"})
+const fd=d=>d.toLocaleDateString();
 
-const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo")
+// ROTACIÓN
+const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
 const guardia=(l,o)=>{
- let a=activos(l)
- return a.length?a[(o%a.length+a.length)%a.length]:"—"
-}
+ let a=activos(l);
+ return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
+};
 
-/* ===== ADMIN RENDER ===== */
+// ADMIN
 function renderAdmin(){
- [["elec",electricos],["mec",mecanicos]].forEach(([id,list])=>{
-  let c=document.getElementById("admin-"+id)
-  c.innerHTML=""
-  list.forEach(p=>{
+ ["elec","mec"].forEach(t=>{
+  let c=document.getElementById("admin-"+t);
+  c.innerHTML="";
+  (t==="elec"?electricos:mecanicos).forEach(p=>{
+   let s=estados[p]||"activo";
    c.innerHTML+=`
    <div class="admin-person">
     ${p}
-    <select onchange="estados['${p}']=this.value">
-     <option value="activo" ${estados[p]==="activo"?"selected":""}>Activo</option>
-     <option value="vacaciones" ${estados[p]==="vacaciones"?"selected":""}>Vacaciones</option>
-     <option value="viaje" ${estados[p]==="viaje"?"selected":""}>Viaje</option>
-     <option value="baja" ${estados[p]==="baja"?"selected":""}>Baja</option>
+    <select data-p="${p}">
+     <option value="activo" ${s==="activo"?"selected":""}>Activo</option>
+     <option value="vacaciones" ${s==="vacaciones"?"selected":""}>Vacaciones</option>
+     <option value="baja" ${s==="baja"?"selected":""}>Baja</option>
+     <option value="viaje" ${s==="viaje"?"selected":""}>Viaje</option>
     </select>
-   </div>`
-  })
- })
+   </div>`;
+  });
+ });
+ document.querySelectorAll("select").forEach(s=>{
+  s.onchange=()=>{estados[s.dataset.p]=s.value;}
+ });
 }
 
-/* ===== CALENDARIO ===== */
+// RENDER PRINCIPAL
 function render(){
- carousel.innerHTML=""
- let base=lunes(new Date())
- let ini=new Date(base);ini.setDate(ini.getDate()+offset*7)
- subtitle.textContent=`Semana ${fd(ini)} - ${fd(new Date(ini.getTime()+4*86400000))}`
+ carousel.innerHTML="";
+ let base=lunes(new Date());
+ let ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
+ let fin=new Date(ini);fin.setDate(fin.getDate()+4);
+ subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
+
+ let weekKey=ini.toISOString().slice(0,10);
+
+ if(offset===0 && lastLoggedWeek!==weekKey){
+  let e=guardia(electricos,0);
+  let m=guardia(mecanicos,0);
+  history.unshift(`${fd(ini)} → ⚡ ${e} | 🔧 ${m}`);
+  history=history.slice(0,20);
+  localStorage.history=JSON.stringify(history);
+  localStorage.lastLoggedWeek=weekKey;
+  lastLoggedWeek=weekKey;
+ }
 
  for(let i=-1;i<=1;i++){
-  let l=new Date(ini);l.setDate(l.getDate()+i*7)
-  let e=guardia(electricos,offset+i)
-  let m=guardia(mecanicos,offset+i)
-
-if(i===0){
-  const weekKey = l.toISOString().slice(0,10); // lunes real
-
-  if(lastLoggedWeek !== weekKey){
-    history.unshift(`${fd(l)} → ⚡ ${e} | 🔧 ${m}`);
-    history = history.slice(0,30);
-    localStorage.history = JSON.stringify(history);
-    localStorage.lastLoggedWeek = weekKey;
-    lastLoggedWeek = weekKey;
-  }
-}
-
-
+  let l=new Date(ini);l.setDate(l.getDate()+i*7);
+  let v=new Date(l);v.setDate(v.getDate()+4);
   carousel.innerHTML+=`
   <div class="card">
-   <h3>${fd(l)}</h3>
+   <h3>${fd(l)} - ${fd(v)}</h3>
    <div class="guardias">
     <div class="guardia">
      <div class="icono">⚡</div>
-     <div class="nombre">${e}</div>
-     <div class="days">L–V</div>
+     <div class="nombre">${guardia(electricos,offset+i)}</div>
+     <div class="days">Lun · Mar · Mié · Jue · Vie</div>
      <div class="time">15:30 – 19:00</div>
     </div>
     <div class="guardia">
      <div class="icono">🔧</div>
-     <div class="nombre">${m}</div>
-     <div class="days">L–V</div>
+     <div class="nombre">${guardia(mecanicos,offset+i)}</div>
+     <div class="days">Lun · Mar · Mié · Jue · Vie</div>
      <div class="time">15:30 – 19:00</div>
     </div>
    </div>
-  </div>`
+  </div>`;
  }
- renderHistory()
+ renderHistory();
 }
 
-/* ===== HISTORIAL ===== */
+// HISTORIAL
 function renderHistory(){
- historyList.innerHTML=""
- history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`)
+ historyList.innerHTML="";
+ history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`);
 }
 
-/* ===== EVENTOS ===== */
-prev.onclick=()=>{offset--;render()}
-next.onclick=()=>{offset++;render()}
+// GUARDAR
 save.onclick=()=>{
- localStorage.estados=JSON.stringify(estados)
- alert("Guardado")
-}
+ localStorage.estados=JSON.stringify(estados);
+ alert("Guardado correctamente");
+ render();
+};
 
-/* ===== INIT ===== */
-renderAdmin()
-render()
- // 🔐 Control de acceso administrador (SOLUCIÓN DEFINITIVA)
-document.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search);
-  const isAdmin = params.get("admin") === "alsi2026";
-  const adminPanel = document.getElementById("admin");
-
-  if (adminPanel) {
-    adminPanel.style.display = isAdmin ? "block" : "none";
-  }
-});
-
+renderAdmin();
+render();
 </script>
 
 </body>
 </html>
+
+
 
 
 
