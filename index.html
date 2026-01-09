@@ -45,8 +45,18 @@ button{
 }
 #night,#adminBtn{
   position:fixed;
-  top:12px;
+  top:14px;
+  z-index:9999;
+  font-size:1.2em;
+  padding:10px 14px;
 }
+#night{
+  right:14px;
+}
+#adminBtn{
+  right:62px;
+}
+
 #night{right:12px}
 #adminBtn{right:60px}
 
@@ -269,7 +279,7 @@ night.onclick=()=>{
  localStorage.dark=document.body.classList.contains("dark");
 }
 if(localStorage.dark==="true")document.body.classList.add("dark");
-
+}
 adminBtn.onclick=()=>{
  if(localStorage.isAdmin==="true"){
    adminPanel.style.display=
@@ -301,6 +311,7 @@ render();
 
 </body>
 </html>
+
 
 
 
