@@ -64,28 +64,65 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 
 /* ===== CALENDARIO ===== */
 #calendar{
- margin:20px;background:var(--card);
- border-radius:var(--radius);
- padding:16px
+  margin:20px;
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:16px;
 }
+
 .calendar-grid{
- display:grid;
- grid-template-columns:repeat(7,1fr);
- gap:6px;margin-top:10px
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  margin-top:10px;
 }
-.cal-day{
- padding:8px;border-radius:10px;
- font-size:.8em;text-align:center;
- background:rgba(0,0,0,.05);
- cursor:pointer
+
+.calendar-day,
+.calendar-head {
+  text-align:center;
+  font-size:.75rem;
+  padding:6px 0;
+  border-radius:8px;
 }
-body.dark .cal-day{background:rgba(255,255,255,.06)}
-.cal-day strong{display:block;font-size:.75em}
-.cal-header{
- display:grid;
- grid-template-columns:repeat(7,1fr);
- text-align:center;
- font-size:.75em;color:var(--muted)
+
+.calendar-head{
+  font-weight:700;
+  color:var(--muted);
+}
+
+.calendar-day{
+  background: rgba(0,0,0,.05);
+  cursor: pointer;
+}
+
+body.dark .calendar-day{
+  background: rgba(255,255,255,.08);
+}
+
+/* Día seleccionado */
+.calendar-day.active{
+  background: var(--primary);
+  color:#fff;
+}
+
+/* Días fuera del mes */
+.calendar-day.outside{
+  background: rgba(0,0,0,.02);
+  color: var(--muted);
+  cursor: default;
+}
+
+body.dark .calendar-day.outside{
+  background: rgba(255,255,255,.03);
+}
+
+/* RESPONSIVE */
+@media(max-width:480px){
+  .calendar-day,
+  .calendar-head{
+    font-size:0.65rem;
+    padding:5px 0;
+  }
 }
 
 /* ===== ADMIN ===== */
@@ -111,56 +148,6 @@ select{border-radius:10px;padding:5px}
  font-size:.9em;border-bottom:1px dashed rgba(0,0,0,.2);
  padding:6px 0
 }
- /* 📆 CALENDARIO RESPONSIVE */
-.calendar {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.calendar-day,
-.calendar-head {
-  text-align: center;
-  font-size: 0.75rem;
-  padding: 6px 0;
-  border-radius: 8px;
-}
-
-.calendar-head {
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.calendar-day {
-  background: rgba(0,0,0,.05);
-}
-
-body.dark .calendar-day {
-  background: rgba(255,255,255,.08);
-}
-
-.calendar-day.active {
-  background: var(--primary);
-  color: #fff;
-}
-
-.calendar-day.guard {
-  border: 2px solid var(--primary);
-}
-
-@media (max-width: 480px) {
-  .calendar-day,
-  .calendar-head {
-    font-size: 0.65rem;
-    padding: 5px 0;
-  }
-}
-
 </style>
 </head>
 
@@ -190,7 +177,7 @@ body.dark .calendar-day {
   <button onclick="changeMonth(1)">▶</button>
 </div>
 
-<div class="cal-header">
+<div class="calendar-head">
 <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
 </div>
 <div class="calendar-grid" id="calendarGrid"></div>
@@ -258,38 +245,50 @@ const guardia=(l,o)=>{
 
 /* ===================== CALENDARIO ===================== */
 function renderCalendar(){
- const g=document.getElementById("calendarGrid");
- const title=document.getElementById("calendarTitle");
- g.innerHTML="";
+  const g = document.getElementById("calendarGrid");
+  const title = document.getElementById("calendarTitle");
+  g.innerHTML = "";
 
- const year=calendarMonth.getFullYear();
- const month=calendarMonth.getMonth();
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  title.textContent = `📆 ${monthNames[month]} ${year}`;
 
- const monthNames=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
- title.textContent=`📆 ${monthNames[month]} ${year}`;
+  const firstDayOfMonth = new Date(year, month, 1);
+  const lastDayOfMonth = new Date(year, month + 1, 0);
 
- const firstDay=new Date(year,month,1);
- const start=lunes(firstDay);
+  const startDay = firstDayOfMonth.getDay() === 0 ? 7 : firstDayOfMonth.getDay();
+  const totalDays = lastDayOfMonth.getDate();
 
- for(let i=0;i<42;i++){
-  const d=new Date(start);
-  d.setDate(start.getDate()+i);
+  let html = "";
+  let dayCounter = 1;
 
-  const weekOffset=Math.floor((lunes(d)-lunes(new Date()))/604800000);
+  for(let i = 1; i <= 42; i++){
+    if(i < startDay || dayCounter > totalDays){
+      html += `<div class="calendar-day outside"></div>`;
+    } else {
+      const currentDate = new Date(year, month, dayCounter);
+      const weekOffset = Math.floor((lunes(currentDate) - lunes(new Date())) / 604800000);
+      const e = guardia(electricos, weekOffset);
+      const m = guardia(mecanicos, weekOffset);
 
-  g.innerHTML+=`
-  <div class="cal-day" onclick="offset=${weekOffset};render()">
-   ${d.getDate()}
-   <strong>⚡ ${guardia(electricos,weekOffset)}</strong>
-   <strong>🔧 ${guardia(mecanicos,weekOffset)}</strong>
-  </div>`;
- }
+      html += `<div class="calendar-day" onclick="offset=${weekOffset};render()">
+        ${dayCounter}
+        <strong>⚡ ${e}</strong>
+        <strong>🔧 ${m}</strong>
+      </div>`;
+
+      dayCounter++;
+    }
+  }
+
+  g.innerHTML = html;
 }
+
 function changeMonth(delta){
   calendarMonth.setMonth(calendarMonth.getMonth() + delta);
   renderCalendar();
 }
-
 
 /* ===================== RENDER ===================== */
 function render(){
@@ -396,6 +395,8 @@ render();
 
 </body>
 </html>
+
+
 
 
 
