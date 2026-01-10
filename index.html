@@ -219,6 +219,8 @@ let history=JSON.parse(localStorage.history||"[]");
 let myName=localStorage.myName||"";
 let lastLoggedWeek=localStorage.lastLoggedWeek||"";
 let offset=0;
+ electricos = JSON.parse(localStorage.electricos || JSON.stringify(electricos));
+mecanicos  = JSON.parse(localStorage.mecanicos  || JSON.stringify(mecanicos));
 
 /* ====== HELPERS ====== */
 const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d}
@@ -234,32 +236,44 @@ night.onclick=()=>{
 if(localStorage.dark==="true")document.body.classList.add("dark");
 
 /* ====== ADMIN ====== */
-admin.open=false;
-adminBtn.onclick=()=>{
- if(admin.open){admin.open=false;return}
- let p=prompt("Contraseña admin");
- if(p===ADMIN_PASS)admin.open=true;
+function mover(lista, i, dir){
+ if(dir===-1 && i===0) return;
+ if(dir===1 && i===lista.length-1) return;
+ [lista[i], lista[i+dir]] = [lista[i+dir], lista[i]];
 }
 
-/* ====== RENDER ADMIN ====== */
 function renderAdmin(){
  ["elec","mec"].forEach(t=>{
-  let c=document.getElementById("admin-"+t);
-  c.innerHTML="";
-  (t==="elec"?electricos:mecanicos).forEach(p=>{
+  let lista = t==="elec"?electricos:mecanicos;
+  let cont = document.getElementById("admin-"+t);
+  cont.innerHTML="";
+
+  lista.forEach((p,i)=>{
    let estado = estados[p] || "activo";
-   c.innerHTML+=`
+   cont.innerHTML += `
    <div class="admin-person">
-    ${p}
-    <select onchange="estados['${p}']=this.value">
-     <option value="activo" ${estado==="activo"?"selected":""}>Activo</option>
-     <option value="vacaciones" ${estado==="vacaciones"?"selected":""}>Vacaciones</option>
-     <option value="baja" ${estado==="baja"?"selected":""}>Baja</option>
-     <option value="viaje" ${estado==="viaje"?"selected":""}>Viaje</option>
-    </select>
+    <span>${p}</span>
+    <div>
+      <button onclick="
+        mover(${t==="elec"?"electricos":"mecanicos"},${i},-1);
+        renderAdmin(); render();
+      ">⬆</button>
+      <button onclick="
+        mover(${t==="elec"?"electricos":"mecanicos"},${i},1);
+        renderAdmin(); render();
+      ">⬇</button>
+      <select onchange="estados['${p}']=this.value">
+        <option value="activo" ${estado==="activo"?"selected":""}>Activo</option>
+        <option value="vacaciones" ${estado==="vacaciones"?"selected":""}>Vacaciones</option>
+        <option value="baja" ${estado==="baja"?"selected":""}>Baja</option>
+        <option value="viaje" ${estado==="viaje"?"selected":""}>Viaje</option>
+      </select>
+    </div>
    </div>`;
   });
  });
+}
+
 
  let sel=document.getElementById("myName");
  sel.innerHTML="<option value=''>—</option>";
@@ -279,12 +293,13 @@ function addPerson(t){
 }
 
 /* ====== SAVE ====== */
-function saveAdmin(){
- localStorage.elec=JSON.stringify(electricos);
- localStorage.mec=JSON.stringify(mecanicos);
- localStorage.estados=JSON.stringify(estados);
+save.onclick = ()=>{
+ localStorage.estados = JSON.stringify(estados);
+ localStorage.electricos = JSON.stringify(electricos);
+ localStorage.mecanicos  = JSON.stringify(mecanicos);
  alert("Guardado");
-}
+};
+
 
 /* ====== RENDER MAIN ====== */
 function render(){
@@ -376,6 +391,7 @@ if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.
 
 </body>
 </html>
+
 
 
 
