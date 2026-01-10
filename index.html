@@ -3,156 +3,203 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Alsi PRO</title>
+<title>Guardias Alsi</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e88e5">
+<link rel="icon" href="icon-192.png">
 
 <style>
 :root{
-  --primary:#1e88e5;
-  --bg:#f2f4f8;
-  --card:#ffffff;
-  --text:#1f2937;
-  --muted:#6b7280;
-  --shadow:0 8px 22px rgba(0,0,0,.15);
-  --radius:18px;
+ --primary:#1e88e5;
+ --bg:#f2f4f8;
+ --card:#fff;
+ --text:#1f2937;
+ --muted:#6b7280;
+ --shadow:0 10px 25px rgba(0,0,0,.12);
+ --radius:18px;
 }
 body.dark{
-  --bg:#0f172a;
-  --card:#1e293b;
-  --text:#e5e7eb;
-  --muted:#9ca3af;
+ --bg:#0f172a;
+ --card:#1e293b;
+ --text:#e5e7eb;
+ --muted:#9ca3af;
 }
 body{
-  margin:0;
-  font-family:system-ui,Segoe UI;
-  background:var(--bg);
-  color:var(--text);
+ margin:0;
+ font-family:system-ui;
+ background:var(--bg);
+ color:var(--text);
 }
 header{
-  background:linear-gradient(135deg,#1e88e5,#1565c0);
-  color:#fff;
-  padding:18px;
-  text-align:center;
-  position:sticky;
-  top:0;
-  z-index:10;
+ background:linear-gradient(135deg,#1e88e5,#1565c0);
+ color:#fff;
+ padding:20px;
+ text-align:center;
+ position:sticky;
+ top:0;
+ z-index:10;
 }
-#subtitle{opacity:.9;font-size:.9em;margin-top:6px}
+#subtitle{opacity:.9;font-size:.95em}
 
-.topbar{
-  position:fixed;
-  top:10px;
-  right:10px;
-  display:flex;
-  gap:8px;
-  z-index:20;
-}
 button{
-  border:none;
-  border-radius:12px;
-  padding:8px 14px;
-  font-weight:700;
-  background:var(--primary);
-  color:#fff;
+ background:var(--primary);
+ color:#fff;
+ border:none;
+ padding:10px 16px;
+ border-radius:14px;
+ font-weight:700;
 }
+#night,#adminBtn{
+ position:fixed;
+ top:12px;
+ z-index:20;
+}
+#night{right:12px}
+#adminBtn{right:60px}
 
-.container{max-width:950px;margin:auto;padding:10px}
+.nav{
+ display:flex;
+ justify-content:space-between;
+ padding:12px;
+}
+.container{
+ max-width:950px;
+ margin:auto;
+ padding:10px;
+}
 
 .carousel{
-  display:flex;
-  gap:14px;
-  overflow-x:auto;
-  scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling: touch;
+ display:flex;
+ gap:14px;
+ overflow-x:auto;
+ scroll-snap-type:x mandatory;
+ -webkit-overflow-scrolling:touch;
 }
-.carousel::-webkit-scrollbar{display:none}
-
 .card{
-  min-width:320px;
-  background:var(--card);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:18px;
-  scroll-snap-align:center;
+ min-width:320px;
+ background:var(--card);
+ border-radius:var(--radius);
+ box-shadow:var(--shadow);
+ padding:20px;
+ scroll-snap-align:center;
 }
+.card h3{text-align:center;margin-top:0}
 
 .guardias{
-  display:flex;
-  gap:14px;
-  margin-top:14px;
+ display:flex;
+ gap:14px;
+ margin-top:14px;
 }
 .guardia{
-  flex:1;
-  background:rgba(0,0,0,.05);
-  border-radius:14px;
-  padding:12px;
-  text-align:center;
+ flex:1;
+ text-align:center;
+ background:rgba(0,0,0,.05);
+ border-radius:14px;
+ padding:14px;
 }
 body.dark .guardia{background:rgba(255,255,255,.06)}
 
 .icono{font-size:2.2em}
 .nombre{font-size:1.15em;font-weight:800}
-.days{font-size:.85em;color:var(--muted);margin-top:4px}
-.time{font-size:.9em;font-weight:700;margin-top:4px}
+.days{font-size:.85em;color:var(--muted)}
+.time{font-weight:700;font-size:.9em;margin-top:4px}
 
 details{
-  margin:20px;
-  background:var(--card);
-  padding:16px;
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
+ margin:20px;
+ background:var(--card);
+ padding:16px;
+ border-radius:var(--radius);
 }
 .admin-person{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:6px 0;
-  border-bottom:1px solid rgba(0,0,0,.1);
+ display:flex;
+ justify-content:space-between;
+ padding:6px 0;
+ border-bottom:1px solid rgba(0,0,0,.1);
 }
-select{border-radius:8px;padding:4px}
+select,input{
+ border-radius:10px;
+ padding:6px;
+}
+
+#calendar{
+ margin:20px;
+ background:var(--card);
+ padding:16px;
+ border-radius:var(--radius);
+}
+.calendar-grid{
+ display:grid;
+ grid-template-columns:repeat(7,1fr);
+ gap:6px;
+}
+.day{
+ padding:8px;
+ text-align:center;
+ border-radius:10px;
+ background:rgba(0,0,0,.05);
+ font-size:.8em;
+ cursor:pointer;
+}
+body.dark .day{background:rgba(255,255,255,.08)}
 
 #history{
-  margin:20px;
-  background:var(--card);
-  padding:16px;
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
+ margin:20px;
+ background:var(--card);
+ padding:16px;
+ border-radius:var(--radius);
 }
 .history-item{
-  font-size:.9em;
-  padding:6px 0;
-  border-bottom:1px dashed rgba(0,0,0,.2);
+ font-size:.9em;
+ padding:6px 0;
+ border-bottom:1px dashed rgba(0,0,0,.15)
 }
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-  <button id="night">🌙</button>
-  <button id="adminBtn">Admin</button>
-</div>
+<button id="night">🌙</button>
+<button id="adminBtn">⚙️</button>
 
 <header>
-<h1>Guardias Alsi PRO</h1>
+<h1>Guardias Alsi</h1>
 <div id="subtitle"></div>
 </header>
 
-<div class="container">
-  <div class="carousel" id="carousel"></div>
+<div class="nav">
+<button id="prev">⬅</button>
+<button id="next">➡</button>
 </div>
 
-<details id="admin" style="display:none">
-<summary>⚙️ Administrador</summary>
+<div class="container">
+<div class="carousel" id="carousel"></div>
+</div>
+
+<details id="admin">
+<summary>Administrador</summary>
+
+<p><b>Tu nombre (notificaciones)</b></p>
+<select id="myName"></select>
 
 <h3>⚡ Eléctricos</h3>
 <div id="admin-elec"></div>
+<input id="newElec" placeholder="Añadir eléctrico">
+<button onclick="addPerson('elec')">➕ Añadir</button>
 
 <h3>🔧 Mecánicos</h3>
 <div id="admin-mec"></div>
+<input id="newMec" placeholder="Añadir mecánico">
+<button onclick="addPerson('mec')">➕ Añadir</button>
 
-<br>
-<button id="save">💾 Guardar</button>
+<br><br>
+<button onclick="saveAdmin()">💾 Guardar</button>
 </details>
+
+<div id="calendar">
+<h3>📆 Calendario mensual</h3>
+<div class="calendar-grid" id="calendarGrid"></div>
+</div>
 
 <div id="history">
 <h3>📜 Historial de guardias</h3>
@@ -160,135 +207,176 @@ select{border-radius:8px;padding:4px}
 </div>
 
 <script>
-// 🌙 MODO OSCURO
+/* ====== CONFIG ====== */
+const ADMIN_PASS="alsi2026";
+const HOUR="15:30 – 19:00";
+
+/* ====== STATE ====== */
+let electricos=JSON.parse(localStorage.elec||'["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"]');
+let mecanicos=JSON.parse(localStorage.mec||'["Ramon","Santy","Traian","Manu","Fran Alba","Cele"]');
+let estados=JSON.parse(localStorage.estados||"{}");
+let history=JSON.parse(localStorage.history||"[]");
+let myName=localStorage.myName||"";
+let lastLoggedWeek=localStorage.lastLoggedWeek||"";
+let offset=0;
+
+/* ====== HELPERS ====== */
+const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d}
+const fd=d=>d.toLocaleDateString();
+const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
+const guardia=(l,o)=>{let a=activos(l);return a.length?a[((o%a.length)+a.length)%a.length]:"—"}
+
+/* ====== DARK MODE ====== */
 night.onclick=()=>{
  document.body.classList.toggle("dark");
  localStorage.dark=document.body.classList.contains("dark");
 }
 if(localStorage.dark==="true")document.body.classList.add("dark");
 
-// 🔐 ADMIN CON CONTRASEÑA REAL
+/* ====== ADMIN ====== */
+admin.open=false;
 adminBtn.onclick=()=>{
- const pass=prompt("Contraseña administrador");
- if(pass==="alsi2026"){
-   admin.style.display="block";
- }else{
-   alert("Contraseña incorrecta");
- }
-};
-
-// DATOS
-let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
-let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
-let estados=JSON.parse(localStorage.estados||"{}");
-let history=JSON.parse(localStorage.history||"[]");
-let lastLoggedWeek=localStorage.lastLoggedWeek||"";
-let offset=0;
-
-// FECHAS
-const lunes=d=>{
- d=new Date(d);
- let n=d.getDay();
- d.setDate(d.getDate()-(n===0?6:n-1));
- return d;
+ if(admin.open){admin.open=false;return}
+ let p=prompt("Contraseña admin");
+ if(p===ADMIN_PASS)admin.open=true;
 }
-const fd=d=>d.toLocaleDateString();
 
-// ROTACIÓN
-const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
-const guardia=(l,o)=>{
- let a=activos(l);
- return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
-};
-
-// ADMIN
+/* ====== RENDER ADMIN ====== */
 function renderAdmin(){
  ["elec","mec"].forEach(t=>{
   let c=document.getElementById("admin-"+t);
   c.innerHTML="";
   (t==="elec"?electricos:mecanicos).forEach(p=>{
-   let s=estados[p]||"activo";
    c.innerHTML+=`
    <div class="admin-person">
     ${p}
-    <select data-p="${p}">
-     <option value="activo" ${s==="activo"?"selected":""}>Activo</option>
-     <option value="vacaciones" ${s==="vacaciones"?"selected":""}>Vacaciones</option>
-     <option value="baja" ${s==="baja"?"selected":""}>Baja</option>
-     <option value="viaje" ${s==="viaje"?"selected":""}>Viaje</option>
+    <select onchange="estados['${p}']=this.value">
+     <option value="activo">Activo</option>
+     <option value="vacaciones">Vacaciones</option>
+     <option value="baja">Baja</option>
+     <option value="viaje">Viaje</option>
     </select>
    </div>`;
   });
  });
- document.querySelectorAll("select").forEach(s=>{
-  s.onchange=()=>{estados[s.dataset.p]=s.value;}
+ let sel=document.getElementById("myName");
+ sel.innerHTML="<option value=''>—</option>";
+ [...electricos,...mecanicos].forEach(p=>{
+  sel.innerHTML+=`<option ${p===myName?"selected":""}>${p}</option>`;
  });
+ sel.onchange=()=>{myName=sel.value;localStorage.myName=myName}
 }
 
-// RENDER PRINCIPAL
+/* ====== ADD PERSON ====== */
+function addPerson(t){
+ let i=document.getElementById(t==="elec"?"newElec":"newMec");
+ if(!i.value)return;
+ (t==="elec"?electricos:mecanicos).push(i.value);
+ i.value="";
+ renderAdmin();
+}
+
+/* ====== SAVE ====== */
+function saveAdmin(){
+ localStorage.elec=JSON.stringify(electricos);
+ localStorage.mec=JSON.stringify(mecanicos);
+ localStorage.estados=JSON.stringify(estados);
+ alert("Guardado");
+}
+
+/* ====== RENDER MAIN ====== */
 function render(){
  carousel.innerHTML="";
  let base=lunes(new Date());
  let ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
- let fin=new Date(ini);fin.setDate(fin.getDate()+4);
- subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
-
  let weekKey=ini.toISOString().slice(0,10);
-
- if(offset===0 && lastLoggedWeek!==weekKey){
-  let e=guardia(electricos,0);
-  let m=guardia(mecanicos,0);
-  history.unshift(`${fd(ini)} → ⚡ ${e} | 🔧 ${m}`);
-  history=history.slice(0,20);
-  localStorage.history=JSON.stringify(history);
-  localStorage.lastLoggedWeek=weekKey;
-  lastLoggedWeek=weekKey;
- }
+ subtitle.textContent=`${fd(ini)} - ${fd(new Date(ini.getTime()+4*86400000))}`;
 
  for(let i=-1;i<=1;i++){
   let l=new Date(ini);l.setDate(l.getDate()+i*7);
   let v=new Date(l);v.setDate(v.getDate()+4);
+  let e=guardia(electricos,offset+i);
+  let m=guardia(mecanicos,offset+i);
+
+  if(i===0 && weekKey!==lastLoggedWeek){
+   lastLoggedWeek=weekKey;
+   localStorage.lastLoggedWeek=weekKey;
+   history.unshift(`${fd(l)} → ⚡ ${e} | 🔧 ${m}`);
+   history=history.slice(0,30);
+   localStorage.history=JSON.stringify(history);
+
+   if(myName && (myName===e||myName===m) && Notification.permission==="granted"){
+    new Notification("Te toca guardia",{
+     body:`${fd(l)}\n⏰ ${HOUR}`
+    });
+   }
+  }
+
   carousel.innerHTML+=`
   <div class="card">
    <h3>${fd(l)} - ${fd(v)}</h3>
    <div class="guardias">
     <div class="guardia">
      <div class="icono">⚡</div>
-     <div class="nombre">${guardia(electricos,offset+i)}</div>
+     <div class="nombre">${e}</div>
      <div class="days">Lun · Mar · Mié · Jue · Vie</div>
-     <div class="time">15:30 – 19:00</div>
+     <div class="time">${HOUR}</div>
     </div>
     <div class="guardia">
      <div class="icono">🔧</div>
-     <div class="nombre">${guardia(mecanicos,offset+i)}</div>
+     <div class="nombre">${m}</div>
      <div class="days">Lun · Mar · Mié · Jue · Vie</div>
-     <div class="time">15:30 – 19:00</div>
+     <div class="time">${HOUR}</div>
     </div>
    </div>
   </div>`;
  }
  renderHistory();
+ renderCalendar(ini);
 }
 
-// HISTORIAL
+/* ====== HISTORY ====== */
 function renderHistory(){
  historyList.innerHTML="";
  history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`);
 }
 
-// GUARDAR
-save.onclick=()=>{
- localStorage.estados=JSON.stringify(estados);
- alert("Guardado correctamente");
- render();
-};
+/* ====== CALENDAR ====== */
+function renderCalendar(d){
+ let g=document.getElementById("calendarGrid");
+ g.innerHTML="";
+ let first=new Date(d.getFullYear(),d.getMonth(),1);
+ let last=new Date(d.getFullYear(),d.getMonth()+1,0);
+ for(let i=1;i<=last.getDate();i++){
+  let day=new Date(d.getFullYear(),d.getMonth(),i);
+  let div=document.createElement("div");
+  div.className="day";
+  div.textContent=i;
+  div.onclick=()=>{
+   let base=lunes(new Date());
+   offset=Math.round((lunes(day)-base)/(86400000*7));
+   render();
+  }
+  g.appendChild(div);
+ }
+}
 
+/* ====== NAV ====== */
+prev.onclick=()=>{offset--;render()}
+next.onclick=()=>{offset++;render()}
+
+/* ====== INIT ====== */
 renderAdmin();
 render();
+if("Notification"in window)Notification.requestPermission();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js");
 </script>
 
 </body>
 </html>
+
+
+
 
 
 
