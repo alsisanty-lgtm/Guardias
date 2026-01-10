@@ -274,15 +274,6 @@ function renderAdmin(){
  });
 }
 
-
- let sel=document.getElementById("myName");
- sel.innerHTML="<option value=''>—</option>";
- [...electricos,...mecanicos].forEach(p=>{
-  sel.innerHTML+=`<option ${p===myName?"selected":""}>${p}</option>`;
- });
- sel.onchange=()=>{myName=sel.value;localStorage.myName=myName}
-}
-
 /* ====== ADD PERSON ====== */
 function addPerson(t){
  let i=document.getElementById(t==="elec"?"newElec":"newMec");
@@ -391,6 +382,7 @@ if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.
 
 </body>
 </html>
+
 
 
 
