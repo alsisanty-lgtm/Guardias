@@ -212,15 +212,23 @@ const ADMIN_PASS="alsi2026";
 const HOUR="15:30 – 19:00";
 
 /* ====== STATE ====== */
-let electricos=JSON.parse(localStorage.elec||'["Fran","Hicham","Jose","Fran Ruiz","Dani","Abde"]');
-let mecanicos=JSON.parse(localStorage.mec||'["Santy","Traian","Manu","Fran Alba","Ramon","Cele"]');
-let estados=JSON.parse(localStorage.estados||"{}");
-let history=JSON.parse(localStorage.history||"[]");
-let myName=localStorage.myName||"";
-let lastLoggedWeek=localStorage.lastLoggedWeek||"";
-let offset=0;
- electricos = JSON.parse(localStorage.electricos || JSON.stringify(electricos));
-mecanicos  = JSON.parse(localStorage.mecanicos  || JSON.stringify(mecanicos));
+let electricos = ["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
+let mecanicos  = ["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
+let estados = JSON.parse(localStorage.estados || "{}");
+let history = JSON.parse(localStorage.history || "[]");
+let offset = 0;
+
+// ✅ CARGA SEGURA DEL ORDEN (NO ROMPE NUNCA)
+try {
+  const e = JSON.parse(localStorage.electricos);
+  if (Array.isArray(e)) electricos = e;
+} catch {}
+
+try {
+  const m = JSON.parse(localStorage.mecanicos);
+  if (Array.isArray(m)) mecanicos = m;
+} catch {}
+
 
 /* ====== HELPERS ====== */
 const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d}
@@ -284,11 +292,9 @@ function addPerson(t){
 }
 
 /* ====== SAVE ====== */
-save.onclick = ()=>{
- localStorage.estados = JSON.stringify(estados);
- localStorage.electricos = JSON.stringify(electricos);
- localStorage.mecanicos  = JSON.stringify(mecanicos);
- alert("Guardado");
+localStorage.electricos = JSON.stringify(electricos);
+localStorage.mecanicos  = JSON.stringify(mecanicos);
+localStorage.estados    = JSON.stringify(estados);
 };
 
 
@@ -382,6 +388,7 @@ if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.
 
 </body>
 </html>
+
 
 
 
