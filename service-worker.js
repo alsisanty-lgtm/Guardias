@@ -1,4 +1,4 @@
-const CACHE_NAME = "guardias-alsi-v45";
+const CACHE_NAME = "guardias-alsi-v46";
 
 const FILES = [
   "/Guardias/",
@@ -31,6 +31,7 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
 
 
 
