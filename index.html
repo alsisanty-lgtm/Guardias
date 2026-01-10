@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Alsi</title>
+<title>Guardias Alsi PRO</title>
 
 <link rel="manifest" href="/Guardias/manifest.json">
 <meta name="theme-color" content="#1e88e5">
@@ -62,24 +62,47 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 .days{font-size:.85em;color:var(--muted);margin-top:6px}
 .time{font-weight:700;font-size:.9em;margin-top:4px}
 
+/* ===== CALENDARIO ===== */
+#calendar{
+ margin:20px;background:var(--card);
+ border-radius:var(--radius);
+ padding:16px
+}
+.calendar-grid{
+ display:grid;
+ grid-template-columns:repeat(7,1fr);
+ gap:6px;margin-top:10px
+}
+.cal-day{
+ padding:8px;border-radius:10px;
+ font-size:.8em;text-align:center;
+ background:rgba(0,0,0,.05);
+ cursor:pointer
+}
+body.dark .cal-day{background:rgba(255,255,255,.06)}
+.cal-day strong{display:block;font-size:.75em}
+.cal-header{
+ display:grid;
+ grid-template-columns:repeat(7,1fr);
+ text-align:center;
+ font-size:.75em;color:var(--muted)
+}
+
+/* ===== ADMIN ===== */
 details{
  margin:20px;background:var(--card);
  padding:16px;border-radius:var(--radius)
 }
-
 .admin-person{
  display:flex;align-items:center;
  justify-content:space-between;
  border-bottom:1px solid rgba(0,0,0,.1);
  padding:6px 0
 }
-
 select{border-radius:10px;padding:5px}
+.order button{padding:4px 8px;font-size:12px}
 
-.order button{
- padding:4px 8px;font-size:12px
-}
-
+/* ===== HISTORIAL ===== */
 #history{
  margin:20px;background:var(--card);
  padding:16px;border-radius:var(--radius)
@@ -96,7 +119,7 @@ select{border-radius:10px;padding:5px}
 <button id="night">🌙</button>
 
 <header>
-<h1>Guardias Alsi</h1>
+<h1>Guardias Alsi PRO</h1>
 <div id="subtitle"></div>
 </header>
 
@@ -109,6 +132,21 @@ select{border-radius:10px;padding:5px}
 <div class="carousel" id="carousel"></div>
 </div>
 
+<!-- 📆 CALENDARIO -->
+<div id="calendar">
+<div style="display:flex;justify-content:space-between;align-items:center">
+  <button onclick="changeMonth(-1)">◀</button>
+  <h3 id="calendarTitle">📆 Calendario mensual</h3>
+  <button onclick="changeMonth(1)">▶</button>
+</div>
+
+<div class="cal-header">
+<div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
+</div>
+
+<!-- ADMIN -->
 <details id="admin">
 <summary>⚙️ Administrador</summary>
 
@@ -134,39 +172,25 @@ night.onclick=()=>{
 };
 if(localStorage.dark==="true")document.body.classList.add("dark");
 
-/* ===================== ADMIN PASSWORD ===================== */
+/* ===================== ADMIN ===================== */
 const ADMIN_PASS="alsi2026";
-let adminUnlocked=false;
+let unlocked=false;
+setTimeout(()=>{
+ const p=prompt("Contraseña admin");
+ if(p!==ADMIN_PASS)admin.style.display="none";
+},300);
 
-if(!adminUnlocked){
- setTimeout(()=>{
-  const p=prompt("Contraseña admin");
-  if(p===ADMIN_PASS){
-   adminUnlocked=true;
-   admin.open=true;
-  }else{
-   admin.style.display="none";
-  }
- },500);
-}
-
-/* ===================== DATOS BASE ===================== */
+/* ===================== DATOS ===================== */
 let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
 let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
 let estados=JSON.parse(localStorage.estados||"{}");
 let history=JSON.parse(localStorage.history||"[]");
 let lastLoggedWeek=localStorage.lastLoggedWeek||"";
 let offset=0;
+let calendarMonth = new Date(); // mes que se está mostrando
 
-/* ==== CARGA SEGURA ORDEN ==== */
-try{
- const e=JSON.parse(localStorage.electricos);
- if(Array.isArray(e))electricos=e;
-}catch{}
-try{
- const m=JSON.parse(localStorage.mecanicos);
- if(Array.isArray(m))mecanicos=m;
-}catch{}
+try{electricos=JSON.parse(localStorage.electricos)||electricos}catch{}
+try{mecanicos=JSON.parse(localStorage.mecanicos)||mecanicos}catch{}
 
 /* ===================== FECHAS ===================== */
 const lunes=d=>{
@@ -182,38 +206,40 @@ const guardia=(l,o)=>{
  return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
 };
 
-/* ===================== ADMIN UI ===================== */
-function renderAdmin(){
- [["elec",electricos],["mec",mecanicos]].forEach(([id,list])=>{
-  const c=document.getElementById("admin-"+id);
-  c.innerHTML="";
-  list.forEach((p,i)=>{
-   c.innerHTML+=`
-   <div class="admin-person">
-    ${p}
-    <div class="order">
-     <button onclick="move('${id}',${i},-1)">▲</button>
-     <button onclick="move('${id}',${i},1)">▼</button>
-     <select onchange="estados['${p}']=this.value">
-      <option value="activo">Activo</option>
-      <option value="vacaciones">Vacaciones</option>
-      <option value="baja">Baja</option>
-      <option value="viaje">Viaje</option>
-     </select>
-    </div>
-   </div>`;
-  });
- });
+/* ===================== CALENDARIO ===================== */
+function renderCalendar(){
+ const g=document.getElementById("calendarGrid");
+ const title=document.getElementById("calendarTitle");
+ g.innerHTML="";
+
+ const year=calendarMonth.getFullYear();
+ const month=calendarMonth.getMonth();
+
+ const monthNames=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+ title.textContent=`📆 ${monthNames[month]} ${year}`;
+
+ const firstDay=new Date(year,month,1);
+ const start=lunes(firstDay);
+
+ for(let i=0;i<42;i++){
+  const d=new Date(start);
+  d.setDate(start.getDate()+i);
+
+  const weekOffset=Math.floor((lunes(d)-lunes(new Date()))/604800000);
+
+  g.innerHTML+=`
+  <div class="cal-day" onclick="offset=${weekOffset};render()">
+   ${d.getDate()}
+   <strong>⚡ ${guardia(electricos,weekOffset)}</strong>
+   <strong>🔧 ${guardia(mecanicos,weekOffset)}</strong>
+  </div>`;
+ }
+}
+function changeMonth(delta){
+  calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+  renderCalendar();
 }
 
-/* mover orden */
-function move(type,i,d){
- const l=type==="elec"?electricos:mecanicos;
- const ni=i+d;
- if(ni<0||ni>=l.length)return;
- [l[i],l[ni]]=[l[ni],l[i]];
- renderAdmin();render();
-}
 
 /* ===================== RENDER ===================== */
 function render(){
@@ -273,24 +299,55 @@ function renderHistory(){
  });
 }
 
-/* ===================== BOTONES ===================== */
+/* ===================== ADMIN ===================== */
+function renderAdmin(){
+ [["elec",electricos],["mec",mecanicos]].forEach(([id,list])=>{
+  const c=document.getElementById("admin-"+id);
+  c.innerHTML="";
+  list.forEach((p,i)=>{
+   c.innerHTML+=`
+   <div class="admin-person">
+    ${p}
+    <div class="order">
+     <button onclick="move('${id}',${i},-1)">▲</button>
+     <button onclick="move('${id}',${i},1)">▼</button>
+     <select onchange="estados['${p}']=this.value">
+      <option value="activo">Activo</option>
+      <option value="vacaciones">Vacaciones</option>
+      <option value="baja">Baja</option>
+      <option value="viaje">Viaje</option>
+     </select>
+    </div>
+   </div>`;
+  });
+ });
+}
+function move(t,i,d){
+ const l=t==="elec"?electricos:mecanicos;
+ const n=i+d;if(n<0||n>=l.length)return;
+ [l[i],l[n]]=[l[n],l[i]];
+ renderAdmin();render();
+}
+
 prev.onclick=()=>{offset--;render()};
 next.onclick=()=>{offset++;render()};
-
 save.onclick=()=>{
  localStorage.electricos=JSON.stringify(electricos);
  localStorage.mecanicos=JSON.stringify(mecanicos);
  localStorage.estados=JSON.stringify(estados);
- alert("Guardado correctamente");
+ alert("Guardado");
 };
 
 /* ===================== INIT ===================== */
 renderAdmin();
+renderCalendar();
 render();
 </script>
 
 </body>
 </html>
+
+
 
 
 
