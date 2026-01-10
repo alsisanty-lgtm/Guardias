@@ -247,18 +247,21 @@ function renderAdmin(){
   let c=document.getElementById("admin-"+t);
   c.innerHTML="";
   (t==="elec"?electricos:mecanicos).forEach(p=>{
+   let estado = estados[p] || "activo";
    c.innerHTML+=`
    <div class="admin-person">
     ${p}
     <select onchange="estados['${p}']=this.value">
-     <option value="activo">Activo</option>
-     <option value="vacaciones">Vacaciones</option>
-     <option value="baja">Baja</option>
-     <option value="viaje">Viaje</option>
+     <option value="activo" ${estado==="activo"?"selected":""}>Activo</option>
+     <option value="vacaciones" ${estado==="vacaciones"?"selected":""}>Vacaciones</option>
+     <option value="baja" ${estado==="baja"?"selected":""}>Baja</option>
+     <option value="viaje" ${estado==="viaje"?"selected":""}>Viaje</option>
     </select>
    </div>`;
   });
  });
+}
+
  let sel=document.getElementById("myName");
  sel.innerHTML="<option value=''>—</option>";
  [...electricos,...mecanicos].forEach(p=>{
@@ -374,6 +377,7 @@ if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.
 
 </body>
 </html>
+
 
 
 
