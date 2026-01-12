@@ -4,11 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guardias Alsi</title>
-
 <link rel="manifest" href="/Guardias/manifest.json">
 <meta name="theme-color" content="#1e88e5">
 <link rel="icon" href="/Guardias/icon-192.png">
-
 <style>
 :root{
  --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
@@ -17,37 +15,29 @@
  --radius:18px;
 }
 body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--muted:#9ca3af}
-body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
-
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(text)}
 header{
  background:linear-gradient(135deg,#1e88e5,#1565c0);
  color:#fff;padding:20px;text-align:center;
  position:sticky;top:0;z-index:100
 }
-
 button{
  background:var(--primary);color:#fff;border:none;
  padding:10px 16px;border-radius:14px;font-weight:700
 }
-
 #night{position:fixed;top:12px;right:12px;z-index:200}
-
 .nav{display:flex;justify-content:space-between;padding:10px}
-
 .container{max-width:960px;margin:auto;padding:10px}
-
 .carousel{
  display:flex;gap:14px;overflow-x:auto;
  scroll-snap-type:x mandatory
 }
-
 .card{
  min-width:320px;background:var(--card);
  border-radius:var(--radius);
  box-shadow:var(--shadow);
  padding:20px;scroll-snap-align:center
 }
-
 .guardias{display:flex;gap:14px;margin-top:14px}
 .guardia{
  flex:1;text-align:center;
@@ -55,7 +45,6 @@ button{
  border-radius:14px;padding:14px
 }
 body.dark .guardia{background:rgba(255,255,255,.06)}
-
 .icono{font-size:2.2em}
 .nombre{font-size:1.15em;font-weight:800}
 .days{font-size:.85em;color:var(--muted)}
@@ -66,10 +55,6 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
  margin:20px;background:var(--card);
  border-radius:var(--radius);padding:16px
 }
- <div class="calendar-head">
- <div>Lun</div><div>Mar</div><div>Mié</div>
- <div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
-</div>
 .calendar-head{
  display:grid;
  grid-template-columns:repeat(7,1fr);
@@ -95,13 +80,8 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 .today-week{outline:2px solid var(--primary)}
 body.dark .weekday{background:rgba(30,136,229,.18)}
 body.dark .weekend{background:rgba(255,255,255,.03)}
-
 .calendar-day.outside{
  background:rgba(0,0,0,.02);color:var(--muted)
-}
-
-@media(max-width:480px){
- .calendar-day{font-size:.6rem}
 }
 
 /* ===== ADMIN ===== */
@@ -109,11 +89,33 @@ details{
  margin:20px;background:var(--card);
  padding:16px;border-radius:var(--radius)
 }
+.admin-section{margin-bottom:20px}
 .admin-person{
  display:flex;justify-content:space-between;
- border-bottom:1px solid rgba(0,0,0,.1);padding:6px 0
+ align-items:center;
+ border-bottom:1px solid rgba(0,0,0,.1);
+ padding:10px 0;
+ gap:10px;
+ flex-wrap:wrap;
 }
-select{border-radius:10px;padding:5px}
+.admin-person .name{
+ flex:1;
+ min-width:120px;
+ font-weight:600;
+}
+select{
+ border-radius:10px;
+ padding:6px 10px;
+ border:1px solid #ddd;
+ background:var(--card);
+ color:var(--text);
+ font-size:14px;
+}
+.status-active{color:#10b981}
+.status-vacaciones{color:#f59e0b}
+.status-viaje{color:#8b5cf6}
+.status-baja{color:#ef4444}
+.status-inactivo{color:#6b7280}
 
 /* ===== HISTORIAL ===== */
 #history{
@@ -124,27 +126,27 @@ select{border-radius:10px;padding:5px}
  font-size:.9em;border-bottom:1px dashed rgba(0,0,0,.2);
  padding:6px 0
 }
+
+@media(max-width:480px){
+ .calendar-day{font-size:.6rem}
+ .admin-person{flex-direction:column;align-items:flex-start}
+ .admin-person .name{min-width:auto}
+}
 </style>
 </head>
-
 <body>
-
 <button id="night">🌙</button>
-
 <header>
 <h1>Guardias Alsi</h1>
 <div id="subtitle"></div>
 </header>
-
 <div class="nav">
 <button id="prev">⬅ Anterior</button>
 <button id="next">Siguiente ➡</button>
 </div>
-
 <div class="container">
 <div class="carousel" id="carousel"></div>
 </div>
-
 <div id="calendar">
 <div style="display:flex;justify-content:space-between;align-items:center">
 <button onclick="changeMonth(-1)">◀</button>
@@ -169,12 +171,22 @@ select{border-radius:10px;padding:5px}
 </div>
 
 <script>
-night.onclick=()=>{document.body.classList.toggle("dark");localStorage.dark=document.body.classList.contains("dark")};
-if(localStorage.dark==="true")document.body.classList.add("dark");
+// Toggle modo oscuro
+night.onclick=()=>{
+ document.body.classList.toggle("dark");
+ localStorage.dark=document.body.classList.contains("dark");
+};
+if(localStorage.dark==="true") document.body.classList.add("dark");
 
+// Contraseña admin
 const ADMIN_PASS="alsi2026";
-setTimeout(()=>{if(prompt("Contraseña admin")!==ADMIN_PASS)admin.style.display="none"},300);
+setTimeout(()=>{
+ if(prompt("Contraseña admin")!==ADMIN_PASS){
+  admin.style.display="none";
+ }
+},300);
 
+// Datos iniciales
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
 let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
 let estados=JSON.parse(localStorage.estados||"{}");
@@ -182,81 +194,156 @@ let history=JSON.parse(localStorage.history||"[]");
 let offset=0;
 let calendarMonth=new Date();
 
-const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d};
+// Funciones auxiliares
+const lunes=d=>{
+ d=new Date(d);
+ let n=d.getDay();
+ d.setDate(d.getDate()-(n===0?6:n-1));
+ return d;
+};
 const fd=d=>d.toLocaleDateString();
 const weekDiff=(a,b)=>Math.floor((lunes(a)-lunes(b))/604800000);
-
 const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
-const guardia=(l,o)=>{const a=activos(l);return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie"};
+const guardia=(l,o)=>{
+ const a=activos(l);
+ return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
+};
 
+// Renderizar administración
+function renderAdmin(){
+ // Renderizar eléctricos
+ adminElec.innerHTML="";
+ electricos.forEach(persona=>{
+  adminElec.innerHTML+=`
+   <div class="admin-person">
+    <div class="name">${persona}</div>
+    <select id="estado-${persona}" onchange="estados['${persona}']=this.value">
+     <option value="activo" ${estados[persona]==='activo'?'selected':''}>✅ Activo</option>
+     <option value="vacaciones" ${estados[persona]==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
+     <option value="viaje" ${estados[persona]==='viaje'?'selected':''}>✈️ Viaje</option>
+     <option value="baja" ${estados[persona]==='baja'?'selected':''}>🤒 Baja médica</option>
+     <option value="inactivo" ${estados[persona]==='inactivo'?'selected':''}>⏸️ Inactivo</option>
+    </select>
+    <span class="status-${estados[persona]||'active'}">${getEstadoTexto(estados[persona])}</span>
+   </div>
+  `;
+ });
+ 
+ // Renderizar mecánicos
+ adminMec.innerHTML="";
+ mecanicos.forEach(persona=>{
+  adminMec.innerHTML+=`
+   <div class="admin-person">
+    <div class="name">${persona}</div>
+    <select id="estado-${persona}" onchange="estados['${persona}']=this.value">
+     <option value="activo" ${estados[persona]==='activo'?'selected':''}>✅ Activo</option>
+     <option value="vacaciones" ${estados[persona]==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
+     <option value="viaje" ${estados[persona]==='viaje'?'selected':''}>✈️ Viaje</option>
+     <option value="baja" ${estados[persona]==='baja'?'selected':''}>🤒 Baja médica</option>
+     <option value="inactivo" ${estados[persona]==='inactivo'?'selected':''}>⏸️ Inactivo</option>
+    </select>
+    <span class="status-${estados[persona]||'active'}">${getEstadoTexto(estados[persona])}</span>
+   </div>
+  `;
+ });
+}
+
+function getEstadoTexto(estado){
+ switch(estado){
+  case 'activo': return 'Activo';
+  case 'vacaciones': return 'De vacaciones';
+  case 'viaje': return 'De viaje';
+  case 'baja': return 'De baja';
+  case 'inactivo': return 'Inactivo';
+  default: return 'Activo';
+ }
+}
+
+// Renderizar calendario
 function renderCalendar(){
  calendarGrid.innerHTML="";
-
  const y = calendarMonth.getFullYear();
  const m = calendarMonth.getMonth();
- calendarTitle.textContent =
-  `📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
-
+ calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
+ 
  const firstDay = new Date(y, m, 1);
  const lastDay  = new Date(y, m + 1, 0);
-
+ 
  // Primer lunes visible
  const start = new Date(firstDay);
  const fdw = start.getDay() === 0 ? 7 : start.getDay();
  start.setDate(start.getDate() - (fdw - 1));
-
+ 
  // Último domingo visible
  const end = new Date(lastDay);
  const ldw = end.getDay() === 0 ? 7 : end.getDay();
  end.setDate(end.getDate() + (7 - ldw));
-
+ 
  let cur = new Date(start);
-
  while(cur <= end){
   const isOutside = cur.getMonth() !== m;
   const dow = cur.getDay();
   const isWeekday = dow >= 1 && dow <= 5;
-
   let html = `<div>${cur.getDate()}</div>`;
-
+  
   if(isWeekday && !isOutside){
    const w = weekDiff(cur, new Date());
    html += `
-    <small>⚡ ${guardia(electricos, w)}</small><br>
-    <small>🔧 ${guardia(mecanicos, w)}</small>`;
+    <small class="status-${estados[guardia(electricos,w)]||'active'}">⚡ ${guardia(electricos, w)}</small><br>
+    <small class="status-${estados[guardia(mecanicos,w)]||'active'}">🔧 ${guardia(mecanicos, w)}</small>`;
   }
-
+  
   calendarGrid.innerHTML += `
    <div class="calendar-day ${isOutside ? "outside" : ""} ${isWeekday ? "weekday" : "weekend"}"
         ${isWeekday && !isOutside ? `onclick="offset=${weekDiff(cur,new Date())};render()"` : ""}>
     ${html}
    </div>`;
-
+   
   cur.setDate(cur.getDate() + 1);
  }
 }
 
+function changeMonth(d){
+ calendarMonth.setMonth(calendarMonth.getMonth()+d);
+ renderCalendar();
+}
 
-function changeMonth(d){calendarMonth.setMonth(calendarMonth.getMonth()+d);renderCalendar()}
-
+// Renderizar semana
 function render(){
  carousel.innerHTML="";
  const base=lunes(new Date());
  const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
  const fin=new Date(ini);fin.setDate(fin.getDate()+4);
  subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
+ 
  for(let i=-1;i<=1;i++){
   const l=new Date(ini);l.setDate(l.getDate()+i*7);
   const v=new Date(l);v.setDate(v.getDate()+4);
+  const elecGuardia = guardia(electricos,offset+i);
+  const mecGuardia = guardia(mecanicos,offset+i);
+  
   carousel.innerHTML+=`
   <div class="card">
    <h3>${fd(l)} - ${fd(v)}</h3>
    <div class="guardias">
-    <div class="guardia"><div class="icono">⚡</div><div class="nombre">${guardia(electricos,offset+i)}</div><div class="days">L–V</div><div class="time">15:30 – 19:00</div></div>
-    <div class="guardia"><div class="icono">🔧</div><div class="nombre">${guardia(mecanicos,offset+i)}</div><div class="days">L–V</div><div class="time">15:30 – 19:00</div></div>
+    <div class="guardia">
+     <div class="icono">⚡</div>
+     <div class="nombre ${estados[elecGuardia]||'active'}">${elecGuardia}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
+     <small class="status-${estados[elecGuardia]||'active'}">${getEstadoTexto(estados[elecGuardia])}</small>
+    </div>
+    <div class="guardia">
+     <div class="icono">🔧</div>
+     <div class="nombre ${estados[mecGuardia]||'active'}">${mecGuardia}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
+     <small class="status-${estados[mecGuardia]||'active'}">${getEstadoTexto(estados[mecGuardia])}</small>
+    </div>
    </div>
   </div>`;
  }
+ 
  renderHistory();
  requestAnimationFrame(()=>carousel.scrollLeft=carousel.children[0].offsetWidth+14);
 }
@@ -271,19 +358,31 @@ function logCompletedWeek(){
  localStorage.history=JSON.stringify(history);
 }
 
-function renderHistory(){historyList.innerHTML="";history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`)}
+function renderHistory(){
+ historyList.innerHTML="";
+ history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`);
+}
 
+// Event listeners
 prev.onclick=()=>{offset--;render()};
 next.onclick=()=>{offset++;render()};
-save.onclick=()=>{localStorage.estados=JSON.stringify(estados);renderCalendar();alert("Guardado")};
+save.onclick=()=>{
+ localStorage.estados=JSON.stringify(estados);
+ render();
+ renderCalendar();
+ renderAdmin();
+ alert("✅ Configuración guardada");
+};
 
+// Inicialización
+renderAdmin();
 renderCalendar();
 logCompletedWeek();
 render();
 </script>
-
 </body>
 </html>
+
 
 
 
