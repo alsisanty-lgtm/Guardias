@@ -66,6 +66,19 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
  margin:20px;background:var(--card);
  border-radius:var(--radius);padding:16px
 }
+ <div class="calendar-head">
+ <div>Lun</div><div>Mar</div><div>Mié</div>
+ <div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+</div>
+.calendar-head{
+ display:grid;
+ grid-template-columns:repeat(7,1fr);
+ font-size:.7rem;
+ font-weight:700;
+ color:var(--muted);
+ text-align:center;
+ margin-top:8px
+}
 .calendar-grid{
  display:grid;
  grid-template-columns:repeat(7,1fr);
@@ -259,6 +272,7 @@ render();
 
 </body>
 </html>
+
 
 
 
