@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Alsi - Usuarios</title>
-<link rel="manifest" href="/Guardias/manifest.json">
+<title>Guardias Alsi</title>
 <meta name="theme-color" content="#1e88e5">
-<link rel="icon" href="/Guardias/icon-192.png">
+<link rel="icon" href="https://alsisanty-lgtm.github.io/Guardias/icon-192.png">
 <style>
 :root{
  --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
@@ -173,7 +172,7 @@ night.onclick=()=>{
 };
 if(localStorage.dark==="true") document.body.classList.add("dark");
 
-// Datos iniciales (se sincronizan desde la versión admin)
+// Datos iniciales
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
 let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
 let estados=JSON.parse(localStorage.estados||"{}");
@@ -194,7 +193,6 @@ const weekDiff=(a,b)=>Math.floor((lunes(a)-lunes(b))/604800000);
 const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
 const guardia=(l,o)=>{
  const a=activos(l);
- // Verificar si hay override manual para esta semana
  const weekKey = o.toString();
  if(manualOverrides[weekKey]) {
   const type = l === electricos ? 'electrico' : 'mecanico';
@@ -202,7 +200,6 @@ const guardia=(l,o)=>{
    return manualOverrides[weekKey][type];
   }
  }
- // Si no hay override, usar rotación automática
  return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
 };
 
@@ -221,7 +218,6 @@ function getEstadoTexto(estado){
 function renderPersonasList() {
  let html = '';
  
- // Eléctricos
  electricos.forEach(persona => {
   const estado = estados[persona] || 'activo';
   if (estado !== 'inactivo') {
@@ -236,7 +232,6 @@ function renderPersonasList() {
   }
  });
  
- // Mecánicos
  mecanicos.forEach(persona => {
   const estado = estados[persona] || 'activo';
   if (estado !== 'inactivo') {
@@ -264,12 +259,10 @@ function renderCalendar(){
  const firstDay = new Date(y, m, 1);
  const lastDay  = new Date(y, m + 1, 0);
  
- // Primer lunes visible
  const start = new Date(firstDay);
  const fdw = start.getDay() === 0 ? 7 : start.getDay();
  start.setDate(start.getDate() - (fdw - 1));
  
- // Último domingo visible
  const end = new Date(lastDay);
  const ldw = end.getDay() === 0 ? 7 : end.getDay();
  end.setDate(end.getDate() + (7 - ldw));
@@ -293,8 +286,7 @@ function renderCalendar(){
   }
   
   calendarGrid.innerHTML += `
-   <div class="calendar-day ${isOutside ? "outside" : ""} ${isWeekday ? "weekday" : "weekend"}"
-        ${isWeekday && !isOutside ? `onclick="offset=${weekDiff(cur,new Date())};render()"` : ""}>
+   <div class="calendar-day ${isOutside ? "outside" : ""} ${isWeekday ? "weekday" : "weekend"}">
     ${html}
    </div>`;
    
@@ -314,8 +306,6 @@ function render(){
  const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
  const fin=new Date(ini);fin.setDate(fin.getDate()+4);
  
- // Actualizar título principal
- document.querySelector('header h1').textContent = `Guardias Alsi`;
  subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
  
  for(let i=-1;i<=1;i++){
@@ -349,7 +339,6 @@ function render(){
  }
  
  renderHistory();
- // Centrar la semana actual
  requestAnimationFrame(()=>{
   if(carousel.children[1]){
    carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
@@ -384,21 +373,11 @@ function renderHistory(){
 prev.onclick=()=>{offset--;render()};
 next.onclick=()=>{offset++;render()};
 
-// Sincronizar datos periodicamente (simulación)
-function syncData() {
- // En un caso real, aquí harías una petición al servidor
- // para obtener los datos actualizados del admin
- console.log("Datos sincronizados");
-}
-
 // Inicialización
 renderCalendar();
 renderPersonasList();
 logCompletedWeek();
 render();
-
-// Sincronizar cada minuto
-setInterval(syncData, 60000);
 </script>
 </body>
 </html>
