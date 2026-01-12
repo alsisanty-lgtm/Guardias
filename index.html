@@ -67,8 +67,10 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
  border-radius:var(--radius);padding:16px
 }
 .calendar-grid{
- display:grid;grid-template-columns:repeat(7,1fr);
- gap:4px;margin-top:10px
+ display:grid;
+ grid-template-columns:repeat(5,1fr);
+ gap:4px;
+ margin-top:10px
 }
 .calendar-day{
  font-size:.7rem;text-align:center;
@@ -192,26 +194,36 @@ const guardia=(l,o)=>{
 /* ===== CALENDARIO ===== */
 function renderCalendar(){
  calendarGrid.innerHTML="";
- const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();
- calendarTitle.textContent=`📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
- const first=new Date(y,m,1),last=new Date(y,m+1,0);
- let start=first.getDay()||7,day=1;
- for(let i=1;i<=42;i++){
-  if(i<start||day>last.getDate()){
-   calendarGrid.innerHTML+=`<div class="calendar-day outside"></div>`;
-  }else{
-   const d=new Date(y,m,day);
-   const w=weekDiff(d,new Date());
-   calendarGrid.innerHTML+=`
+
+ const year = calendarMonth.getFullYear();
+ const month = calendarMonth.getMonth();
+ calendarTitle.textContent =
+  `📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${year}`;
+
+ const first = new Date(year, month, 1);
+ const last  = new Date(year, month + 1, 0);
+
+ let day = 1;
+
+ while(day <= last.getDate()){
+  const date = new Date(year, month, day);
+  const dow = date.getDay(); // 0 dom - 6 sáb
+
+  // SOLO LUNES (1) A VIERNES (5)
+  if(dow >= 1 && dow <= 5){
+   const w = weekDiff(date, new Date());
+   calendarGrid.innerHTML += `
     <div class="calendar-day" onclick="offset=${w};render()">
      <div>${day}</div>
-     <small>⚡ ${guardia(electricos,w)}</small><br>
-     <small>🔧 ${guardia(mecanicos,w)}</small>
+     <small>⚡ ${guardia(electricos, w)}</small><br>
+     <small>🔧 ${guardia(mecanicos, w)}</small>
     </div>`;
-   day++;
   }
+
+  day++;
  }
 }
+
 function changeMonth(d){calendarMonth.setMonth(calendarMonth.getMonth()+d);renderCalendar();}
 
 /* ===== RENDER ===== */
@@ -310,6 +322,7 @@ render();
 
 </body>
 </html>
+
 
 
 
