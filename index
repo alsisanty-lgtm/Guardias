@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardias Alsi - Usuarios</title>
+<link rel="manifest" href="/Guardias/manifest.json">
+<meta name="theme-color" content="#1e88e5">
+<link rel="icon" href="/Guardias/icon-192.png">
+<style>
+:root{
+ --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
+ --text:#1f2937;--muted:#6b7280;
+ --shadow:0 10px 25px rgba(0,0,0,.12);
+ --radius:18px;
+}
+body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--muted:#9ca3af}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
+header{
+ background:linear-gradient(135deg,#1e88e5,#1565c0);
+ color:#fff;padding:20px;text-align:center;
+ position:sticky;top:0;z-index:100
+}
+button{
+ background:var(--primary);color:#fff;border:none;
+ padding:10px 16px;border-radius:14px;font-weight:700;
+ cursor:pointer;
+ transition:opacity 0.3s;
+}
+button:hover{opacity:0.9}
+#night{position:fixed;top:12px;right:12px;z-index:200}
+.nav{display:flex;justify-content:space-between;padding:10px}
+.container{max-width:960px;margin:auto;padding:10px}
+.carousel{
+ display:flex;gap:14px;overflow-x:auto;
+ scroll-snap-type:x mandatory;
+ padding-bottom:10px;
+}
+.card{
+ min-width:320px;background:var(--card);
+ border-radius:var(--radius);
+ box-shadow:var(--shadow);
+ padding:20px;scroll-snap-align:center;
+}
+.guardias{display:flex;gap:14px;margin-top:14px}
+.guardia{
+ flex:1;text-align:center;
+ background:rgba(0,0,0,.05);
+ border-radius:14px;padding:14px;
+}
+body.dark .guardia{background:rgba(255,255,255,.06)}
+.icono{font-size:2.2em}
+.nombre{font-size:1.15em;font-weight:800}
+.days{font-size:.85em;color:var(--muted)}
+.time{font-weight:700;font-size:.9em}
+.status-active{color:#10b981}
+.status-vacaciones{color:#f59e0b}
+.status-viaje{color:#8b5cf6}
+.status-baja{color:#ef4444}
+.status-inactivo{color:#6b7280}
+
+/* ===== CALENDARIO ===== */
+#calendar{
+ margin:20px;background:var(--card);
+ border-radius:var(--radius);padding:16px
+}
+.calendar-head{
+ display:grid;
+ grid-template-columns:repeat(7,1fr);
+ font-size:.7rem;
+ font-weight:700;
+ color:var(--muted);
+ text-align:center;
+ margin-top:8px
+}
+.calendar-grid{
+ display:grid;
+ grid-template-columns:repeat(7,1fr);
+ gap:4px;
+ margin-top:10px
+}
+.calendar-day{
+ font-size:.7rem;text-align:center;
+ padding:6px;border-radius:8px;
+ background:rgba(0,0,0,.04);
+}
+.weekday{background:rgba(30,136,229,.08);cursor:pointer}
+.weekend{background:rgba(0,0,0,.02);color:var(--muted)}
+.today-week{outline:2px solid var(--primary)}
+body.dark .weekday{background:rgba(30,136,229,.18)}
+body.dark .weekend{background:rgba(255,255,255,.03)}
+.calendar-day.outside{
+ background:rgba(0,0,0,.02);color:var(--muted)
+}
+
+/* ===== INFO ===== */
+.info-section{
+ margin:20px;background:var(--card);
+ padding:16px;border-radius:var(--radius);
+}
+.info-section h3{margin-top:0}
+.personas-grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+ gap:10px;
+ margin-top:10px;
+}
+.persona-item{
+ padding:8px 12px;
+ border-radius:8px;
+ background:rgba(0,0,0,.03);
+ display:flex;
+ align-items:center;
+ gap:8px;
+}
+.persona-item .icon{font-size:1.2em}
+
+/* ===== HISTORIAL ===== */
+#history{
+ margin:20px;background:var(--card);
+ padding:16px;border-radius:var(--radius)
+}
+.history-item{
+ font-size:.9em;border-bottom:1px dashed rgba(0,0,0,.2);
+ padding:6px 0;
+ display:flex;
+ justify-content:space-between;
+}
+
+@media(max-width:480px){
+ .calendar-day{font-size:.6rem}
+ .personas-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<button id="night">🌙</button>
+<header>
+<h1>Guardias Alsi</h1>
+<div id="subtitle"></div>
+</header>
+<div class="nav">
+<button id="prev">⬅ Anterior</button>
+<button id="next">Siguiente ➡</button>
+</div>
+<div class="container">
+<div class="carousel" id="carousel"></div>
+</div>
+<div id="calendar">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<button onclick="changeMonth(-1)">◀</button>
+<h3 id="calendarTitle"></h3>
+<button onclick="changeMonth(1)">▶</button>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
+</div>
+
+<div class="info-section">
+<h3>👥 Personal Actual</h3>
+<div class="personas-grid" id="personasList"></div>
+</div>
+
+<div id="history">
+<h3>📜 Historial de Guardias</h3>
+<div id="historyList"></div>
+</div>
+
+<script>
+// Toggle modo oscuro
+night.onclick=()=>{
+ document.body.classList.toggle("dark");
+ localStorage.dark=document.body.classList.contains("dark");
+};
+if(localStorage.dark==="true") document.body.classList.add("dark");
+
+// Datos iniciales (se sincronizan desde la versión admin)
+let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
+let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
+let estados=JSON.parse(localStorage.estados||"{}");
+let history=JSON.parse(localStorage.history||"[]");
+let manualOverrides=JSON.parse(localStorage.manualOverrides||"{}");
+let offset=0;
+let calendarMonth=new Date();
+
+// Funciones auxiliares
+const lunes=d=>{
+ d=new Date(d);
+ let n=d.getDay();
+ d.setDate(d.getDate()-(n===0?6:n-1));
+ return d;
+};
+const fd=d=>d.toLocaleDateString();
+const weekDiff=(a,b)=>Math.floor((lunes(a)-lunes(b))/604800000);
+const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
+const guardia=(l,o)=>{
+ const a=activos(l);
+ // Verificar si hay override manual para esta semana
+ const weekKey = o.toString();
+ if(manualOverrides[weekKey]) {
+  const type = l === electricos ? 'electrico' : 'mecanico';
+  if(manualOverrides[weekKey][type]) {
+   return manualOverrides[weekKey][type];
+  }
+ }
+ // Si no hay override, usar rotación automática
+ return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
+};
+
+function getEstadoTexto(estado){
+ switch(estado){
+  case 'activo': return 'Activo';
+  case 'vacaciones': return 'De vacaciones';
+  case 'viaje': return 'De viaje';
+  case 'baja': return 'De baja';
+  case 'inactivo': return 'Inactivo';
+  default: return 'Activo';
+ }
+}
+
+// Renderizar lista de personas
+function renderPersonasList() {
+ let html = '';
+ 
+ // Eléctricos
+ electricos.forEach(persona => {
+  const estado = estados[persona] || 'activo';
+  if (estado !== 'inactivo') {
+   html += `
+    <div class="persona-item">
+     <span class="icon">⚡</span>
+     <span>${persona}</span>
+     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
+      ${getEstadoTexto(estado)}
+     </span>
+    </div>`;
+  }
+ });
+ 
+ // Mecánicos
+ mecanicos.forEach(persona => {
+  const estado = estados[persona] || 'activo';
+  if (estado !== 'inactivo') {
+   html += `
+    <div class="persona-item">
+     <span class="icon">🔧</span>
+     <span>${persona}</span>
+     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
+      ${getEstadoTexto(estado)}
+     </span>
+    </div>`;
+  }
+ });
+ 
+ document.getElementById('personasList').innerHTML = html;
+}
+
+// Renderizar calendario
+function renderCalendar(){
+ calendarGrid.innerHTML="";
+ const y = calendarMonth.getFullYear();
+ const m = calendarMonth.getMonth();
+ calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
+ 
+ const firstDay = new Date(y, m, 1);
+ const lastDay  = new Date(y, m + 1, 0);
+ 
+ // Primer lunes visible
+ const start = new Date(firstDay);
+ const fdw = start.getDay() === 0 ? 7 : start.getDay();
+ start.setDate(start.getDate() - (fdw - 1));
+ 
+ // Último domingo visible
+ const end = new Date(lastDay);
+ const ldw = end.getDay() === 0 ? 7 : end.getDay();
+ end.setDate(end.getDate() + (7 - ldw));
+ 
+ let cur = new Date(start);
+ while(cur <= end){
+  const isOutside = cur.getMonth() !== m;
+  const dow = cur.getDay();
+  const isWeekday = dow >= 1 && dow <= 5;
+  let html = `<div>${cur.getDate()}</div>`;
+  
+  if(isWeekday && !isOutside){
+   const w = weekDiff(cur, new Date());
+   const elecGuardia = guardia(electricos, w);
+   const mecGuardia = guardia(mecanicos, w);
+   const hasOverride = manualOverrides[w.toString()];
+   
+   html += `
+    <small class="${hasOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</small><br>
+    <small class="${hasOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</small>`;
+  }
+  
+  calendarGrid.innerHTML += `
+   <div class="calendar-day ${isOutside ? "outside" : ""} ${isWeekday ? "weekday" : "weekend"}"
+        ${isWeekday && !isOutside ? `onclick="offset=${weekDiff(cur,new Date())};render()"` : ""}>
+    ${html}
+   </div>`;
+   
+  cur.setDate(cur.getDate() + 1);
+ }
+}
+
+function changeMonth(d){
+ calendarMonth.setMonth(calendarMonth.getMonth()+d);
+ renderCalendar();
+}
+
+// Renderizar semana
+function render(){
+ carousel.innerHTML="";
+ const base=lunes(new Date());
+ const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
+ const fin=new Date(ini);fin.setDate(fin.getDate()+4);
+ 
+ // Actualizar título principal
+ document.querySelector('header h1').textContent = `Guardias Alsi`;
+ subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
+ 
+ for(let i=-1;i<=1;i++){
+  const l=new Date(ini);l.setDate(l.getDate()+i*7);
+  const v=new Date(l);v.setDate(v.getDate()+4);
+  const elecGuardia = guardia(electricos,offset+i);
+  const mecGuardia = guardia(mecanicos,offset+i);
+  const weekKey = (offset+i).toString();
+  const hasOverride = manualOverrides[weekKey];
+  
+  carousel.innerHTML+=`
+  <div class="card">
+   <h3>${fd(l)} - ${fd(v)} ${hasOverride?'🔄':''}</h3>
+   <div class="guardias">
+    <div class="guardia">
+     <div class="icono">⚡</div>
+     <div class="nombre">${elecGuardia}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
+     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[elecGuardia])}</small>
+    </div>
+    <div class="guardia">
+     <div class="icono">🔧</div>
+     <div class="nombre">${mecGuardia}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
+     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[mecGuardia])}</small>
+    </div>
+   </div>
+  </div>`;
+ }
+ 
+ renderHistory();
+ // Centrar la semana actual
+ requestAnimationFrame(()=>{
+  if(carousel.children[1]){
+   carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
+  }
+ });
+}
+
+function logCompletedWeek(){
+ const now=new Date(),fri=lunes(now);fri.setDate(fri.getDate()+4);
+ if(now<fri)return;
+ const key=fd(lunes(now));
+ if(history.some(h=>h.startsWith(key)))return;
+ history.unshift(`${key} ⚡ ${guardia(electricos,0)} · 🔧 ${guardia(mecanicos,0)}`);
+ history=history.slice(0,30);
+ localStorage.history=JSON.stringify(history);
+}
+
+function renderHistory(){
+ historyList.innerHTML="";
+ history.forEach(h=>{
+  const [fecha, ...resto] = h.split(' ');
+  const guardias = resto.join(' ');
+  historyList.innerHTML+=`
+   <div class="history-item">
+    <span>${fecha}</span>
+    <span>${guardias}</span>
+   </div>`;
+ });
+}
+
+// Event listeners
+prev.onclick=()=>{offset--;render()};
+next.onclick=()=>{offset++;render()};
+
+// Sincronizar datos periodicamente (simulación)
+function syncData() {
+ // En un caso real, aquí harías una petición al servidor
+ // para obtener los datos actualizados del admin
+ console.log("Datos sincronizados");
+}
+
+// Inicialización
+renderCalendar();
+renderPersonasList();
+logCompletedWeek();
+render();
+
+// Sincronizar cada minuto
+setInterval(syncData, 60000);
+</script>
+</body>
+</html>
