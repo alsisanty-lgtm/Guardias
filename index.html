@@ -15,7 +15,7 @@
  --radius:18px;
 }
 body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--muted:#9ca3af}
-body{margin:0;font-family:system-ui;background:var(--bg);color:var(text)}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
 header{
  background:linear-gradient(135deg,#1e88e5,#1565c0);
  color:#fff;padding:20px;text-align:center;
@@ -110,6 +110,7 @@ select{
  background:var(--card);
  color:var(--text);
  font-size:14px;
+ min-width:140px;
 }
 .status-active{color:#10b981}
 .status-vacaciones{color:#f59e0b}
@@ -131,6 +132,7 @@ select{
  .calendar-day{font-size:.6rem}
  .admin-person{flex-direction:column;align-items:flex-start}
  .admin-person .name{min-width:auto}
+ select{min-width:100%}
 }
 </style>
 </head>
@@ -158,11 +160,13 @@ select{
 
 <details id="admin">
 <summary>⚙️ Administrador</summary>
-<h3>⚡ Eléctricos</h3>
-<div id="admin-elec"></div>
-<h3>🔧 Mecánicos</h3>
-<div id="admin-mec"></div>
-<br><button id="save">💾 Guardar</button>
+<div id="admin-content">
+ <h3>⚡ Eléctricos</h3>
+ <div id="admin-elec"></div>
+ <h3>🔧 Mecánicos</h3>
+ <div id="admin-mec"></div>
+ <br><button id="save">💾 Guardar</button>
+</div>
 </details>
 
 <div id="history">
@@ -180,11 +184,22 @@ if(localStorage.dark==="true") document.body.classList.add("dark");
 
 // Contraseña admin
 const ADMIN_PASS="alsi2026";
-setTimeout(()=>{
- if(prompt("Contraseña admin")!==ADMIN_PASS){
-  admin.style.display="none";
+let adminAuthenticated = false;
+
+// Verificar autenticación
+function checkAdminAuth() {
+ if (!adminAuthenticated) {
+  const password = prompt("🔐 Contraseña administrador:");
+  if (password === ADMIN_PASS) {
+   adminAuthenticated = true;
+   document.getElementById('admin-content').style.display = 'block';
+   renderAdmin();
+  } else {
+   document.getElementById('admin-content').style.display = 'none';
+   document.querySelector('#admin summary').textContent = '🔒 Administrador (acceso restringido)';
+  }
  }
-},300);
+}
 
 // Datos iniciales
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
@@ -212,40 +227,44 @@ const guardia=(l,o)=>{
 // Renderizar administración
 function renderAdmin(){
  // Renderizar eléctricos
- adminElec.innerHTML="";
+ let adminElecHTML = '';
  electricos.forEach(persona=>{
-  adminElec.innerHTML+=`
+  const estadoActual = estados[persona] || 'activo';
+  adminElecHTML += `
    <div class="admin-person">
     <div class="name">${persona}</div>
-    <select id="estado-${persona}" onchange="estados['${persona}']=this.value">
-     <option value="activo" ${estados[persona]==='activo'?'selected':''}>✅ Activo</option>
-     <option value="vacaciones" ${estados[persona]==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
-     <option value="viaje" ${estados[persona]==='viaje'?'selected':''}>✈️ Viaje</option>
-     <option value="baja" ${estados[persona]==='baja'?'selected':''}>🤒 Baja médica</option>
-     <option value="inactivo" ${estados[persona]==='inactivo'?'selected':''}>⏸️ Inactivo</option>
+    <select id="estado-${persona.replace(/\s+/g, '-')}" onchange="estados['${persona}']=this.value">
+     <option value="activo" ${estadoActual==='activo'?'selected':''}>✅ Activo</option>
+     <option value="vacaciones" ${estadoActual==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
+     <option value="viaje" ${estadoActual==='viaje'?'selected':''}>✈️ Viaje</option>
+     <option value="baja" ${estadoActual==='baja'?'selected':''}>🤒 Baja médica</option>
+     <option value="inactivo" ${estadoActual==='inactivo'?'selected':''}>⏸️ Inactivo</option>
     </select>
-    <span class="status-${estados[persona]||'active'}">${getEstadoTexto(estados[persona])}</span>
+    <span class="status-${estadoActual}">${getEstadoTexto(estadoActual)}</span>
    </div>
   `;
  });
+ document.getElementById('admin-elec').innerHTML = adminElecHTML;
  
  // Renderizar mecánicos
- adminMec.innerHTML="";
+ let adminMecHTML = '';
  mecanicos.forEach(persona=>{
-  adminMec.innerHTML+=`
+  const estadoActual = estados[persona] || 'activo';
+  adminMecHTML += `
    <div class="admin-person">
     <div class="name">${persona}</div>
-    <select id="estado-${persona}" onchange="estados['${persona}']=this.value">
-     <option value="activo" ${estados[persona]==='activo'?'selected':''}>✅ Activo</option>
-     <option value="vacaciones" ${estados[persona]==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
-     <option value="viaje" ${estados[persona]==='viaje'?'selected':''}>✈️ Viaje</option>
-     <option value="baja" ${estados[persona]==='baja'?'selected':''}>🤒 Baja médica</option>
-     <option value="inactivo" ${estados[persona]==='inactivo'?'selected':''}>⏸️ Inactivo</option>
+    <select id="estado-${persona.replace(/\s+/g, '-')}" onchange="estados['${persona}']=this.value">
+     <option value="activo" ${estadoActual==='activo'?'selected':''}>✅ Activo</option>
+     <option value="vacaciones" ${estadoActual==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
+     <option value="viaje" ${estadoActual==='viaje'?'selected':''}>✈️ Viaje</option>
+     <option value="baja" ${estadoActual==='baja'?'selected':''}>🤒 Baja médica</option>
+     <option value="inactivo" ${estadoActual==='inactivo'?'selected':''}>⏸️ Inactivo</option>
     </select>
-    <span class="status-${estados[persona]||'active'}">${getEstadoTexto(estados[persona])}</span>
+    <span class="status-${estadoActual}">${getEstadoTexto(estadoActual)}</span>
    </div>
   `;
  });
+ document.getElementById('admin-mec').innerHTML = adminMecHTML;
 }
 
 function getEstadoTexto(estado){
@@ -288,9 +307,11 @@ function renderCalendar(){
   
   if(isWeekday && !isOutside){
    const w = weekDiff(cur, new Date());
+   const elecGuardia = guardia(electricos, w);
+   const mecGuardia = guardia(mecanicos, w);
    html += `
-    <small class="status-${estados[guardia(electricos,w)]||'active'}">⚡ ${guardia(electricos, w)}</small><br>
-    <small class="status-${estados[guardia(mecanicos,w)]||'active'}">🔧 ${guardia(mecanicos, w)}</small>`;
+    <small class="status-${estados[elecGuardia]||'active'}">⚡ ${elecGuardia}</small><br>
+    <small class="status-${estados[mecGuardia]||'active'}">🔧 ${mecGuardia}</small>`;
   }
   
   calendarGrid.innerHTML += `
@@ -328,14 +349,14 @@ function render(){
    <div class="guardias">
     <div class="guardia">
      <div class="icono">⚡</div>
-     <div class="nombre ${estados[elecGuardia]||'active'}">${elecGuardia}</div>
+     <div class="nombre">${elecGuardia}</div>
      <div class="days">L–V</div>
      <div class="time">15:30 – 19:00</div>
      <small class="status-${estados[elecGuardia]||'active'}">${getEstadoTexto(estados[elecGuardia])}</small>
     </div>
     <div class="guardia">
      <div class="icono">🔧</div>
-     <div class="nombre ${estados[mecGuardia]||'active'}">${mecGuardia}</div>
+     <div class="nombre">${mecGuardia}</div>
      <div class="days">L–V</div>
      <div class="time">15:30 – 19:00</div>
      <small class="status-${estados[mecGuardia]||'active'}">${getEstadoTexto(estados[mecGuardia])}</small>
@@ -366,7 +387,20 @@ function renderHistory(){
 // Event listeners
 prev.onclick=()=>{offset--;render()};
 next.onclick=()=>{offset++;render()};
+
+// Configurar evento para el details del admin
+document.querySelector('#admin summary').addEventListener('click', function(e) {
+ // Solo verificar autenticación cuando se expande
+ if (this.parentNode.open && !adminAuthenticated) {
+  checkAdminAuth();
+ }
+});
+
 save.onclick=()=>{
+ if (!adminAuthenticated) {
+  alert("❌ No tienes permisos de administrador");
+  return;
+ }
  localStorage.estados=JSON.stringify(estados);
  render();
  renderCalendar();
@@ -375,13 +409,16 @@ save.onclick=()=>{
 };
 
 // Inicialización
-renderAdmin();
 renderCalendar();
 logCompletedWeek();
 render();
+
+// Renderizar admin inicialmente (oculto hasta autenticación)
+renderAdmin();
 </script>
 </body>
 </html>
+
 
 
 
