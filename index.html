@@ -38,8 +38,7 @@ button{
 
 .carousel{
  display:flex;gap:14px;overflow-x:auto;
- scroll-snap-type:x mandatory;
- -webkit-overflow-scrolling:touch
+ scroll-snap-type:x mandatory
 }
 
 .card{
@@ -59,70 +58,26 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 
 .icono{font-size:2.2em}
 .nombre{font-size:1.15em;font-weight:800}
-.days{font-size:.85em;color:var(--muted);margin-top:6px}
-.time{font-weight:700;font-size:.9em;margin-top:4px}
+.days{font-size:.85em;color:var(--muted)}
+.time{font-weight:700;font-size:.9em}
 
 /* ===== CALENDARIO ===== */
 #calendar{
-  margin:20px;
-  background:var(--card);
-  border-radius:var(--radius);
-  padding:16px;
+ margin:20px;background:var(--card);
+ border-radius:var(--radius);padding:16px
 }
-
 .calendar-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:4px;
-  margin-top:10px;
+ display:grid;grid-template-columns:repeat(7,1fr);
+ gap:4px;margin-top:10px
 }
-
-.calendar-day,
-.calendar-head {
-  text-align:center;
-  font-size:.75rem;
-  padding:6px 0;
-  border-radius:8px;
-}
-
-.calendar-head{
-  font-weight:700;
-  color:var(--muted);
-}
-
 .calendar-day{
-  background: rgba(0,0,0,.05);
-  cursor: pointer;
+ font-size:.7rem;text-align:center;
+ padding:6px;border-radius:8px;
+ background:rgba(0,0,0,.05);cursor:pointer
 }
-
-body.dark .calendar-day{
-  background: rgba(255,255,255,.08);
-}
-
-/* Día seleccionado */
-.calendar-day.active{
-  background: var(--primary);
-  color:#fff;
-}
-
-/* Días fuera del mes */
+body.dark .calendar-day{background:rgba(255,255,255,.08)}
 .calendar-day.outside{
-  background: rgba(0,0,0,.02);
-  color: var(--muted);
-  cursor: default;
-}
-
-body.dark .calendar-day.outside{
-  background: rgba(255,255,255,.03);
-}
-
-/* RESPONSIVE */
-@media(max-width:480px){
-  .calendar-day,
-  .calendar-head{
-    font-size:0.65rem;
-    padding:5px 0;
-  }
+ background:rgba(0,0,0,.02);color:var(--muted);cursor:default
 }
 
 /* ===== ADMIN ===== */
@@ -131,13 +86,10 @@ details{
  padding:16px;border-radius:var(--radius)
 }
 .admin-person{
- display:flex;align-items:center;
- justify-content:space-between;
- border-bottom:1px solid rgba(0,0,0,.1);
- padding:6px 0
+ display:flex;justify-content:space-between;
+ border-bottom:1px solid rgba(0,0,0,.1);padding:6px 0
 }
 select{border-radius:10px;padding:5px}
-.order button{padding:4px 8px;font-size:12px}
 
 /* ===== HISTORIAL ===== */
 #history{
@@ -169,16 +121,12 @@ select{border-radius:10px;padding:5px}
 <div class="carousel" id="carousel"></div>
 </div>
 
-<!-- 📆 CALENDARIO -->
+<!-- CALENDARIO -->
 <div id="calendar">
 <div style="display:flex;justify-content:space-between;align-items:center">
-  <button onclick="changeMonth(-1)">◀</button>
-  <h3 id="calendarTitle">📆 Calendario mensual</h3>
-  <button onclick="changeMonth(1)">▶</button>
-</div>
-
-<div class="calendar-head">
-<div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+<button onclick="changeMonth(-1)">◀</button>
+<h3 id="calendarTitle"></h3>
+<button onclick="changeMonth(1)">▶</button>
 </div>
 <div class="calendar-grid" id="calendarGrid"></div>
 </div>
@@ -202,95 +150,71 @@ select{border-radius:10px;padding:5px}
 </div>
 
 <script>
-/* ===================== MODO NOCHE ===================== */
+/* ===== MODO NOCHE ===== */
 night.onclick=()=>{
  document.body.classList.toggle("dark");
  localStorage.dark=document.body.classList.contains("dark");
 };
 if(localStorage.dark==="true")document.body.classList.add("dark");
 
-/* ===================== ADMIN ===================== */
+/* ===== ADMIN ===== */
 const ADMIN_PASS="alsi2026";
-let unlocked=false;
 setTimeout(()=>{
- const p=prompt("Contraseña admin");
- if(p!==ADMIN_PASS)admin.style.display="none";
+ if(prompt("Contraseña admin")!==ADMIN_PASS)admin.style.display="none";
 },300);
 
-/* ===================== DATOS ===================== */
+/* ===== DATOS ===== */
 let electricos=["Abde","Fran","Dani","Jose","Fran Ruiz","Hicham"];
 let mecanicos=["Ramon","Santy","Traian","Manu","Fran Alba","Cele"];
 let estados=JSON.parse(localStorage.estados||"{}");
 let history=JSON.parse(localStorage.history||"[]");
-let lastLoggedWeek=localStorage.lastLoggedWeek||"";
 let offset=0;
-let calendarMonth = new Date(); // mes que se está mostrando
+let calendarMonth=new Date();
 
 try{electricos=JSON.parse(localStorage.electricos)||electricos}catch{}
 try{mecanicos=JSON.parse(localStorage.mecanicos)||mecanicos}catch{}
 
-/* ===================== FECHAS ===================== */
+/* ===== FECHAS ===== */
 const lunes=d=>{
  d=new Date(d);let n=d.getDay();
  d.setDate(d.getDate()-(n===0?6:n-1));return d;
 };
 const fd=d=>d.toLocaleDateString();
+const weekDiff=(a,b)=>Math.floor((lunes(a)-lunes(b))/604800000);
 
-/* ===================== GUARDIAS ===================== */
+/* ===== GUARDIAS ===== */
 const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
 const guardia=(l,o)=>{
  const a=activos(l);
  return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
 };
 
-/* ===================== CALENDARIO ===================== */
+/* ===== CALENDARIO ===== */
 function renderCalendar(){
-  const g = document.getElementById("calendarGrid");
-  const title = document.getElementById("calendarTitle");
-  g.innerHTML = "";
-
-  const year = calendarMonth.getFullYear();
-  const month = calendarMonth.getMonth();
-  const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  title.textContent = `📆 ${monthNames[month]} ${year}`;
-
-  const firstDayOfMonth = new Date(year, month, 1);
-  const lastDayOfMonth = new Date(year, month + 1, 0);
-
-  const startDay = firstDayOfMonth.getDay() === 0 ? 7 : firstDayOfMonth.getDay();
-  const totalDays = lastDayOfMonth.getDate();
-
-  let html = "";
-  let dayCounter = 1;
-
-  for(let i = 1; i <= 42; i++){
-    if(i < startDay || dayCounter > totalDays){
-      html += `<div class="calendar-day outside"></div>`;
-    } else {
-      const currentDate = new Date(year, month, dayCounter);
-      const weekOffset = Math.floor((lunes(currentDate) - lunes(new Date())) / 604800000);
-      const e = guardia(electricos, weekOffset);
-      const m = guardia(mecanicos, weekOffset);
-
-      html += `<div class="calendar-day" onclick="offset=${weekOffset};render()">
-        ${dayCounter}
-        <strong>⚡ ${e}</strong>
-        <strong>🔧 ${m}</strong>
-      </div>`;
-
-      dayCounter++;
-    }
+ calendarGrid.innerHTML="";
+ const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();
+ calendarTitle.textContent=`📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
+ const first=new Date(y,m,1),last=new Date(y,m+1,0);
+ let start=first.getDay()||7,day=1;
+ for(let i=1;i<=42;i++){
+  if(i<start||day>last.getDate()){
+   calendarGrid.innerHTML+=`<div class="calendar-day outside"></div>`;
+  }else{
+   const d=new Date(y,m,day);
+   const w=weekDiff(d,new Date());
+   calendarGrid.innerHTML+=`
+    <div class="calendar-day" onclick="offset=${w};render()">
+     <div>${day}</div>
+     <small>⚡ ${guardia(electricos,w)}</small><br>
+     <small>🔧 ${guardia(mecanicos,w)}</small>
+    </div>`;
+   day++;
   }
-
-  g.innerHTML = html;
+ }
 }
+function changeMonth(d){calendarMonth.setMonth(calendarMonth.getMonth()+d);renderCalendar();}
 
-function changeMonth(delta){
-  calendarMonth.setMonth(calendarMonth.getMonth() + delta);
-  renderCalendar();
-}
-
-/* ===================== RENDER ===================== */
+/* ===== RENDER ===== */
 function render(){
  carousel.innerHTML="";
  const base=lunes(new Date());
@@ -301,63 +225,53 @@ function render(){
  for(let i=-1;i<=1;i++){
   const l=new Date(ini);l.setDate(l.getDate()+i*7);
   const v=new Date(l);v.setDate(v.getDate()+4);
-  const e=guardia(electricos,offset+i);
-  const m=guardia(mecanicos,offset+i);
-
-  if(i===0){
-   const key=fd(l);
-   if(key!==lastLoggedWeek){
-    history.unshift(`${key} ⚡ ${e} · 🔧 ${m}`);
-    history=history.slice(0,30);
-    localStorage.history=JSON.stringify(history);
-    localStorage.lastLoggedWeek=key;
-   }
-  }
-
   carousel.innerHTML+=`
   <div class="card">
    <h3>${fd(l)} - ${fd(v)}</h3>
    <div class="guardias">
     <div class="guardia">
      <div class="icono">⚡</div>
-     <div class="nombre">${e}</div>
-     <div class="days">Lun · Mar · Mié · Jue · Vie</div>
-     <div class="time">⏰ 15:30 – 19:00</div>
+     <div class="nombre">${guardia(electricos,offset+i)}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
     </div>
     <div class="guardia">
      <div class="icono">🔧</div>
-     <div class="nombre">${m}</div>
-     <div class="days">Lun · Mar · Mié · Jue · Vie</div>
-     <div class="time">⏰ 15:30 – 19:00</div>
+     <div class="nombre">${guardia(mecanicos,offset+i)}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
     </div>
    </div>
   </div>`;
  }
-
  renderHistory();
- requestAnimationFrame(()=>{
-  carousel.scrollLeft=carousel.children[0].offsetWidth+14;
- });
+ requestAnimationFrame(()=>carousel.scrollLeft=carousel.children[0].offsetWidth+14);
 }
 
-/* ===================== HISTORIAL ===================== */
+/* ===== HISTORIAL REAL ===== */
+function logCompletedWeek(){
+ const now=new Date();
+ const friday=lunes(now);friday.setDate(friday.getDate()+4);
+ if(now<friday)return;
+ const key=fd(lunes(now));
+ if(history.some(h=>h.startsWith(key)))return;
+ history.unshift(`${key} ⚡ ${guardia(electricos,0)} · 🔧 ${guardia(mecanicos,0)}`);
+ history=history.slice(0,30);
+ localStorage.history=JSON.stringify(history);
+}
 function renderHistory(){
  historyList.innerHTML="";
- history.forEach(h=>{
-  historyList.innerHTML+=`<div class="history-item">${h}</div>`;
- });
+ history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`);
 }
 
-/* ===================== ADMIN ===================== */
+/* ===== ADMIN ===== */
 function renderAdmin(){
  [["elec",electricos],["mec",mecanicos]].forEach(([id,list])=>{
-  const c=document.getElementById("admin-"+id);
-  c.innerHTML="";
+  const c=document.getElementById("admin-"+id);c.innerHTML="";
   list.forEach((p,i)=>{
    c.innerHTML+=`
-   <div class="admin-person">
-    ${p}
-    <div class="order">
+   <div class="admin-person">${p}
+    <div>
      <button onclick="move('${id}',${i},-1)">▲</button>
      <button onclick="move('${id}',${i},1)">▼</button>
      <select onchange="estados['${p}']=this.value">
@@ -375,7 +289,7 @@ function move(t,i,d){
  const l=t==="elec"?electricos:mecanicos;
  const n=i+d;if(n<0||n>=l.length)return;
  [l[i],l[n]]=[l[n],l[i]];
- renderAdmin();render();
+ renderAdmin();render();renderCalendar();
 }
 
 prev.onclick=()=>{offset--;render()};
@@ -384,17 +298,20 @@ save.onclick=()=>{
  localStorage.electricos=JSON.stringify(electricos);
  localStorage.mecanicos=JSON.stringify(mecanicos);
  localStorage.estados=JSON.stringify(estados);
- alert("Guardado");
+ renderCalendar();alert("Guardado");
 };
 
-/* ===================== INIT ===================== */
+/* ===== INIT ===== */
 renderAdmin();
 renderCalendar();
+logCompletedWeek();
 render();
 </script>
 
 </body>
 </html>
+
+
 
 
 
