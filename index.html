@@ -197,32 +197,46 @@ function renderCalendar(){
 
  const year = calendarMonth.getFullYear();
  const month = calendarMonth.getMonth();
+
  calendarTitle.textContent =
   `📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${year}`;
 
  const first = new Date(year, month, 1);
  const last  = new Date(year, month + 1, 0);
 
- let day = 1;
+ // Lunes como inicio de semana
+ const start = new Date(first);
+ const dayOfWeek = start.getDay() === 0 ? 7 : start.getDay();
+ start.setDate(start.getDate() - (dayOfWeek - 1));
 
- while(day <= last.getDate()){
-  const date = new Date(year, month, day);
-  const dow = date.getDay(); // 0 dom - 6 sáb
+ let current = new Date(start);
 
-  // SOLO LUNES (1) A VIERNES (5)
-  if(dow >= 1 && dow <= 5){
-   const w = weekDiff(date, new Date());
-   calendarGrid.innerHTML += `
-    <div class="calendar-day" onclick="offset=${w};render()">
-     <div>${day}</div>
-     <small>⚡ ${guardia(electricos, w)}</small><br>
-     <small>🔧 ${guardia(mecanicos, w)}</small>
-    </div>`;
+ // 6 semanas (42 días) como un calendario real
+ for(let i=0;i<42;i++){
+  const isOutside = current.getMonth() !== month;
+  const dow = current.getDay(); // 0 dom - 6 sáb
+  const isWeekday = dow >= 1 && dow <= 5;
+
+  let content = `<div>${current.getDate()}</div>`;
+
+  // SOLO LUNES A VIERNES
+  if(isWeekday && !isOutside){
+   const w = weekDiff(current, new Date());
+   content += `
+    <small>⚡ ${guardia(electricos, w)}</small><br>
+    <small>🔧 ${guardia(mecanicos, w)}</small>`;
   }
 
-  day++;
+  calendarGrid.innerHTML += `
+   <div class="calendar-day ${isOutside ? "outside" : ""}"
+        onclick="${!isOutside ? `offset=${weekDiff(current,new Date())};render()` : ""}">
+    ${content}
+   </div>`;
+
+  current.setDate(current.getDate() + 1);
  }
 }
+
 
 function changeMonth(d){calendarMonth.setMonth(calendarMonth.getMonth()+d);renderCalendar();}
 
@@ -322,6 +336,7 @@ render();
 
 </body>
 </html>
+
 
 
 
