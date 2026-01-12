@@ -191,39 +191,51 @@ const guardia=(l,o)=>{const a=activos(l);return a.length?a[((o%a.length)+a.lengt
 
 function renderCalendar(){
  calendarGrid.innerHTML="";
- const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();
- calendarTitle.textContent=`📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
 
- const first=new Date(y,m,1);
- const start=new Date(first);
- const dow=start.getDay()||7;
- start.setDate(start.getDate()-(dow-1));
+ const y = calendarMonth.getFullYear();
+ const m = calendarMonth.getMonth();
+ calendarTitle.textContent =
+  `📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
 
- let cur=new Date(start);
- const thisWeek=lunes(new Date()).getTime();
+ const firstDay = new Date(y, m, 1);
+ const lastDay  = new Date(y, m + 1, 0);
 
- for(let i=0;i<42;i++){
-  const isOutside=cur.getMonth()!==m;
-  const d=cur.getDay();
-  const isWeekday=d>=1&&d<=5;
-  const isCurrentWeek=lunes(cur).getTime()===thisWeek;
+ // Primer lunes visible
+ const start = new Date(firstDay);
+ const fdw = start.getDay() === 0 ? 7 : start.getDay();
+ start.setDate(start.getDate() - (fdw - 1));
 
-  let cls="calendar-day";
-  if(isOutside)cls+=" outside";
-  else if(isWeekday)cls+=" weekday";
-  else cls+=" weekend";
-  if(isCurrentWeek && isWeekday)cls+=" today-week";
+ // Último domingo visible
+ const end = new Date(lastDay);
+ const ldw = end.getDay() === 0 ? 7 : end.getDay();
+ end.setDate(end.getDate() + (7 - ldw));
 
-  let html=`<div>${cur.getDate()}</div>`;
+ let cur = new Date(start);
+
+ while(cur <= end){
+  const isOutside = cur.getMonth() !== m;
+  const dow = cur.getDay();
+  const isWeekday = dow >= 1 && dow <= 5;
+
+  let html = `<div>${cur.getDate()}</div>`;
+
   if(isWeekday && !isOutside){
-   const w=weekDiff(cur,new Date());
-   html+=`<small>⚡ ${guardia(electricos,w)}</small><br><small>🔧 ${guardia(mecanicos,w)}</small>`;
+   const w = weekDiff(cur, new Date());
+   html += `
+    <small>⚡ ${guardia(electricos, w)}</small><br>
+    <small>🔧 ${guardia(mecanicos, w)}</small>`;
   }
 
-  calendarGrid.innerHTML+=`<div class="${cls}" ${isWeekday&&!isOutside?`onclick="offset=${weekDiff(cur,new Date())};render()"`:""}>${html}</div>`;
-  cur.setDate(cur.getDate()+1);
+  calendarGrid.innerHTML += `
+   <div class="calendar-day ${isOutside ? "outside" : ""} ${isWeekday ? "weekday" : "weekend"}"
+        ${isWeekday && !isOutside ? `onclick="offset=${weekDiff(cur,new Date())};render()"` : ""}>
+    ${html}
+   </div>`;
+
+  cur.setDate(cur.getDate() + 1);
  }
 }
+
 
 function changeMonth(d){calendarMonth.setMonth(calendarMonth.getMonth()+d);renderCalendar()}
 
@@ -272,6 +284,7 @@ render();
 
 </body>
 </html>
+
 
 
 
