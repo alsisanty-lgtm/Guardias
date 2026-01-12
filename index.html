@@ -68,18 +68,27 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 }
 .calendar-grid{
  display:grid;
- grid-template-columns:repeat(5,1fr);
+ grid-template-columns:repeat(7,1fr);
  gap:4px;
  margin-top:10px
 }
 .calendar-day{
  font-size:.7rem;text-align:center;
  padding:6px;border-radius:8px;
- background:rgba(0,0,0,.05);cursor:pointer
+ background:rgba(0,0,0,.04);
 }
-body.dark .calendar-day{background:rgba(255,255,255,.08)}
+.weekday{background:rgba(30,136,229,.08);cursor:pointer}
+.weekend{background:rgba(0,0,0,.02);color:var(--muted)}
+.today-week{outline:2px solid var(--primary)}
+body.dark .weekday{background:rgba(30,136,229,.18)}
+body.dark .weekend{background:rgba(255,255,255,.03)}
+
 .calendar-day.outside{
- background:rgba(0,0,0,.02);color:var(--muted);cursor:default
+ background:rgba(0,0,0,.02);color:var(--muted)
+}
+
+@media(max-width:480px){
+ .calendar-day{font-size:.6rem}
 }
 
 /* ===== ADMIN ===== */
@@ -123,7 +132,6 @@ select{border-radius:10px;padding:5px}
 <div class="carousel" id="carousel"></div>
 </div>
 
-<!-- CALENDARIO -->
 <div id="calendar">
 <div style="display:flex;justify-content:space-between;align-items:center">
 <button onclick="changeMonth(-1)">◀</button>
@@ -133,16 +141,12 @@ select{border-radius:10px;padding:5px}
 <div class="calendar-grid" id="calendarGrid"></div>
 </div>
 
-<!-- ADMIN -->
 <details id="admin">
 <summary>⚙️ Administrador</summary>
-
 <h3>⚡ Eléctricos</h3>
 <div id="admin-elec"></div>
-
 <h3>🔧 Mecánicos</h3>
 <div id="admin-mec"></div>
-
 <br><button id="save">💾 Guardar</button>
 </details>
 
@@ -152,20 +156,12 @@ select{border-radius:10px;padding:5px}
 </div>
 
 <script>
-/* ===== MODO NOCHE ===== */
-night.onclick=()=>{
- document.body.classList.toggle("dark");
- localStorage.dark=document.body.classList.contains("dark");
-};
+night.onclick=()=>{document.body.classList.toggle("dark");localStorage.dark=document.body.classList.contains("dark")};
 if(localStorage.dark==="true")document.body.classList.add("dark");
 
-/* ===== ADMIN ===== */
 const ADMIN_PASS="alsi2026";
-setTimeout(()=>{
- if(prompt("Contraseña admin")!==ADMIN_PASS)admin.style.display="none";
-},300);
+setTimeout(()=>{if(prompt("Contraseña admin")!==ADMIN_PASS)admin.style.display="none"},300);
 
-/* ===== DATOS ===== */
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
 let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
 let estados=JSON.parse(localStorage.estados||"{}");
@@ -173,81 +169,57 @@ let history=JSON.parse(localStorage.history||"[]");
 let offset=0;
 let calendarMonth=new Date();
 
-try{electricos=JSON.parse(localStorage.electricos)||electricos}catch{}
-try{mecanicos=JSON.parse(localStorage.mecanicos)||mecanicos}catch{}
-
-/* ===== FECHAS ===== */
-const lunes=d=>{
- d=new Date(d);let n=d.getDay();
- d.setDate(d.getDate()-(n===0?6:n-1));return d;
-};
+const lunes=d=>{d=new Date(d);let n=d.getDay();d.setDate(d.getDate()-(n===0?6:n-1));return d};
 const fd=d=>d.toLocaleDateString();
 const weekDiff=(a,b)=>Math.floor((lunes(a)-lunes(b))/604800000);
 
-/* ===== GUARDIAS ===== */
 const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
-const guardia=(l,o)=>{
- const a=activos(l);
- return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
-};
+const guardia=(l,o)=>{const a=activos(l);return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie"};
 
-/* ===== CALENDARIO ===== */
 function renderCalendar(){
  calendarGrid.innerHTML="";
+ const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();
+ calendarTitle.textContent=`📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
 
- const year = calendarMonth.getFullYear();
- const month = calendarMonth.getMonth();
+ const first=new Date(y,m,1);
+ const start=new Date(first);
+ const dow=start.getDay()||7;
+ start.setDate(start.getDate()-(dow-1));
 
- calendarTitle.textContent =
-  `📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${year}`;
+ let cur=new Date(start);
+ const thisWeek=lunes(new Date()).getTime();
 
- const first = new Date(year, month, 1);
- const last  = new Date(year, month + 1, 0);
-
- // Lunes como inicio de semana
- const start = new Date(first);
- const dayOfWeek = start.getDay() === 0 ? 7 : start.getDay();
- start.setDate(start.getDate() - (dayOfWeek - 1));
-
- let current = new Date(start);
-
- // 6 semanas (42 días) como un calendario real
  for(let i=0;i<42;i++){
-  const isOutside = current.getMonth() !== month;
-  const dow = current.getDay(); // 0 dom - 6 sáb
-  const isWeekday = dow >= 1 && dow <= 5;
+  const isOutside=cur.getMonth()!==m;
+  const d=cur.getDay();
+  const isWeekday=d>=1&&d<=5;
+  const isCurrentWeek=lunes(cur).getTime()===thisWeek;
 
-  let content = `<div>${current.getDate()}</div>`;
+  let cls="calendar-day";
+  if(isOutside)cls+=" outside";
+  else if(isWeekday)cls+=" weekday";
+  else cls+=" weekend";
+  if(isCurrentWeek && isWeekday)cls+=" today-week";
 
-  // SOLO LUNES A VIERNES
+  let html=`<div>${cur.getDate()}</div>`;
   if(isWeekday && !isOutside){
-   const w = weekDiff(current, new Date());
-   content += `
-    <small>⚡ ${guardia(electricos, w)}</small><br>
-    <small>🔧 ${guardia(mecanicos, w)}</small>`;
+   const w=weekDiff(cur,new Date());
+   html+=`<small>⚡ ${guardia(electricos,w)}</small><br><small>🔧 ${guardia(mecanicos,w)}</small>`;
   }
 
-  calendarGrid.innerHTML += `
-   <div class="calendar-day ${isOutside ? "outside" : ""}"
-        onclick="${!isOutside ? `offset=${weekDiff(current,new Date())};render()` : ""}">
-    ${content}
-   </div>`;
-
-  current.setDate(current.getDate() + 1);
+  calendarGrid.innerHTML+=`<div class="${cls}" ${isWeekday&&!isOutside?`onclick="offset=${weekDiff(cur,new Date())};render()"`:""}>${html}</div>`;
+  cur.setDate(cur.getDate()+1);
  }
 }
 
+function changeMonth(d){calendarMonth.setMonth(calendarMonth.getMonth()+d);renderCalendar()}
 
-function changeMonth(d){calendarMonth.setMonth(calendarMonth.getMonth()+d);renderCalendar();}
-
-/* ===== RENDER ===== */
 function render(){
  carousel.innerHTML="";
  const base=lunes(new Date());
  const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
  const fin=new Date(ini);fin.setDate(fin.getDate()+4);
  subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
-
  for(let i=-1;i<=1;i++){
   const l=new Date(ini);l.setDate(l.getDate()+i*7);
   const v=new Date(l);v.setDate(v.getDate()+4);
@@ -255,18 +227,8 @@ function render(){
   <div class="card">
    <h3>${fd(l)} - ${fd(v)}</h3>
    <div class="guardias">
-    <div class="guardia">
-     <div class="icono">⚡</div>
-     <div class="nombre">${guardia(electricos,offset+i)}</div>
-     <div class="days">L–V</div>
-     <div class="time">15:30 – 19:00</div>
-    </div>
-    <div class="guardia">
-     <div class="icono">🔧</div>
-     <div class="nombre">${guardia(mecanicos,offset+i)}</div>
-     <div class="days">L–V</div>
-     <div class="time">15:30 – 19:00</div>
-    </div>
+    <div class="guardia"><div class="icono">⚡</div><div class="nombre">${guardia(electricos,offset+i)}</div><div class="days">L–V</div><div class="time">15:30 – 19:00</div></div>
+    <div class="guardia"><div class="icono">🔧</div><div class="nombre">${guardia(mecanicos,offset+i)}</div><div class="days">L–V</div><div class="time">15:30 – 19:00</div></div>
    </div>
   </div>`;
  }
@@ -274,61 +236,22 @@ function render(){
  requestAnimationFrame(()=>carousel.scrollLeft=carousel.children[0].offsetWidth+14);
 }
 
-/* ===== HISTORIAL REAL ===== */
 function logCompletedWeek(){
- const now=new Date();
- const friday=lunes(now);friday.setDate(friday.getDate()+4);
- if(now<friday)return;
+ const now=new Date(),fri=lunes(now);fri.setDate(fri.getDate()+4);
+ if(now<fri)return;
  const key=fd(lunes(now));
  if(history.some(h=>h.startsWith(key)))return;
  history.unshift(`${key} ⚡ ${guardia(electricos,0)} · 🔧 ${guardia(mecanicos,0)}`);
  history=history.slice(0,30);
  localStorage.history=JSON.stringify(history);
 }
-function renderHistory(){
- historyList.innerHTML="";
- history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`);
-}
 
-/* ===== ADMIN ===== */
-function renderAdmin(){
- [["elec",electricos],["mec",mecanicos]].forEach(([id,list])=>{
-  const c=document.getElementById("admin-"+id);c.innerHTML="";
-  list.forEach((p,i)=>{
-   c.innerHTML+=`
-   <div class="admin-person">${p}
-    <div>
-     <button onclick="move('${id}',${i},-1)">▲</button>
-     <button onclick="move('${id}',${i},1)">▼</button>
-     <select onchange="estados['${p}']=this.value">
-      <option value="activo">Activo</option>
-      <option value="vacaciones">Vacaciones</option>
-      <option value="baja">Baja</option>
-      <option value="viaje">Viaje</option>
-     </select>
-    </div>
-   </div>`;
-  });
- });
-}
-function move(t,i,d){
- const l=t==="elec"?electricos:mecanicos;
- const n=i+d;if(n<0||n>=l.length)return;
- [l[i],l[n]]=[l[n],l[i]];
- renderAdmin();render();renderCalendar();
-}
+function renderHistory(){historyList.innerHTML="";history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`)}
 
 prev.onclick=()=>{offset--;render()};
 next.onclick=()=>{offset++;render()};
-save.onclick=()=>{
- localStorage.electricos=JSON.stringify(electricos);
- localStorage.mecanicos=JSON.stringify(mecanicos);
- localStorage.estados=JSON.stringify(estados);
- renderCalendar();alert("Guardado");
-};
+save.onclick=()=>{localStorage.estados=JSON.stringify(estados);renderCalendar();alert("Guardado")};
 
-/* ===== INIT ===== */
-renderAdmin();
 renderCalendar();
 logCompletedWeek();
 render();
@@ -336,6 +259,8 @@ render();
 
 </body>
 </html>
+
+
 
 
 
