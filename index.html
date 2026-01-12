@@ -23,26 +23,35 @@ header{
 }
 button{
  background:var(--primary);color:#fff;border:none;
- padding:10px 16px;border-radius:14px;font-weight:700
+ padding:10px 16px;border-radius:14px;font-weight:700;
+ cursor:pointer;
+ transition:opacity 0.3s;
+}
+button:hover{opacity:0.9}
+button.secondary{
+ background:#6b7280;
 }
 #night{position:fixed;top:12px;right:12px;z-index:200}
 .nav{display:flex;justify-content:space-between;padding:10px}
 .container{max-width:960px;margin:auto;padding:10px}
 .carousel{
  display:flex;gap:14px;overflow-x:auto;
- scroll-snap-type:x mandatory
+ scroll-snap-type:x mandatory;
+ padding-bottom:10px;
 }
 .card{
  min-width:320px;background:var(--card);
  border-radius:var(--radius);
  box-shadow:var(--shadow);
- padding:20px;scroll-snap-align:center
+ padding:20px;scroll-snap-align:center;
+ position:relative;
 }
 .guardias{display:flex;gap:14px;margin-top:14px}
 .guardia{
  flex:1;text-align:center;
  background:rgba(0,0,0,.05);
- border-radius:14px;padding:14px
+ border-radius:14px;padding:14px;
+ position:relative;
 }
 body.dark .guardia{background:rgba(255,255,255,.06)}
 .icono{font-size:2.2em}
@@ -89,7 +98,12 @@ details{
  margin:20px;background:var(--card);
  padding:16px;border-radius:var(--radius)
 }
-.admin-section{margin-bottom:20px}
+.admin-section{
+ margin-bottom:30px;
+ padding:15px;
+ background:rgba(0,0,0,.02);
+ border-radius:12px;
+}
 .admin-person{
  display:flex;justify-content:space-between;
  align-items:center;
@@ -118,6 +132,36 @@ select{
 .status-baja{color:#ef4444}
 .status-inactivo{color:#6b7280}
 
+/* ===== MANEJO DE GUARDIAS ===== */
+.week-controls{
+ display:flex;
+ gap:10px;
+ align-items:center;
+ margin:15px 0;
+}
+.week-number{
+ font-weight:bold;
+ color:var(--primary);
+}
+.week-guard{
+ background:rgba(30,136,229,.1);
+ padding:8px 15px;
+ border-radius:10px;
+ margin:5px 0;
+}
+.week-guard select{
+ min-width:120px;
+}
+.move-buttons{
+ display:flex;
+ gap:5px;
+ margin-top:5px;
+}
+.move-buttons button{
+ padding:4px 8px;
+ font-size:12px;
+}
+
 /* ===== HISTORIAL ===== */
 #history{
  margin:20px;background:var(--card);
@@ -128,11 +172,39 @@ select{
  padding:6px 0
 }
 
+/* ===== MODAL ===== */
+.modal{
+ display:none;
+ position:fixed;
+ top:0;left:0;
+ width:100%;height:100%;
+ background:rgba(0,0,0,0.5);
+ z-index:1000;
+ align-items:center;
+ justify-content:center;
+}
+.modal-content{
+ background:var(--card);
+ padding:25px;
+ border-radius:var(--radius);
+ max-width:500px;
+ width:90%;
+ max-height:80vh;
+ overflow-y:auto;
+}
+.modal-buttons{
+ display:flex;
+ gap:10px;
+ justify-content:flex-end;
+ margin-top:20px;
+}
+
 @media(max-width:480px){
  .calendar-day{font-size:.6rem}
  .admin-person{flex-direction:column;align-items:flex-start}
  .admin-person .name{min-width:auto}
  select{min-width:100%}
+ .modal-content{width:95%;padding:15px;}
 }
 </style>
 </head>
@@ -161,17 +233,69 @@ select{
 <details id="admin">
 <summary>⚙️ Administrador</summary>
 <div id="admin-content">
- <h3>⚡ Eléctricos</h3>
- <div id="admin-elec"></div>
- <h3>🔧 Mecánicos</h3>
- <div id="admin-mec"></div>
- <br><button id="save">💾 Guardar</button>
+ <div class="admin-section">
+  <h3>⚡ Estado de Personas</h3>
+  <h4>Eléctricos</h4>
+  <div id="admin-elec"></div>
+  <h4>Mecánicos</h4>
+  <div id="admin-mec"></div>
+ </div>
+ 
+ <div class="admin-section">
+  <h3>🔄 Mover Guardias</h3>
+  <p>Selecciona una semana y cambia las guardias manualmente:</p>
+  <div class="week-controls">
+   <button onclick="changeAdminWeek(-1)">◀ Semana anterior</button>
+   <span id="admin-week-title" class="week-number"></span>
+   <button onclick="changeAdminWeek(1)">Semana siguiente ▶</button>
+  </div>
+  <div id="admin-guardias"></div>
+  <button onclick="saveManualChanges()" style="margin-top:15px">💾 Guardar cambios manuales</button>
+ </div>
+ 
+ <div class="admin-section">
+  <h3>⚙️ Intercambiar Personas</h3>
+  <p>Intercambia a dos personas en el calendario:</p>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+   <select id="swap-person1">
+    <option value="">Selecciona persona 1</option>
+   </select>
+   <span>↔</span>
+   <select id="swap-person2">
+    <option value="">Selecciona persona 2</option>
+   </select>
+   <button onclick="swapPersons()" class="secondary">🔄 Intercambiar</button>
+  </div>
+ </div>
+ 
+ <br><button id="save">💾 Guardar Todo</button>
+ <button onclick="resetToDefault()" class="secondary" style="margin-left:10px;">🔄 Reiniciar a Rotación Automática</button>
 </div>
 </details>
 
 <div id="history">
 <h3>📜 Historial real</h3>
 <div id="historyList"></div>
+</div>
+
+<!-- Modal para editar guardia -->
+<div id="editModal" class="modal">
+<div class="modal-content">
+ <h3>✏️ Editar Guardia</h3>
+ <div id="modal-week-info"></div>
+ <div style="margin:15px 0;">
+  <label for="edit-electrico"><strong>⚡ Eléctrico:</strong></label>
+  <select id="edit-electrico" style="width:100%;margin-top:5px;"></select>
+ </div>
+ <div style="margin:15px 0;">
+  <label for="edit-mecanico"><strong>🔧 Mecánico:</strong></label>
+  <select id="edit-mecanico" style="width:100%;margin-top:5px;"></select>
+ </div>
+ <div class="modal-buttons">
+  <button onclick="closeModal()">Cancelar</button>
+  <button onclick="applyGuardiaEdit()">Guardar Cambios</button>
+ </div>
+</div>
 </div>
 
 <script>
@@ -185,21 +309,9 @@ if(localStorage.dark==="true") document.body.classList.add("dark");
 // Contraseña admin
 const ADMIN_PASS="alsi2026";
 let adminAuthenticated = false;
-
-// Verificar autenticación
-function checkAdminAuth() {
- if (!adminAuthenticated) {
-  const password = prompt("🔐 Contraseña administrador:");
-  if (password === ADMIN_PASS) {
-   adminAuthenticated = true;
-   document.getElementById('admin-content').style.display = 'block';
-   renderAdmin();
-  } else {
-   document.getElementById('admin-content').style.display = 'none';
-   document.querySelector('#admin summary').textContent = '🔒 Administrador (acceso restringido)';
-  }
- }
-}
+let adminWeekOffset = 0; // Semana actual en admin
+let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
+let editModalWeek = 0; // Semana que se está editando en modal
 
 // Datos iniciales
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
@@ -221,10 +333,36 @@ const weekDiff=(a,b)=>Math.floor((lunes(a)-lunes(b))/604800000);
 const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
 const guardia=(l,o)=>{
  const a=activos(l);
+ // Primero verificar si hay override manual para esta semana
+ const weekKey = o.toString();
+ if(manualOverrides[weekKey]) {
+  const type = l === electricos ? 'electrico' : 'mecanico';
+  if(manualOverrides[weekKey][type]) {
+   return manualOverrides[weekKey][type];
+  }
+ }
+ // Si no hay override, usar rotación automática
  return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
 };
 
-// Renderizar administración
+// Verificar autenticación
+function checkAdminAuth() {
+ if (!adminAuthenticated) {
+  const password = prompt("🔐 Contraseña administrador:");
+  if (password === ADMIN_PASS) {
+   adminAuthenticated = true;
+   document.getElementById('admin-content').style.display = 'block';
+   renderAdmin();
+   renderAdminGuardias();
+   populateSwapSelects();
+  } else {
+   document.getElementById('admin-content').style.display = 'none';
+   document.querySelector('#admin summary').textContent = '🔒 Administrador (acceso restringido)';
+  }
+ }
+}
+
+// Renderizar administración de estados
 function renderAdmin(){
  // Renderizar eléctricos
  let adminElecHTML = '';
@@ -233,12 +371,12 @@ function renderAdmin(){
   adminElecHTML += `
    <div class="admin-person">
     <div class="name">${persona}</div>
-    <select id="estado-${persona.replace(/\s+/g, '-')}" onchange="estados['${persona}']=this.value">
+    <select id="estado-${persona.replace(/\s+/g, '-')}" onchange="estados['${persona}']=this.value; updatePersonStatus('${persona}', this.value)">
      <option value="activo" ${estadoActual==='activo'?'selected':''}>✅ Activo</option>
      <option value="vacaciones" ${estadoActual==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
      <option value="viaje" ${estadoActual==='viaje'?'selected':''}>✈️ Viaje</option>
      <option value="baja" ${estadoActual==='baja'?'selected':''}>🤒 Baja médica</option>
-     <option value="inactivo" ${estadoActual==='inactivo'?'selected':''}>⏸️ Inactivo</option>
+     <option value="inactivo" ${estadoActual==='inactivo'?'selected':''}>⏸️ Inactivo</button>
     </select>
     <span class="status-${estadoActual}">${getEstadoTexto(estadoActual)}</span>
    </div>
@@ -253,7 +391,7 @@ function renderAdmin(){
   adminMecHTML += `
    <div class="admin-person">
     <div class="name">${persona}</div>
-    <select id="estado-${persona.replace(/\s+/g, '-')}" onchange="estados['${persona}']=this.value">
+    <select id="estado-${persona.replace(/\s+/g, '-')}" onchange="estados['${persona}']=this.value; updatePersonStatus('${persona}', this.value)">
      <option value="activo" ${estadoActual==='activo'?'selected':''}>✅ Activo</option>
      <option value="vacaciones" ${estadoActual==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
      <option value="viaje" ${estadoActual==='viaje'?'selected':''}>✈️ Viaje</option>
@@ -267,6 +405,13 @@ function renderAdmin(){
  document.getElementById('admin-mec').innerHTML = adminMecHTML;
 }
 
+function updatePersonStatus(persona, estado) {
+ estados[persona] = estado;
+ render();
+ renderCalendar();
+ renderAdminGuardias();
+}
+
 function getEstadoTexto(estado){
  switch(estado){
   case 'activo': return 'Activo';
@@ -275,6 +420,250 @@ function getEstadoTexto(estado){
   case 'baja': return 'De baja';
   case 'inactivo': return 'Inactivo';
   default: return 'Activo';
+ }
+}
+
+// Renderizar administración de guardias (para mover)
+function renderAdminGuardias() {
+ const base=lunes(new Date());
+ const ini=new Date(base);ini.setDate(ini.getDate()+adminWeekOffset*7);
+ const fin=new Date(ini);fin.setDate(fin.getDate()+4);
+ 
+ document.getElementById('admin-week-title').textContent = 
+  `Semana ${adminWeekOffset}: ${fd(ini)} - ${fd(fin)}`;
+ 
+ const weekKey = adminWeekOffset.toString();
+ const override = manualOverrides[weekKey] || {};
+ 
+ let html = `
+  <div class="week-guard">
+   <strong>⚡ Guardia eléctrica:</strong>
+   <select id="admin-elec-${adminWeekOffset}" style="margin-left:10px;">
+    <option value="">-- Rotación automática --</option>
+    ${activos(electricos).map(p => 
+     `<option value="${p}" ${override.electrico===p?'selected':''}>${p}</option>`
+    ).join('')}
+   </select>
+   <div class="move-buttons">
+    <button onclick="moveGuardia('electrico', -1)">⬅ Mover a semana anterior</button>
+    <button onclick="moveGuardia('electrico', 1)">Mover a semana siguiente ➡</button>
+   </div>
+  </div>
+  <div class="week-guard">
+   <strong>🔧 Guardia mecánica:</strong>
+   <select id="admin-mec-${adminWeekOffset}" style="margin-left:10px;">
+    <option value="">-- Rotación automática --</option>
+    ${activos(mecanicos).map(p => 
+     `<option value="${p}" ${override.mecanico===p?'selected':''}>${p}</option>`
+    ).join('')}
+   </select>
+   <div class="move-buttons">
+    <button onclick="moveGuardia('mecanico', -1)">⬅ Mover a semana anterior</button>
+    <button onclick="moveGuardia('mecanico', 1)">Mover a semana siguiente ➡</button>
+   </div>
+  </div>
+  <button onclick="openEditModal(${adminWeekOffset})" style="margin-top:10px;">✏️ Editar ambas guardias</button>
+ `;
+ 
+ document.getElementById('admin-guardias').innerHTML = html;
+}
+
+function changeAdminWeek(delta) {
+ adminWeekOffset += delta;
+ renderAdminGuardias();
+}
+
+function moveGuardia(tipo, delta) {
+ const currentWeek = adminWeekOffset;
+ const targetWeek = currentWeek + delta;
+ const weekKey = currentWeek.toString();
+ const targetKey = targetWeek.toString();
+ 
+ const selectId = `admin-${tipo}-${currentWeek}`;
+ const select = document.getElementById(selectId);
+ const selectedPerson = select.value;
+ 
+ if (!selectedPerson) {
+  alert(`Selecciona primero un ${tipo} para mover`);
+  return;
+ }
+ 
+ // Mover de la semana actual a la semana objetivo
+ if (!manualOverrides[targetKey]) {
+  manualOverrides[targetKey] = {};
+ }
+ manualOverrides[targetKey][tipo] = selectedPerson;
+ 
+ // Limpiar la semana actual si tenía override
+ if (manualOverrides[weekKey]) {
+  delete manualOverrides[weekKey][tipo];
+  if (Object.keys(manualOverrides[weekKey]).length === 0) {
+   delete manualOverrides[weekKey];
+  }
+ }
+ 
+ localStorage.manualOverrides = JSON.stringify(manualOverrides);
+ renderAdminGuardias();
+ render();
+ renderCalendar();
+ alert(`${selectedPerson} movido a la semana ${targetWeek}`);
+}
+
+function saveManualChanges() {
+ const weekKey = adminWeekOffset.toString();
+ const elecSelect = document.getElementById(`admin-elec-${adminWeekOffset}`);
+ const mecSelect = document.getElementById(`admin-mec-${adminWeekOffset}`);
+ 
+ const elecValue = elecSelect.value;
+ const mecValue = mecSelect.value;
+ 
+ if (!elecValue && !mecValue) {
+  // Eliminar override si ambos están en automático
+  if (manualOverrides[weekKey]) {
+   delete manualOverrides[weekKey];
+  }
+ } else {
+  if (!manualOverrides[weekKey]) {
+   manualOverrides[weekKey] = {};
+  }
+  if (elecValue) manualOverrides[weekKey].electrico = elecValue;
+  else delete manualOverrides[weekKey].electrico;
+  
+  if (mecValue) manualOverrides[weekKey].mecanico = mecValue;
+  else delete manualOverrides[weekKey].mecanico;
+ }
+ 
+ localStorage.manualOverrides = JSON.stringify(manualOverrides);
+ render();
+ renderCalendar();
+ alert("✅ Cambios guardados");
+}
+
+// Poblar selects para intercambiar
+function populateSwapSelects() {
+ const select1 = document.getElementById('swap-person1');
+ const select2 = document.getElementById('swap-person2');
+ 
+ select1.innerHTML = '<option value="">Selecciona persona 1</option>';
+ select2.innerHTML = '<option value="">Selecciona persona 2</option>';
+ 
+ // Agregar todos los activos de ambas listas
+ [...activos(electricos), ...activos(mecanicos)].forEach(persona => {
+  const option1 = new Option(persona, persona);
+  const option2 = new Option(persona, persona);
+  select1.add(option1);
+  select2.add(option2);
+ });
+}
+
+function swapPersons() {
+ const persona1 = document.getElementById('swap-person1').value;
+ const persona2 = document.getElementById('swap-person2').value;
+ 
+ if (!persona1 || !persona2) {
+  alert("Selecciona dos personas para intercambiar");
+  return;
+ }
+ 
+ if (persona1 === persona2) {
+  alert("Selecciona dos personas diferentes");
+  return;
+ }
+ 
+ // Encontrar y intercambiar en todas las semanas con override
+ Object.keys(manualOverrides).forEach(weekKey => {
+  const week = manualOverrides[weekKey];
+  if (week.electrico === persona1) week.electrico = persona2;
+  else if (week.electrico === persona2) week.electrico = persona1;
+  
+  if (week.mecanico === persona1) week.mecanico = persona2;
+  else if (week.mecanico === persona2) week.mecanico = persona1;
+ });
+ 
+ localStorage.manualOverrides = JSON.stringify(manualOverrides);
+ render();
+ renderCalendar();
+ renderAdminGuardias();
+ alert(`✅ ${persona1} y ${persona2} intercambiados en todas las semanas`);
+}
+
+// Funciones para el modal de edición
+function openEditModal(week) {
+ editModalWeek = week;
+ const base=lunes(new Date());
+ const ini=new Date(base);ini.setDate(ini.getDate()+week*7);
+ const fin=new Date(ini);fin.setDate(fin.getDate()+4);
+ 
+ document.getElementById('modal-week-info').innerHTML = 
+  `<p><strong>Semana ${week}:</strong> ${fd(ini)} - ${fd(fin)}</p>`;
+ 
+ // Poblar select de eléctricos
+ const elecSelect = document.getElementById('edit-electrico');
+ elecSelect.innerHTML = '<option value="">-- Rotación automática --</option>';
+ activos(electricos).forEach(p => {
+  const option = new Option(p, p);
+  elecSelect.add(option);
+ });
+ 
+ // Poblar select de mecánicos
+ const mecSelect = document.getElementById('edit-mecanico');
+ mecSelect.innerHTML = '<option value="">-- Rotación automática --</option>';
+ activos(mecanicos).forEach(p => {
+  const option = new Option(p, p);
+  mecSelect.add(option);
+ });
+ 
+ // Seleccionar valores actuales si existen
+ const weekKey = week.toString();
+ const override = manualOverrides[weekKey] || {};
+ if (override.electrico) elecSelect.value = override.electrico;
+ if (override.mecanico) mecSelect.value = override.mecanico;
+ 
+ document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeModal() {
+ document.getElementById('editModal').style.display = 'none';
+}
+
+function applyGuardiaEdit() {
+ const weekKey = editModalWeek.toString();
+ const elecValue = document.getElementById('edit-electrico').value;
+ const mecValue = document.getElementById('edit-mecanico').value;
+ 
+ if (!elecValue && !mecValue) {
+  // Eliminar override si ambos están en automático
+  if (manualOverrides[weekKey]) {
+   delete manualOverrides[weekKey];
+  }
+ } else {
+  if (!manualOverrides[weekKey]) {
+   manualOverrides[weekKey] = {};
+  }
+  if (elecValue) manualOverrides[weekKey].electrico = elecValue;
+  else delete manualOverrides[weekKey].electrico;
+  
+  if (mecValue) manualOverrides[weekKey].mecanico = mecValue;
+  else delete manualOverrides[weekKey].mecanico;
+ }
+ 
+ localStorage.manualOverrides = JSON.stringify(manualOverrides);
+ render();
+ renderCalendar();
+ renderAdminGuardias();
+ closeModal();
+ alert("✅ Cambios guardados");
+}
+
+// Reiniciar a rotación automática
+function resetToDefault() {
+ if (confirm("¿Estás seguro de que quieres eliminar todos los cambios manuales y volver a la rotación automática?")) {
+  manualOverrides = {};
+  localStorage.manualOverrides = JSON.stringify({});
+  render();
+  renderCalendar();
+  renderAdminGuardias();
+  alert("✅ Rotación restablecida a automática");
  }
 }
 
@@ -309,9 +698,11 @@ function renderCalendar(){
    const w = weekDiff(cur, new Date());
    const elecGuardia = guardia(electricos, w);
    const mecGuardia = guardia(mecanicos, w);
+   const hasOverride = manualOverrides[w.toString()];
+   
    html += `
-    <small class="status-${estados[elecGuardia]||'active'}">⚡ ${elecGuardia}</small><br>
-    <small class="status-${estados[mecGuardia]||'active'}">🔧 ${mecGuardia}</small>`;
+    <small class="${hasOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia} ${hasOverride?'(Manual)':''}</small><br>
+    <small class="${hasOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia} ${hasOverride?'(Manual)':''}</small>`;
   }
   
   calendarGrid.innerHTML += `
@@ -342,24 +733,26 @@ function render(){
   const v=new Date(l);v.setDate(v.getDate()+4);
   const elecGuardia = guardia(electricos,offset+i);
   const mecGuardia = guardia(mecanicos,offset+i);
+  const weekKey = (offset+i).toString();
+  const hasOverride = manualOverrides[weekKey];
   
   carousel.innerHTML+=`
   <div class="card">
-   <h3>${fd(l)} - ${fd(v)}</h3>
+   <h3>${fd(l)} - ${fd(v)} ${hasOverride?'🔄':''}</h3>
    <div class="guardias">
     <div class="guardia">
      <div class="icono">⚡</div>
      <div class="nombre">${elecGuardia}</div>
      <div class="days">L–V</div>
      <div class="time">15:30 – 19:00</div>
-     <small class="status-${estados[elecGuardia]||'active'}">${getEstadoTexto(estados[elecGuardia])}</small>
+     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[elecGuardia])} ${hasOverride?'· Manual':''}</small>
     </div>
     <div class="guardia">
      <div class="icono">🔧</div>
      <div class="nombre">${mecGuardia}</div>
      <div class="days">L–V</div>
      <div class="time">15:30 – 19:00</div>
-     <small class="status-${estados[mecGuardia]||'active'}">${getEstadoTexto(estados[mecGuardia])}</small>
+     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[mecGuardia])} ${hasOverride?'· Manual':''}</small>
     </div>
    </div>
   </div>`;
@@ -402,11 +795,18 @@ save.onclick=()=>{
   return;
  }
  localStorage.estados=JSON.stringify(estados);
+ localStorage.manualOverrides = JSON.stringify(manualOverrides);
  render();
  renderCalendar();
  renderAdmin();
- alert("✅ Configuración guardada");
+ renderAdminGuardias();
+ alert("✅ Todo guardado");
 };
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('editModal').addEventListener('click', function(e) {
+ if (e.target === this) closeModal();
+});
 
 // Inicialización
 renderCalendar();
@@ -415,9 +815,12 @@ render();
 
 // Renderizar admin inicialmente (oculto hasta autenticación)
 renderAdmin();
+renderAdminGuardias();
+populateSwapSelects();
 </script>
 </body>
 </html>
+
 
 
 
