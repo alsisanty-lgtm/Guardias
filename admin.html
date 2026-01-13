@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Alsi</title>
-<link rel="manifest" href="/Guardias/manifest.json">
+<title>Guardias Alsi - Administración</title>
 <meta name="theme-color" content="#1e88e5">
-<link rel="icon" href="/Guardias/icon-192.png">
+<link rel="icon" href="icon-192.png">
 <style>
 :root{
  --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
@@ -58,6 +57,11 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 .nombre{font-size:1.15em;font-weight:800}
 .days{font-size:.85em;color:var(--muted)}
 .time{font-weight:700;font-size:.9em}
+.status-active{color:#10b981}
+.status-vacaciones{color:#f59e0b}
+.status-viaje{color:#8b5cf6}
+.status-baja{color:#ef4444}
+.status-inactivo{color:#6b7280}
 
 /* ===== CALENDARIO ===== */
 #calendar{
@@ -83,6 +87,14 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
  font-size:.7rem;text-align:center;
  padding:6px;border-radius:8px;
  background:rgba(0,0,0,.04);
+ min-height:70px;
+ display:flex;
+ flex-direction:column;
+ justify-content:flex-start;
+}
+.day-number{
+ font-weight:bold;
+ margin-bottom:3px;
 }
 .weekday{background:rgba(30,136,229,.08);cursor:pointer}
 .weekend{background:rgba(0,0,0,.02);color:var(--muted)}
@@ -91,6 +103,11 @@ body.dark .weekday{background:rgba(30,136,229,.18)}
 body.dark .weekend{background:rgba(255,255,255,.03)}
 .calendar-day.outside{
  background:rgba(0,0,0,.02);color:var(--muted)
+}
+.guardia-info{
+ font-size:9px;
+ line-height:1.2;
+ margin-top:2px;
 }
 
 /* ===== ADMIN ===== */
@@ -126,11 +143,6 @@ select{
  font-size:14px;
  min-width:140px;
 }
-.status-active{color:#10b981}
-.status-vacaciones{color:#f59e0b}
-.status-viaje{color:#8b5cf6}
-.status-baja{color:#ef4444}
-.status-inactivo{color:#6b7280}
 
 /* ===== MANEJO DE GUARDIAS ===== */
 .week-controls{
@@ -200,18 +212,19 @@ select{
 }
 
 @media(max-width:480px){
- .calendar-day{font-size:.6rem}
+ .calendar-day{font-size:.6rem;min-height:60px}
  .admin-person{flex-direction:column;align-items:flex-start}
  .admin-person .name{min-width:auto}
  select{min-width:100%}
  .modal-content{width:95%;padding:15px;}
+ .guardia-info{font-size:8px}
 }
 </style>
 </head>
 <body>
 <button id="night">🌙</button>
 <header>
-<h1>Guardias Alsi</h1>
+<h1>Guardias Alsi - Administración</h1>
 <div id="subtitle"></div>
 </header>
 <div class="nav">
@@ -299,6 +312,7 @@ select{
 </div>
 
 <script>
+// ========== CÓDIGO CORREGIDO PARA EL CALENDARIO ==========
 // Toggle modo oscuro
 night.onclick=()=>{
  document.body.classList.toggle("dark");
@@ -309,9 +323,9 @@ if(localStorage.dark==="true") document.body.classList.add("dark");
 // Contraseña admin
 const ADMIN_PASS="alsi2026";
 let adminAuthenticated = false;
-let adminWeekOffset = 0; // Semana actual en admin
+let adminWeekOffset = 0;
 let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
-let editModalWeek = 0; // Semana que se está editando en modal
+let editModalWeek = 0;
 
 // Datos iniciales
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
@@ -321,31 +335,65 @@ let history=JSON.parse(localStorage.history||"[]");
 let offset=0;
 let calendarMonth=new Date();
 
-// Funciones auxiliares
-const lunes=d=>{
- d=new Date(d);
- let n=d.getDay();
- d.setDate(d.getDate()-(n===0?6:n-1));
- return d;
-};
-const fd=d=>d.toLocaleDateString();
-const weekDiff=(a,b)=>Math.floor((lunes(a)-lunes(b))/604800000);
-const activos=l=>l.filter(p=>!estados[p]||estados[p]==="activo");
-const guardia=(l,o)=>{
- const a=activos(l);
- // Primero verificar si hay override manual para esta semana
- const weekKey = o.toString();
- if(manualOverrides[weekKey]) {
-  const type = l === electricos ? 'electrico' : 'mecanico';
-  if(manualOverrides[weekKey][type]) {
-   return manualOverrides[weekKey][type];
-  }
- }
- // Si no hay override, usar rotación automática
- return a.length?a[((o%a.length)+a.length)%a.length]:"Nadie";
+// ========== FUNCIONES CORREGIDAS (IGUAL QUE EN INDEX) ==========
+// FECHA BASE FIJA: Lunes 1 de Enero de 2024
+const FECHA_BASE = new Date(2024, 0, 1);
+const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
+
+// Función para obtener el lunes de cualquier semana
+function obtenerLunes(fecha) {
+  const d = new Date(fecha);
+  const dia = d.getDay();
+  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
+
+// Función para calcular número de semana desde fecha base
+function calcularNumeroSemana(fecha) {
+  const fechaLunes = obtenerLunes(fecha);
+  fechaLunes.setHours(12, 0, 0, 0);
+  
+  const fechaBaseLunes = obtenerLunes(FECHA_BASE);
+  fechaBaseLunes.setHours(12, 0, 0, 0);
+  
+  const diferenciaMs = fechaLunes - fechaBaseLunes;
+  const numeroSemana = Math.floor(diferenciaMs / MS_POR_SEMANA);
+  
+  return numeroSemana;
+}
+
+// Función para formatear fecha
+const fd = d => {
+  const date = new Date(d);
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit'
+  });
 };
 
-// Verificar autenticación
+// Obtener lista de activos
+const activos = l => l.filter(p => !estados[p] || estados[p] === "activo");
+
+// Obtener guardia para una semana específica
+const guardia = (l, numeroSemana) => {
+  const a = activos(l);
+  if (a.length === 0) return "Nadie";
+  
+  // Verificar override manual primero
+  const semanaKey = numeroSemana.toString();
+  if (manualOverrides[semanaKey]) {
+    const tipo = l === electricos ? 'electrico' : 'mecanico';
+    if (manualOverrides[semanaKey][tipo]) {
+      return manualOverrides[semanaKey][tipo];
+    }
+  }
+  
+  // Rotación automática
+  const indice = ((numeroSemana % a.length) + a.length) % a.length;
+  return a[indice];
+};
+
+// ========== AUTENTICACIÓN ADMIN ==========
 function checkAdminAuth() {
  if (!adminAuthenticated) {
   const password = prompt("🔐 Contraseña administrador:");
@@ -362,9 +410,8 @@ function checkAdminAuth() {
  }
 }
 
-// Renderizar administración de estados
+// ========== ADMIN: RENDERIZAR ESTADOS ==========
 function renderAdmin(){
- // Renderizar eléctricos
  let adminElecHTML = '';
  electricos.forEach(persona=>{
   const estadoActual = estados[persona] || 'activo';
@@ -376,7 +423,7 @@ function renderAdmin(){
      <option value="vacaciones" ${estadoActual==='vacaciones'?'selected':''}>🏖️ Vacaciones</option>
      <option value="viaje" ${estadoActual==='viaje'?'selected':''}>✈️ Viaje</option>
      <option value="baja" ${estadoActual==='baja'?'selected':''}>🤒 Baja médica</option>
-     <option value="inactivo" ${estadoActual==='inactivo'?'selected':''}>⏸️ Inactivo</button>
+     <option value="inactivo" ${estadoActual==='inactivo'?'selected':''}>⏸️ Inactivo</option>
     </select>
     <span class="status-${estadoActual}">${getEstadoTexto(estadoActual)}</span>
    </div>
@@ -384,7 +431,6 @@ function renderAdmin(){
  });
  document.getElementById('admin-elec').innerHTML = adminElecHTML;
  
- // Renderizar mecánicos
  let adminMecHTML = '';
  mecanicos.forEach(persona=>{
   const estadoActual = estados[persona] || 'activo';
@@ -405,6 +451,17 @@ function renderAdmin(){
  document.getElementById('admin-mec').innerHTML = adminMecHTML;
 }
 
+function getEstadoTexto(estado){
+ switch(estado){
+  case 'activo': return 'Activo';
+  case 'vacaciones': return 'Vacaciones';
+  case 'viaje': return 'Viaje';
+  case 'baja': return 'Baja';
+  case 'inactivo': return 'Inactivo';
+  default: return 'Activo';
+ }
+}
+
 function updatePersonStatus(persona, estado) {
  estados[persona] = estado;
  render();
@@ -412,403 +469,448 @@ function updatePersonStatus(persona, estado) {
  renderAdminGuardias();
 }
 
-function getEstadoTexto(estado){
- switch(estado){
-  case 'activo': return 'Activo';
-  case 'vacaciones': return 'De vacaciones';
-  case 'viaje': return 'De viaje';
-  case 'baja': return 'De baja';
-  case 'inactivo': return 'Inactivo';
-  default: return 'Activo';
- }
+// ========== CALENDARIO CORREGIDO ==========
+function renderCalendar() {
+  calendarGrid.innerHTML = "";
+  const y = calendarMonth.getFullYear();
+  const m = calendarMonth.getMonth();
+  
+  calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
+  
+  const primerDia = new Date(y, m, 1);
+  const ultimoDia = new Date(y, m + 1, 0);
+  
+  const inicio = new Date(primerDia);
+  const diaSemana = inicio.getDay();
+  const diasAtras = diaSemana === 0 ? 6 : diaSemana - 1;
+  inicio.setDate(inicio.getDate() - diasAtras);
+  
+  const fin = new Date(ultimoDia);
+  const diaSemanaFin = fin.getDay();
+  const diasAdelante = diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin;
+  fin.setDate(fin.getDate() + diasAdelante);
+  
+  let fechaActual = new Date(inicio);
+  while (fechaActual <= fin) {
+    const esMesAnterior = fechaActual.getMonth() < m;
+    const esMesSiguiente = fechaActual.getMonth() > m;
+    const esFueraMes = esMesAnterior || esMesSiguiente;
+    const diaSemana = fechaActual.getDay();
+    const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
+    
+    const numeroSemana = calcularNumeroSemana(fechaActual);
+    const elecGuardia = guardia(electricos, numeroSemana);
+    const mecGuardia = guardia(mecanicos, numeroSemana);
+    const tieneOverride = manualOverrides[numeroSemana.toString()];
+    
+    let contenidoHTML = `
+      <div class="day-number">${fechaActual.getDate()}</div>
+    `;
+    
+    if (esDiaLaboral && !esFueraMes) {
+      contenidoHTML += `
+        <div class="guardia-info">
+          <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">⚡ ${elecGuardia}</div>
+          <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">🔧 ${mecGuardia}</div>
+        </div>
+      `;
+    }
+    
+    const clases = [
+      'calendar-day',
+      esFueraMes ? 'outside' : '',
+      esDiaLaboral ? 'weekday' : 'weekend'
+    ].filter(c => c).join(' ');
+    
+    // En admin, los días laborables son clickeables
+    const onClick = esDiaLaboral && !esFueraMes ? 
+      `onclick="offset=${calcularNumeroSemana(fechaActual) - calcularNumeroSemana(new Date())};render()"` : '';
+    
+    calendarGrid.innerHTML += `
+      <div class="${clases}" ${onClick}>
+        ${contenidoHTML}
+      </div>
+    `;
+    
+    fechaActual.setDate(fechaActual.getDate() + 1);
+  }
 }
 
-// Renderizar administración de guardias (para mover)
+function changeMonth(delta) {
+  calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+  renderCalendar();
+}
+
+// ========== RENDERIZAR SEMANAS ==========
+function render() {
+  carousel.innerHTML = "";
+  const hoy = new Date();
+  const numeroSemanaActual = calcularNumeroSemana(hoy);
+  
+  const fechaBase = obtenerLunes(hoy);
+  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
+  
+  const fechaInicio = new Date(fechaBase);
+  const fechaFin = new Date(fechaInicio);
+  fechaFin.setDate(fechaFin.getDate() + 4);
+  
+  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
+  
+  for (let i = -1; i <= 1; i++) {
+    const semanaOffset = offset + i;
+    const numeroSemana = numeroSemanaActual + semanaOffset;
+    
+    const semanaInicio = new Date(fechaBase);
+    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
+    const semanaFin = new Date(semanaInicio);
+    semanaFin.setDate(semanaFin.getDate() + 4);
+    
+    const elecGuardia = guardia(electricos, numeroSemana);
+    const mecGuardia = guardia(mecanicos, numeroSemana);
+    const tieneOverride = manualOverrides[numeroSemana.toString()];
+    
+    carousel.innerHTML += `
+      <div class="card">
+        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
+        <div class="guardias">
+          <div class="guardia">
+            <div class="icono">⚡</div>
+            <div class="nombre">${elecGuardia}</div>
+            <div class="days">L–V</div>
+            <div class="time">15:30 – 19:00</div>
+            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+              ${getEstadoTexto(estados[elecGuardia])}
+            </small>
+          </div>
+          <div class="guardia">
+            <div class="icono">🔧</div>
+            <div class="nombre">${mecGuardia}</div>
+            <div class="days">L–V</div>
+            <div class="time">15:30 – 19:00</div>
+            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+              ${getEstadoTexto(estados[mecGuardia])}
+            </small>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  renderHistory();
+  
+  requestAnimationFrame(() => {
+    if (carousel.children[1]) {
+      carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
+    }
+  });
+}
+
+// ========== ADMIN: GESTIÓN DE GUARDIAS ==========
 function renderAdminGuardias() {
- const base=lunes(new Date());
- const ini=new Date(base);ini.setDate(ini.getDate()+adminWeekOffset*7);
- const fin=new Date(ini);fin.setDate(fin.getDate()+4);
- 
- document.getElementById('admin-week-title').textContent = 
-  `Semana ${adminWeekOffset}: ${fd(ini)} - ${fd(fin)}`;
- 
- const weekKey = adminWeekOffset.toString();
- const override = manualOverrides[weekKey] || {};
- 
- let html = `
-  <div class="week-guard">
-   <strong>⚡ Guardia eléctrica:</strong>
-   <select id="admin-elec-${adminWeekOffset}" style="margin-left:10px;">
-    <option value="">-- Rotación automática --</option>
-    ${activos(electricos).map(p => 
-     `<option value="${p}" ${override.electrico===p?'selected':''}>${p}</option>`
-    ).join('')}
-   </select>
-   <div class="move-buttons">
-    <button onclick="moveGuardia('electrico', -1)">⬅ Mover a semana anterior</button>
-    <button onclick="moveGuardia('electrico', 1)">Mover a semana siguiente ➡</button>
-   </div>
-  </div>
-  <div class="week-guard">
-   <strong>🔧 Guardia mecánica:</strong>
-   <select id="admin-mec-${adminWeekOffset}" style="margin-left:10px;">
-    <option value="">-- Rotación automática --</option>
-    ${activos(mecanicos).map(p => 
-     `<option value="${p}" ${override.mecanico===p?'selected':''}>${p}</option>`
-    ).join('')}
-   </select>
-   <div class="move-buttons">
-    <button onclick="moveGuardia('mecanico', -1)">⬅ Mover a semana anterior</button>
-    <button onclick="moveGuardia('mecanico', 1)">Mover a semana siguiente ➡</button>
-   </div>
-  </div>
-  <button onclick="openEditModal(${adminWeekOffset})" style="margin-top:10px;">✏️ Editar ambas guardias</button>
- `;
- 
- document.getElementById('admin-guardias').innerHTML = html;
+  const hoy = new Date();
+  const numeroSemanaActual = calcularNumeroSemana(hoy);
+  const semanaAdmin = numeroSemanaActual + adminWeekOffset;
+  
+  const fechaInicio = obtenerLunes(hoy);
+  fechaInicio.setDate(fechaInicio.getDate() + adminWeekOffset * 7);
+  const fechaFin = new Date(fechaInicio);
+  fechaFin.setDate(fechaFin.getDate() + 4);
+  
+  document.getElementById('admin-week-title').textContent = 
+    `Semana ${semanaAdmin}: ${fd(fechaInicio)} - ${fd(fechaFin)}`;
+  
+  const semanaKey = semanaAdmin.toString();
+  const override = manualOverrides[semanaKey] || {};
+  
+  let html = `
+    <div class="week-guard">
+     <strong>⚡ Guardia eléctrica:</strong>
+     <select id="admin-elec-${semanaAdmin}" style="margin-left:10px;">
+      <option value="">-- Rotación automática --</option>
+      ${activos(electricos).map(p => 
+       `<option value="${p}" ${override.electrico===p?'selected':''}>${p}</option>`
+      ).join('')}
+     </select>
+     <div class="move-buttons">
+      <button onclick="moveGuardia('electrico', -1)">⬅ Mover a semana anterior</button>
+      <button onclick="moveGuardia('electrico', 1)">Mover a semana siguiente ➡</button>
+     </div>
+    </div>
+    <div class="week-guard">
+     <strong>🔧 Guardia mecánica:</strong>
+     <select id="admin-mec-${semanaAdmin}" style="margin-left:10px;">
+      <option value="">-- Rotación automática --</option>
+      ${activos(mecanicos).map(p => 
+       `<option value="${p}" ${override.mecanico===p?'selected':''}>${p}</option>`
+      ).join('')}
+     </select>
+     <div class="move-buttons">
+      <button onclick="moveGuardia('mecanico', -1)">⬅ Mover a semana anterior</button>
+      <button onclick="moveGuardia('mecanico', 1)">Mover a semana siguiente ➡</button>
+     </div>
+    </div>
+    <button onclick="openEditModal(${semanaAdmin})" style="margin-top:10px;">✏️ Editar ambas guardias</button>
+  `;
+  
+  document.getElementById('admin-guardias').innerHTML = html;
 }
 
 function changeAdminWeek(delta) {
- adminWeekOffset += delta;
- renderAdminGuardias();
+  adminWeekOffset += delta;
+  renderAdminGuardias();
 }
 
 function moveGuardia(tipo, delta) {
- const currentWeek = adminWeekOffset;
- const targetWeek = currentWeek + delta;
- const weekKey = currentWeek.toString();
- const targetKey = targetWeek.toString();
- 
- const selectId = `admin-${tipo}-${currentWeek}`;
- const select = document.getElementById(selectId);
- const selectedPerson = select.value;
- 
- if (!selectedPerson) {
-  alert(`Selecciona primero un ${tipo} para mover`);
-  return;
- }
- 
- // Mover de la semana actual a la semana objetivo
- if (!manualOverrides[targetKey]) {
-  manualOverrides[targetKey] = {};
- }
- manualOverrides[targetKey][tipo] = selectedPerson;
- 
- // Limpiar la semana actual si tenía override
- if (manualOverrides[weekKey]) {
-  delete manualOverrides[weekKey][tipo];
-  if (Object.keys(manualOverrides[weekKey]).length === 0) {
-   delete manualOverrides[weekKey];
+  const hoy = new Date();
+  const numeroSemanaActual = calcularNumeroSemana(hoy);
+  const currentWeek = numeroSemanaActual + adminWeekOffset;
+  const targetWeek = currentWeek + delta;
+  
+  const semanaKey = currentWeek.toString();
+  const targetKey = targetWeek.toString();
+  
+  const selectId = `admin-${tipo}-${currentWeek}`;
+  const select = document.getElementById(selectId);
+  const selectedPerson = select.value;
+  
+  if (!selectedPerson) {
+    alert(`Selecciona primero un ${tipo} para mover`);
+    return;
   }
- }
- 
- localStorage.manualOverrides = JSON.stringify(manualOverrides);
- renderAdminGuardias();
- render();
- renderCalendar();
- alert(`${selectedPerson} movido a la semana ${targetWeek}`);
+  
+  if (!manualOverrides[targetKey]) {
+    manualOverrides[targetKey] = {};
+  }
+  manualOverrides[targetKey][tipo] = selectedPerson;
+  
+  if (manualOverrides[semanaKey]) {
+    delete manualOverrides[semanaKey][tipo];
+    if (Object.keys(manualOverrides[semanaKey]).length === 0) {
+      delete manualOverrides[semanaKey];
+    }
+  }
+  
+  localStorage.manualOverrides = JSON.stringify(manualOverrides);
+  renderAdminGuardias();
+  render();
+  renderCalendar();
+  alert(`${selectedPerson} movido a la semana ${targetWeek}`);
 }
 
 function saveManualChanges() {
- const weekKey = adminWeekOffset.toString();
- const elecSelect = document.getElementById(`admin-elec-${adminWeekOffset}`);
- const mecSelect = document.getElementById(`admin-mec-${adminWeekOffset}`);
- 
- const elecValue = elecSelect.value;
- const mecValue = mecSelect.value;
- 
- if (!elecValue && !mecValue) {
-  // Eliminar override si ambos están en automático
-  if (manualOverrides[weekKey]) {
-   delete manualOverrides[weekKey];
-  }
- } else {
-  if (!manualOverrides[weekKey]) {
-   manualOverrides[weekKey] = {};
-  }
-  if (elecValue) manualOverrides[weekKey].electrico = elecValue;
-  else delete manualOverrides[weekKey].electrico;
+  const hoy = new Date();
+  const numeroSemanaActual = calcularNumeroSemana(hoy);
+  const semanaAdmin = numeroSemanaActual + adminWeekOffset;
+  const semanaKey = semanaAdmin.toString();
   
-  if (mecValue) manualOverrides[weekKey].mecanico = mecValue;
-  else delete manualOverrides[weekKey].mecanico;
- }
- 
- localStorage.manualOverrides = JSON.stringify(manualOverrides);
- render();
- renderCalendar();
- alert("✅ Cambios guardados");
+  const elecSelect = document.getElementById(`admin-elec-${semanaAdmin}`);
+  const mecSelect = document.getElementById(`admin-mec-${semanaAdmin}`);
+  
+  const elecValue = elecSelect.value;
+  const mecValue = mecSelect.value;
+  
+  if (!elecValue && !mecValue) {
+    if (manualOverrides[semanaKey]) {
+      delete manualOverrides[semanaKey];
+    }
+  } else {
+    if (!manualOverrides[semanaKey]) {
+      manualOverrides[semanaKey] = {};
+    }
+    if (elecValue) manualOverrides[semanaKey].electrico = elecValue;
+    else delete manualOverrides[semanaKey].electrico;
+    
+    if (mecValue) manualOverrides[semanaKey].mecanico = mecValue;
+    else delete manualOverrides[semanaKey].mecanico;
+  }
+  
+  localStorage.manualOverrides = JSON.stringify(manualOverrides);
+  render();
+  renderCalendar();
+  alert("✅ Cambios guardados");
 }
 
-// Poblar selects para intercambiar
+// ========== INTERCAMBIO DE PERSONAS ==========
 function populateSwapSelects() {
- const select1 = document.getElementById('swap-person1');
- const select2 = document.getElementById('swap-person2');
- 
- select1.innerHTML = '<option value="">Selecciona persona 1</option>';
- select2.innerHTML = '<option value="">Selecciona persona 2</option>';
- 
- // Agregar todos los activos de ambas listas
- [...activos(electricos), ...activos(mecanicos)].forEach(persona => {
-  const option1 = new Option(persona, persona);
-  const option2 = new Option(persona, persona);
-  select1.add(option1);
-  select2.add(option2);
- });
+  const select1 = document.getElementById('swap-person1');
+  const select2 = document.getElementById('swap-person2');
+  
+  select1.innerHTML = '<option value="">Selecciona persona 1</option>';
+  select2.innerHTML = '<option value="">Selecciona persona 2</option>';
+  
+  [...activos(electricos), ...activos(mecanicos)].forEach(persona => {
+    const option1 = new Option(persona, persona);
+    const option2 = new Option(persona, persona);
+    select1.add(option1);
+    select2.add(option2);
+  });
 }
 
 function swapPersons() {
- const persona1 = document.getElementById('swap-person1').value;
- const persona2 = document.getElementById('swap-person2').value;
- 
- if (!persona1 || !persona2) {
-  alert("Selecciona dos personas para intercambiar");
-  return;
- }
- 
- if (persona1 === persona2) {
-  alert("Selecciona dos personas diferentes");
-  return;
- }
- 
- // Encontrar y intercambiar en todas las semanas con override
- Object.keys(manualOverrides).forEach(weekKey => {
-  const week = manualOverrides[weekKey];
-  if (week.electrico === persona1) week.electrico = persona2;
-  else if (week.electrico === persona2) week.electrico = persona1;
+  const persona1 = document.getElementById('swap-person1').value;
+  const persona2 = document.getElementById('swap-person2').value;
   
-  if (week.mecanico === persona1) week.mecanico = persona2;
-  else if (week.mecanico === persona2) week.mecanico = persona1;
- });
- 
- localStorage.manualOverrides = JSON.stringify(manualOverrides);
- render();
- renderCalendar();
- renderAdminGuardias();
- alert(`✅ ${persona1} y ${persona2} intercambiados en todas las semanas`);
-}
-
-// Funciones para el modal de edición
-function openEditModal(week) {
- editModalWeek = week;
- const base=lunes(new Date());
- const ini=new Date(base);ini.setDate(ini.getDate()+week*7);
- const fin=new Date(ini);fin.setDate(fin.getDate()+4);
- 
- document.getElementById('modal-week-info').innerHTML = 
-  `<p><strong>Semana ${week}:</strong> ${fd(ini)} - ${fd(fin)}</p>`;
- 
- // Poblar select de eléctricos
- const elecSelect = document.getElementById('edit-electrico');
- elecSelect.innerHTML = '<option value="">-- Rotación automática --</option>';
- activos(electricos).forEach(p => {
-  const option = new Option(p, p);
-  elecSelect.add(option);
- });
- 
- // Poblar select de mecánicos
- const mecSelect = document.getElementById('edit-mecanico');
- mecSelect.innerHTML = '<option value="">-- Rotación automática --</option>';
- activos(mecanicos).forEach(p => {
-  const option = new Option(p, p);
-  mecSelect.add(option);
- });
- 
- // Seleccionar valores actuales si existen
- const weekKey = week.toString();
- const override = manualOverrides[weekKey] || {};
- if (override.electrico) elecSelect.value = override.electrico;
- if (override.mecanico) mecSelect.value = override.mecanico;
- 
- document.getElementById('editModal').style.display = 'flex';
-}
-
-function closeModal() {
- document.getElementById('editModal').style.display = 'none';
-}
-
-function applyGuardiaEdit() {
- const weekKey = editModalWeek.toString();
- const elecValue = document.getElementById('edit-electrico').value;
- const mecValue = document.getElementById('edit-mecanico').value;
- 
- if (!elecValue && !mecValue) {
-  // Eliminar override si ambos están en automático
-  if (manualOverrides[weekKey]) {
-   delete manualOverrides[weekKey];
+  if (!persona1 || !persona2) {
+    alert("Selecciona dos personas para intercambiar");
+    return;
   }
- } else {
-  if (!manualOverrides[weekKey]) {
-   manualOverrides[weekKey] = {};
-  }
-  if (elecValue) manualOverrides[weekKey].electrico = elecValue;
-  else delete manualOverrides[weekKey].electrico;
   
-  if (mecValue) manualOverrides[weekKey].mecanico = mecValue;
-  else delete manualOverrides[weekKey].mecanico;
- }
- 
- localStorage.manualOverrides = JSON.stringify(manualOverrides);
- render();
- renderCalendar();
- renderAdminGuardias();
- closeModal();
- alert("✅ Cambios guardados");
-}
-
-// Reiniciar a rotación automática
-function resetToDefault() {
- if (confirm("¿Estás seguro de que quieres eliminar todos los cambios manuales y volver a la rotación automática?")) {
-  manualOverrides = {};
-  localStorage.manualOverrides = JSON.stringify({});
+  if (persona1 === persona2) {
+    alert("Selecciona dos personas diferentes");
+    return;
+  }
+  
+  Object.keys(manualOverrides).forEach(weekKey => {
+    const week = manualOverrides[weekKey];
+    if (week.electrico === persona1) week.electrico = persona2;
+    else if (week.electrico === persona2) week.electrico = persona1;
+    
+    if (week.mecanico === persona1) week.mecanico = persona2;
+    else if (week.mecanico === persona2) week.mecanico = persona1;
+  });
+  
+  localStorage.manualOverrides = JSON.stringify(manualOverrides);
   render();
   renderCalendar();
   renderAdminGuardias();
-  alert("✅ Rotación restablecida a automática");
- }
+  alert(`✅ ${persona1} y ${persona2} intercambiados en todas las semanas`);
 }
 
-// Renderizar calendario
-function renderCalendar(){
- calendarGrid.innerHTML="";
- const y = calendarMonth.getFullYear();
- const m = calendarMonth.getMonth();
- calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es",{month:"long"})} ${y}`;
- 
- const firstDay = new Date(y, m, 1);
- const lastDay  = new Date(y, m + 1, 0);
- 
- // Primer lunes visible
- const start = new Date(firstDay);
- const fdw = start.getDay() === 0 ? 7 : start.getDay();
- start.setDate(start.getDate() - (fdw - 1));
- 
- // Último domingo visible
- const end = new Date(lastDay);
- const ldw = end.getDay() === 0 ? 7 : end.getDay();
- end.setDate(end.getDate() + (7 - ldw));
- 
- let cur = new Date(start);
- while(cur <= end){
-  const isOutside = cur.getMonth() !== m;
-  const dow = cur.getDay();
-  const isWeekday = dow >= 1 && dow <= 5;
-  let html = `<div>${cur.getDate()}</div>`;
+// ========== MODAL DE EDICIÓN ==========
+function openEditModal(week) {
+  editModalWeek = week;
+  const hoy = new Date();
+  const fechaInicio = obtenerLunes(hoy);
+  fechaInicio.setDate(fechaInicio.getDate() + (week - calcularNumeroSemana(hoy)) * 7);
+  const fechaFin = new Date(fechaInicio);
+  fechaFin.setDate(fechaFin.getDate() + 4);
   
-  if(isWeekday && !isOutside){
-   const w = weekDiff(cur, new Date());
-   const elecGuardia = guardia(electricos, w);
-   const mecGuardia = guardia(mecanicos, w);
-   const hasOverride = manualOverrides[w.toString()];
-   
-   html += `
-    <small class="${hasOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia} ${hasOverride?'(Manual)':''}</small><br>
-    <small class="${hasOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia} ${hasOverride?'(Manual)':''}</small>`;
+  document.getElementById('modal-week-info').innerHTML = 
+    `<p><strong>Semana ${week}:</strong> ${fd(fechaInicio)} - ${fd(fechaFin)}</p>`;
+  
+  const elecSelect = document.getElementById('edit-electrico');
+  elecSelect.innerHTML = '<option value="">-- Rotación automática --</option>';
+  activos(electricos).forEach(p => {
+    const option = new Option(p, p);
+    elecSelect.add(option);
+  });
+  
+  const mecSelect = document.getElementById('edit-mecanico');
+  mecSelect.innerHTML = '<option value="">-- Rotación automática --</option>';
+  activos(mecanicos).forEach(p => {
+    const option = new Option(p, p);
+    mecSelect.add(option);
+  });
+  
+  const weekKey = week.toString();
+  const override = manualOverrides[weekKey] || {};
+  if (override.electrico) elecSelect.value = override.electrico;
+  if (override.mecanico) mecSelect.value = override.mecanico;
+  
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+
+function applyGuardiaEdit() {
+  const weekKey = editModalWeek.toString();
+  const elecValue = document.getElementById('edit-electrico').value;
+  const mecValue = document.getElementById('edit-mecanico').value;
+  
+  if (!elecValue && !mecValue) {
+    if (manualOverrides[weekKey]) {
+      delete manualOverrides[weekKey];
+    }
+  } else {
+    if (!manualOverrides[weekKey]) {
+      manualOverrides[weekKey] = {};
+    }
+    if (elecValue) manualOverrides[weekKey].electrico = elecValue;
+    else delete manualOverrides[weekKey].electrico;
+    
+    if (mecValue) manualOverrides[weekKey].mecanico = mecValue;
+    else delete manualOverrides[weekKey].mecanico;
   }
   
-  calendarGrid.innerHTML += `
-   <div class="calendar-day ${isOutside ? "outside" : ""} ${isWeekday ? "weekday" : "weekend"}"
-        ${isWeekday && !isOutside ? `onclick="offset=${weekDiff(cur,new Date())};render()"` : ""}>
-    ${html}
-   </div>`;
-   
-  cur.setDate(cur.getDate() + 1);
- }
+  localStorage.manualOverrides = JSON.stringify(manualOverrides);
+  render();
+  renderCalendar();
+  renderAdminGuardias();
+  closeModal();
+  alert("✅ Cambios guardados");
 }
 
-function changeMonth(d){
- calendarMonth.setMonth(calendarMonth.getMonth()+d);
- renderCalendar();
+// ========== REINICIAR ROTACIÓN ==========
+function resetToDefault() {
+  if (confirm("¿Estás seguro de que quieres eliminar todos los cambios manuales y volver a la rotación automática?")) {
+    manualOverrides = {};
+    localStorage.manualOverrides = JSON.stringify({});
+    render();
+    renderCalendar();
+    renderAdminGuardias();
+    alert("✅ Rotación restablecida a automática");
+  }
 }
 
-// Renderizar semana
-function render(){
- carousel.innerHTML="";
- const base=lunes(new Date());
- const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
- const fin=new Date(ini);fin.setDate(fin.getDate()+4);
- subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
- 
- for(let i=-1;i<=1;i++){
-  const l=new Date(ini);l.setDate(l.getDate()+i*7);
-  const v=new Date(l);v.setDate(v.getDate()+4);
-  const elecGuardia = guardia(electricos,offset+i);
-  const mecGuardia = guardia(mecanicos,offset+i);
-  const weekKey = (offset+i).toString();
-  const hasOverride = manualOverrides[weekKey];
-  
-  carousel.innerHTML+=`
-  <div class="card">
-   <h3>${fd(l)} - ${fd(v)} ${hasOverride?'🔄':''}</h3>
-   <div class="guardias">
-    <div class="guardia">
-     <div class="icono">⚡</div>
-     <div class="nombre">${elecGuardia}</div>
-     <div class="days">L–V</div>
-     <div class="time">15:30 – 19:00</div>
-     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[elecGuardia])} ${hasOverride?'· Manual':''}</small>
-    </div>
-    <div class="guardia">
-     <div class="icono">🔧</div>
-     <div class="nombre">${mecGuardia}</div>
-     <div class="days">L–V</div>
-     <div class="time">15:30 – 19:00</div>
-     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[mecGuardia])} ${hasOverride?'· Manual':''}</small>
-    </div>
-   </div>
-  </div>`;
- }
- 
- renderHistory();
- requestAnimationFrame(()=>carousel.scrollLeft=carousel.children[0].offsetWidth+14);
-}
-
+// ========== HISTORIAL ==========
 function logCompletedWeek(){
- const now=new Date(),fri=lunes(now);fri.setDate(fri.getDate()+4);
- if(now<fri)return;
- const key=fd(lunes(now));
- if(history.some(h=>h.startsWith(key)))return;
- history.unshift(`${key} ⚡ ${guardia(electricos,0)} · 🔧 ${guardia(mecanicos,0)}`);
- history=history.slice(0,30);
- localStorage.history=JSON.stringify(history);
+  const hoy=new Date();
+  const viernes=obtenerLunes(hoy);
+  viernes.setDate(viernes.getDate()+4);
+  
+  if(hoy<viernes)return;
+  
+  const numeroSemana=calcularNumeroSemana(hoy);
+  const clave=fd(obtenerLunes(hoy));
+  
+  if(history.some(h=>h.startsWith(clave)))return;
+  
+  const elecGuardia=guardia(electricos,numeroSemana);
+  const mecGuardia=guardia(mecanicos,numeroSemana);
+  
+  history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
+  history=history.slice(0,30);
+  localStorage.history=JSON.stringify(history);
 }
 
 function renderHistory(){
- historyList.innerHTML="";
- history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`);
+  historyList.innerHTML="";
+  history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`);
 }
 
-// Event listeners
+// ========== EVENT LISTENERS ==========
 prev.onclick=()=>{offset--;render()};
 next.onclick=()=>{offset++;render()};
 
 // Configurar evento para el details del admin
 document.querySelector('#admin summary').addEventListener('click', function(e) {
- // Solo verificar autenticación cuando se expande
- if (this.parentNode.open && !adminAuthenticated) {
-  checkAdminAuth();
- }
+  if (this.parentNode.open && !adminAuthenticated) {
+    checkAdminAuth();
+  }
 });
 
 save.onclick=()=>{
- if (!adminAuthenticated) {
-  alert("❌ No tienes permisos de administrador");
-  return;
- }
- localStorage.estados=JSON.stringify(estados);
- localStorage.manualOverrides = JSON.stringify(manualOverrides);
- render();
- renderCalendar();
- renderAdmin();
- renderAdminGuardias();
- alert("✅ Todo guardado");
+  if (!adminAuthenticated) {
+    alert("❌ No tienes permisos de administrador");
+    return;
+  }
+  localStorage.estados=JSON.stringify(estados);
+  localStorage.manualOverrides = JSON.stringify(manualOverrides);
+  render();
+  renderCalendar();
+  renderAdmin();
+  renderAdminGuardias();
+  alert("✅ Todo guardado");
 };
 
 // Cerrar modal al hacer clic fuera
 document.getElementById('editModal').addEventListener('click', function(e) {
- if (e.target === this) closeModal();
+  if (e.target === this) closeModal();
 });
 
-// Inicialización
+// ========== INICIALIZACIÓN ==========
 renderCalendar();
 logCompletedWeek();
 render();
@@ -817,9 +919,14 @@ render();
 renderAdmin();
 renderAdminGuardias();
 populateSwapSelects();
+
+// Depuración
+console.log("Admin sincronizado - Calendario corregido");
+console.log("Semana actual:", calcularNumeroSemana(new Date()));
 </script>
 </body>
 </html>
+
 
 
 
