@@ -3,8 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Alsi - Visualización</title>
+<title>Guardias Alsi</title>
+
+<!-- ========== META TAGS PWA ========== -->
 <meta name="theme-color" content="#1e88e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Guardias Alsi">
+<link rel="apple-touch-icon" href="icon-152.png">
+<meta name="msapplication-TileImage" content="icon-144.png">
+<meta name="msapplication-TileColor" content="#1e88e5">
+<meta name="msapplication-config" content="browserconfig.xml">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<!-- ========== FIN META TAGS PWA ========== -->
+
 <link rel="icon" href="icon-192.png">
 <style>
 :root{
@@ -144,6 +157,48 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  .personas-grid{grid-template-columns:1fr}
  .guardia-info{font-size:8px}
 }
+
+/* ========== ESTILOS PWA ========== */
+/* Estilos para modo standalone (app instalada) */
+.standalone-mode header {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+.standalone-mode #night {
+  top: calc(env(safe-area-inset-top, 12px) + 12px);
+}
+
+/* Mejoras para pantallas táctiles en modo app */
+@media (display-mode: standalone) {
+  button, select, .calendar-day {
+    min-height: 44px; /* Tamaño mínimo para toques */
+  }
+  
+  .guardia {
+    padding: 20px;
+  }
+  
+  /* Mejorar visibilidad en modo app */
+  body {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Animación para el botón de instalación */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+#install-button {
+  animation: pulse 2s infinite;
+}
+
+#install-button:hover {
+  animation: none;
+}
+/* ========== FIN ESTILOS PWA ========== */
 </style>
 </head>
 <body>
@@ -178,6 +233,243 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <div id="historyList"></div>
 </div>
 
+<!-- ========== SCRIPT PWA ========== -->
+<script>
+// ========== PWA INSTALLATION ==========
+let deferredPrompt;
+let installButton = null;
+
+// Crear botón de instalación dinámicamente
+function createInstallButton() {
+  if (installButton) return;
+  
+  installButton = document.createElement('button');
+  installButton.id = 'install-button';
+  installButton.innerHTML = '📱 Instalar App';
+  installButton.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    cursor: pointer;
+    display: none;
+    transition: all 0.3s;
+    font-size: 14px;
+  `;
+  
+  installButton.onclick = installPWA;
+  installButton.onmouseover = () => installButton.style.transform = 'translateY(-2px)';
+  installButton.onmouseout = () => installButton.style.transform = 'translateY(0)';
+  
+  document.body.appendChild(installButton);
+}
+
+// Evento para detectar cuándo se puede instalar
+window.addEventListener('beforeinstallprompt', (e) => {
+  console.log('beforeinstallprompt fired');
+  e.preventDefault();
+  deferredPrompt = e;
+  createInstallButton();
+  
+  setTimeout(() => {
+    if (installButton && deferredPrompt) {
+      installButton.style.display = 'block';
+      setTimeout(() => {
+        if (installButton) installButton.style.display = 'none';
+      }, 10000);
+    }
+  }, 3000);
+});
+
+// Función para instalar la PWA
+function installPWA() {
+  if (!deferredPrompt) {
+    alert('La aplicación ya está instalada o no se puede instalar en este navegador.');
+    return;
+  }
+  
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((choiceResult) => {
+    if (choiceResult.outcome === 'accepted') {
+      console.log('Usuario aceptó la instalación');
+      if (installButton) {
+        installButton.style.display = 'none';
+        installButton.innerHTML = '✅ Instalada';
+        setTimeout(() => installButton.style.display = 'none', 2000);
+      }
+      document.dispatchEvent(new CustomEvent('appInstalled'));
+    } else {
+      console.log('Usuario rechazó la instalación');
+      if (installButton) {
+        installButton.style.display = 'none';
+        setTimeout(() => {
+          if (installButton && deferredPrompt) installButton.style.display = 'block';
+        }, 30000);
+      }
+    }
+    deferredPrompt = null;
+  });
+}
+
+// Detectar si la app ya está instalada
+window.addEventListener('appinstalled', (e) => {
+  console.log('App instalada exitosamente');
+  deferredPrompt = null;
+  if (installButton) installButton.style.display = 'none';
+  setTimeout(() => {
+    alert('¡App instalada exitosamente! 🎉\n\nAhora puedes acceder a Guardias Alsi desde tu pantalla de inicio.');
+  }, 1000);
+});
+
+// ========== SERVICE WORKER REGISTRATION ==========
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    console.log('Registrando Service Worker...');
+    navigator.serviceWorker.register('service-worker.js')
+      .then(function(registration) {
+        console.log('Service Worker registrado con éxito:', registration.scope);
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('Nueva versión del Service Worker encontrada:', newWorker);
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateNotification();
+            }
+          });
+        });
+      })
+      .catch(function(error) {
+        console.log('Error registrando Service Worker:', error);
+      });
+  });
+}
+
+// Mostrar notificación de actualización
+function showUpdateNotification() {
+  const updateDiv = document.createElement('div');
+  updateDiv.id = 'update-notification';
+  updateDiv.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1001;
+    text-align: center;
+    max-width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  `;
+  
+  updateDiv.innerHTML = `
+    <div style="font-weight: bold;">🔄 Nueva versión disponible</div>
+    <div style="font-size: 0.9em;">Hay una actualización de la app</div>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button id="update-now" style="background: white; color: #FF9800; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">
+        Actualizar ahora
+      </button>
+      <button id="update-later" style="background: transparent; color: white; border: 1px solid white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+        Más tarde
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(updateDiv);
+  
+  document.getElementById('update-now').onclick = () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        window.location.reload();
+      });
+    }
+  };
+  
+  document.getElementById('update-later').onclick = () => updateDiv.style.display = 'none';
+  
+  setTimeout(() => {
+    if (updateDiv.parentNode) {
+      updateDiv.style.opacity = '0';
+      updateDiv.style.transition = 'opacity 1s';
+      setTimeout(() => updateDiv.parentNode && updateDiv.remove(), 1000);
+    }
+  }, 30000);
+}
+
+// Detectar modo standalone (app instalada)
+function detectStandaloneMode() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                      window.navigator.standalone === true;
+  if (isStandalone) {
+    console.log('App ejecutándose en modo standalone');
+    document.documentElement.classList.add('standalone-mode');
+    if (CSS.supports('padding-top: env(safe-area-inset-top)')) {
+      document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top)');
+      document.documentElement.style.setProperty('--safe-area-bottom', 'env(safe-area-inset-bottom)');
+    }
+  }
+  return isStandalone;
+}
+
+window.addEventListener('load', () => {
+  detectStandaloneMode();
+  window.matchMedia('(display-mode: standalone)').addListener(detectStandaloneMode);
+});
+
+// ========== OFFLINE DETECTION ==========
+function updateOnlineStatus() {
+  if (!navigator.onLine) showOfflineNotification();
+  else hideOfflineNotification();
+}
+
+function showOfflineNotification() {
+  if (document.getElementById('offline-notification')) return;
+  const offlineDiv = document.createElement('div');
+  offlineDiv.id = 'offline-notification';
+  offlineDiv.style.cssText = `
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f44336;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1002;
+    font-size: 0.9em;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `;
+  offlineDiv.innerHTML = `<span>⚠️</span><span>Sin conexión - Modo offline</span>`;
+  document.body.appendChild(offlineDiv);
+}
+
+function hideOfflineNotification() {
+  const offlineDiv = document.getElementById('offline-notification');
+  if (offlineDiv) offlineDiv.remove();
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+</script>
+<!-- ========== FIN SCRIPT PWA ========== -->
+
+<!-- ========== TU CÓDIGO ORIGINAL ========== -->
 <script>
 // Toggle modo oscuro
 night.onclick=()=>{
@@ -186,8 +478,7 @@ night.onclick=()=>{
 };
 if(localStorage.dark==="true") document.body.classList.add("dark");
 
-// ========== CÓDIGO CORREGIDO PARA EL CALENDARIO ==========
-// Datos iniciales
+// Datos iniciales (se sincronizan desde la versión admin)
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
 let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
 let estados=JSON.parse(localStorage.estados||"{}");
@@ -198,21 +489,21 @@ let calendarMonth=new Date();
 
 // ========== FUNCIONES CORREGIDAS ==========
 // FECHA BASE FIJA: Lunes 1 de Enero de 2024
-const FECHA_BASE = new Date(2024, 0, 1); // 1 Enero 2024 (era lunes)
+const FECHA_BASE = new Date(2024, 0, 1);
 const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
 
 // Función para obtener el lunes de cualquier semana
 function obtenerLunes(fecha) {
   const d = new Date(fecha);
   const dia = d.getDay();
-  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1); // Ajuste para domingo
+  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
   return new Date(d.setDate(diff));
 }
 
 // Función para calcular número de semana desde fecha base
 function calcularNumeroSemana(fecha) {
   const fechaLunes = obtenerLunes(fecha);
-  fechaLunes.setHours(12, 0, 0, 0); // Hora fija para evitar problemas zona horaria
+  fechaLunes.setHours(12, 0, 0, 0);
   
   const fechaBaseLunes = obtenerLunes(FECHA_BASE);
   fechaBaseLunes.setHours(12, 0, 0, 0);
@@ -254,7 +545,6 @@ const guardia = (l, numeroSemana) => {
   return a[indice];
 };
 
-// ========== FUNCIONES DE RENDERIZADO ==========
 function getEstadoTexto(estado){
  switch(estado){
   case 'activo': return 'Activo';
@@ -309,24 +599,19 @@ function renderCalendar() {
   
   calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
   
-  // Primer día del mes
   const primerDia = new Date(y, m, 1);
-  // Último día del mes
   const ultimoDia = new Date(y, m + 1, 0);
   
-  // Encontrar el primer lunes a mostrar (puede ser del mes anterior)
   const inicio = new Date(primerDia);
   const diaSemana = inicio.getDay();
   const diasAtras = diaSemana === 0 ? 6 : diaSemana - 1;
   inicio.setDate(inicio.getDate() - diasAtras);
   
-  // Encontrar el último domingo a mostrar (puede ser del mes siguiente)
   const fin = new Date(ultimoDia);
   const diaSemanaFin = fin.getDay();
   const diasAdelante = diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin;
   fin.setDate(fin.getDate() + diasAdelante);
   
-  // Generar calendario
   let fechaActual = new Date(inicio);
   while (fechaActual <= fin) {
     const esMesAnterior = fechaActual.getMonth() < m;
@@ -335,7 +620,6 @@ function renderCalendar() {
     const diaSemana = fechaActual.getDay();
     const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
     
-    // Calcular número de semana para esta fecha
     const numeroSemana = calcularNumeroSemana(fechaActual);
     const elecGuardia = guardia(electricos, numeroSemana);
     const mecGuardia = guardia(mecanicos, numeroSemana);
@@ -348,8 +632,8 @@ function renderCalendar() {
     if (esDiaLaboral && !esFueraMes) {
       contenidoHTML += `
         <div class="guardia-info">
-          <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">⚡ ${elecGuardia}</div>
-          <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">🔧 ${mecGuardia}</div>
+          <div class="${tieneOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</div>
+          <div class="${tieneOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</div>
         </div>
       `;
     }
@@ -366,7 +650,6 @@ function renderCalendar() {
       </div>
     `;
     
-    // Siguiente día
     fechaActual.setDate(fechaActual.getDate() + 1);
   }
 }
@@ -376,126 +659,88 @@ function changeMonth(delta) {
   renderCalendar();
 }
 
-// ========== RENDERIZAR SEMANAS ==========
-function render() {
-  carousel.innerHTML = "";
-  const hoy = new Date();
-  const numeroSemanaActual = calcularNumeroSemana(hoy);
+// Renderizar semana
+function render(){
+ carousel.innerHTML="";
+ const base=lunes(new Date());
+ const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
+ const fin=new Date(ini);fin.setDate(fin.getDate()+4);
+ 
+ // Actualizar título principal
+ document.querySelector('header h1').textContent = `Guardias Alsi`;
+ subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
+ 
+ for(let i=-1;i<=1;i++){
+  const l=new Date(ini);l.setDate(l.getDate()+i*7);
+  const v=new Date(l);v.setDate(v.getDate()+4);
+  const elecGuardia = guardia(electricos,offset+i);
+  const mecGuardia = guardia(mecanicos,offset+i);
+  const weekKey = (offset+i).toString();
+  const hasOverride = manualOverrides[weekKey];
   
-  // Calcular fecha de inicio (lunes) de la semana actual + offset
-  const fechaBase = obtenerLunes(hoy);
-  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
-  
-  const fechaInicio = new Date(fechaBase);
-  const fechaFin = new Date(fechaInicio);
-  fechaFin.setDate(fechaFin.getDate() + 4); // Hasta viernes
-  
-  // Actualizar subtítulo
-  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
-  
-  // Mostrar 3 semanas: anterior, actual, siguiente
-  for (let i = -1; i <= 1; i++) {
-    const semanaOffset = offset + i;
-    const numeroSemana = numeroSemanaActual + semanaOffset;
-    
-    // Calcular fechas para esta semana
-    const semanaInicio = new Date(fechaBase);
-    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
-    const semanaFin = new Date(semanaInicio);
-    semanaFin.setDate(semanaFin.getDate() + 4);
-    
-    // Obtener guardias
-    const elecGuardia = guardia(electricos, numeroSemana);
-    const mecGuardia = guardia(mecanicos, numeroSemana);
-    const tieneOverride = manualOverrides[numeroSemana.toString()];
-    
-    carousel.innerHTML += `
-      <div class="card">
-        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
-        <div class="guardias">
-          <div class="guardia">
-            <div class="icono">⚡</div>
-            <div class="nombre">${elecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[elecGuardia])}
-            </small>
-          </div>
-          <div class="guardia">
-            <div class="icono">🔧</div>
-            <div class="nombre">${mecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[mecGuardia])}
-            </small>
-          </div>
-        </div>
-      </div>
-    `;
+  carousel.innerHTML+=`
+  <div class="card">
+   <h3>${fd(l)} - ${fd(v)} ${hasOverride?'🔄':''}</h3>
+   <div class="guardias">
+    <div class="guardia">
+     <div class="icono">⚡</div>
+     <div class="nombre">${elecGuardia}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
+     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[elecGuardia])}</small>
+    </div>
+    <div class="guardia">
+     <div class="icono">🔧</div>
+     <div class="nombre">${mecGuardia}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
+     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[mecGuardia])}</small>
+    </div>
+   </div>
+  </div>`;
+ }
+ 
+ renderHistory();
+ // Centrar la semana actual
+ requestAnimationFrame(()=>{
+  if(carousel.children[1]){
+   carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
   }
-  
-  renderHistory();
-  
-  // Centrar la tarjeta del medio (semana actual)
-  requestAnimationFrame(() => {
-    if (carousel.children[1]) {
-      carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
-    }
-  });
+ });
 }
 
-// ========== HISTORIAL ==========
-function logCompletedWeek() {
-  const hoy = new Date();
-  const viernes = obtenerLunes(hoy);
-  viernes.setDate(viernes.getDate() + 4);
-  
-  if (hoy < viernes) return;
-  
-  const numeroSemana = calcularNumeroSemana(hoy);
-  const clave = fd(obtenerLunes(hoy));
-  
-  if (history.some(h => h.startsWith(clave))) return;
-  
-  const elecGuardia = guardia(electricos, numeroSemana);
-  const mecGuardia = guardia(mecanicos, numeroSemana);
-  
-  history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
-  history = history.slice(0, 30);
-  localStorage.history = JSON.stringify(history);
+function logCompletedWeek(){
+ const now=new Date(),fri=lunes(now);fri.setDate(fri.getDate()+4);
+ if(now<fri)return;
+ const key=fd(lunes(now));
+ if(history.some(h=>h.startsWith(key)))return;
+ history.unshift(`${key} ⚡ ${guardia(electricos,0)} · 🔧 ${guardia(mecanicos,0)}`);
+ history=history.slice(0,30);
+ localStorage.history=JSON.stringify(history);
 }
 
-function renderHistory() {
-  historyList.innerHTML = "";
-  history.forEach(h => {
-    const [fecha, ...resto] = h.split(' ');
-    const guardias = resto.join(' ');
-    historyList.innerHTML += `
-      <div class="history-item">
-        <span>${fecha}</span>
-        <span>${guardias}</span>
-      </div>
-    `;
-  });
+function renderHistory(){
+ historyList.innerHTML="";
+ history.forEach(h=>{
+  const [fecha, ...resto] = h.split(' ');
+  const guardias = resto.join(' ');
+  historyList.innerHTML+=`
+   <div class="history-item">
+    <span>${fecha}</span>
+    <span>${guardias}</span>
+   </div>`;
+ });
 }
 
-// ========== EVENT LISTENERS ==========
-prev.onclick = () => { offset--; render(); };
-next.onclick = () => { offset++; render(); };
+// Event listeners
+prev.onclick=()=>{offset--;render()};
+next.onclick=()=>{offset++;render()};
 
-// ========== INICIALIZACIÓN ==========
+// Inicialización
 renderCalendar();
 renderPersonasList();
 logCompletedWeek();
 render();
-
-// Depuración (opcional)
-console.log("Calendario sincronizado correctamente");
-console.log("Semana actual:", calcularNumeroSemana(new Date()));
-console.log("Guardia eléctrica:", guardia(electricos, calcularNumeroSemana(new Date())));
-console.log("Guardia mecánica:", guardia(mecanicos, calcularNumeroSemana(new Date())));
 </script>
 </body>
 </html>
