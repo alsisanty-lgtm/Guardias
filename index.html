@@ -43,16 +43,58 @@ button:hover{opacity:0.9}
 #night{position:fixed;top:12px;right:12px;z-index:200}
 .nav{display:flex;justify-content:space-between;padding:10px}
 .container{max-width:960px;margin:auto;padding:10px}
+
+/* ===== CARRUSEL CON SCROLL TÁCTIL MEJORADO ===== */
 .carousel{
  display:flex;gap:14px;overflow-x:auto;
  scroll-snap-type:x mandatory;
  padding-bottom:10px;
+ -webkit-overflow-scrolling: touch;
+ scroll-behavior: smooth;
+ touch-action: pan-x;
+ cursor: grab;
+ position: relative;
 }
+.carousel:active {
+ cursor: grabbing;
+}
+
+/* Ocultar scrollbar pero mantener funcionalidad */
+.carousel::-webkit-scrollbar {
+ height: 6px;
+}
+.carousel::-webkit-scrollbar-track {
+ background: rgba(0,0,0,0.05);
+ border-radius: 3px;
+}
+.carousel::-webkit-scrollbar-thumb {
+ background: var(--primary);
+ border-radius: 3px;
+ opacity: 0.6;
+}
+.carousel::-webkit-scrollbar-thumb:hover {
+ opacity: 1;
+}
+
+/* Indicador visual para móviles */
+.carousel::after {
+ content: '← Desliza →';
+ position: absolute;
+ bottom: -25px;
+ left: 50%;
+ transform: translateX(-50%);
+ color: var(--muted);
+ font-size: 0.8em;
+ white-space: nowrap;
+ display: none;
+}
+
 .card{
  min-width:320px;background:var(--card);
  border-radius:var(--radius);
  box-shadow:var(--shadow);
  padding:20px;scroll-snap-align:center;
+ flex-shrink: 0;
 }
 .guardias{display:flex;gap:14px;margin-top:14px}
 .guardia{
@@ -152,14 +194,43 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  justify-content:space-between;
 }
 
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+ .carousel::after {
+  display: block;
+ }
+ 
+ .card {
+  min-width: 85vw;
+  margin: 0 5px;
+ }
+ 
+ .container {
+  padding: 5px;
+ }
+}
+
 @media(max-width:480px){
  .calendar-day{font-size:.6rem;min-height:60px}
  .personas-grid{grid-template-columns:1fr}
  .guardia-info{font-size:8px}
+ 
+ .nav button {
+  padding: 14px 12px;
+  font-size: 0.9em;
+  flex: 1;
+  margin: 0 5px;
+  min-height: 44px;
+ }
+ 
+ .carousel::after {
+  content: '👉 Desliza con el dedo 👈';
+  bottom: -30px;
+  font-size: 0.75em;
+ }
 }
 
 /* ========== ESTILOS PWA ========== */
-/* Estilos para modo standalone (app instalada) */
 .standalone-mode header {
   padding-top: env(safe-area-inset-top, 20px);
 }
@@ -168,23 +239,20 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
   top: calc(env(safe-area-inset-top, 12px) + 12px);
 }
 
-/* Mejoras para pantallas táctiles en modo app */
 @media (display-mode: standalone) {
   button, select, .calendar-day {
-    min-height: 44px; /* Tamaño mínimo para toques */
+    min-height: 44px;
   }
   
   .guardia {
     padding: 20px;
   }
   
-  /* Mejorar visibilidad en modo app */
   body {
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Animación para el botón de instalación */
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
@@ -469,7 +537,7 @@ updateOnlineStatus();
 </script>
 <!-- ========== FIN SCRIPT PWA ========== -->
 
-<!-- ========== TU CÓDIGO ORIGINAL ========== -->
+<!-- ========== CÓDIGO PRINCIPAL DE LA APLICACIÓN ========== -->
 <script>
 // Toggle modo oscuro
 night.onclick=()=>{
@@ -659,88 +727,222 @@ function changeMonth(delta) {
   renderCalendar();
 }
 
-// Renderizar semana
-function render(){
- carousel.innerHTML="";
- const base=lunes(new Date());
- const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
- const fin=new Date(ini);fin.setDate(fin.getDate()+4);
- 
- // Actualizar título principal
- document.querySelector('header h1').textContent = `Guardias Alsi`;
- subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
- 
- for(let i=-1;i<=1;i++){
-  const l=new Date(ini);l.setDate(l.getDate()+i*7);
-  const v=new Date(l);v.setDate(v.getDate()+4);
-  const elecGuardia = guardia(electricos,offset+i);
-  const mecGuardia = guardia(mecanicos,offset+i);
-  const weekKey = (offset+i).toString();
-  const hasOverride = manualOverrides[weekKey];
+// ========== RENDERIZAR SEMANAS CON SCROLL TÁCTIL MEJORADO ==========
+function render() {
+  carousel.innerHTML = "";
+  const hoy = new Date();
+  const numeroSemanaActual = calcularNumeroSemana(hoy);
   
-  carousel.innerHTML+=`
-  <div class="card">
-   <h3>${fd(l)} - ${fd(v)} ${hasOverride?'🔄':''}</h3>
-   <div class="guardias">
-    <div class="guardia">
-     <div class="icono">⚡</div>
-     <div class="nombre">${elecGuardia}</div>
-     <div class="days">L–V</div>
-     <div class="time">15:30 – 19:00</div>
-     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[elecGuardia])}</small>
-    </div>
-    <div class="guardia">
-     <div class="icono">🔧</div>
-     <div class="nombre">${mecGuardia}</div>
-     <div class="days">L–V</div>
-     <div class="time">15:30 – 19:00</div>
-     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[mecGuardia])}</small>
-    </div>
-   </div>
-  </div>`;
- }
- 
- renderHistory();
- // Centrar la semana actual
- requestAnimationFrame(()=>{
-  if(carousel.children[1]){
-   carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
+  const fechaBase = obtenerLunes(hoy);
+  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
+  
+  const fechaInicio = new Date(fechaBase);
+  const fechaFin = new Date(fechaInicio);
+  fechaFin.setDate(fechaFin.getDate() + 4);
+  
+  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
+  
+  // Crear 3 semanas: anterior, actual, siguiente
+  for (let i = -1; i <= 1; i++) {
+    const semanaOffset = offset + i;
+    const numeroSemana = numeroSemanaActual + semanaOffset;
+    
+    const semanaInicio = new Date(fechaBase);
+    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
+    const semanaFin = new Date(semanaInicio);
+    semanaFin.setDate(semanaFin.getDate() + 4);
+    
+    const elecGuardia = guardia(electricos, numeroSemana);
+    const mecGuardia = guardia(mecanicos, numeroSemana);
+    const tieneOverride = manualOverrides[numeroSemana.toString()];
+    
+    carousel.innerHTML += `
+      <div class="card">
+        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
+        <div class="guardias">
+          <div class="guardia">
+            <div class="icono">⚡</div>
+            <div class="nombre">${elecGuardia}</div>
+            <div class="days">L–V</div>
+            <div class="time">15:30 – 19:00</div>
+            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+              ${getEstadoTexto(estados[elecGuardia])}
+            </small>
+          </div>
+          <div class="guardia">
+            <div class="icono">🔧</div>
+            <div class="nombre">${mecGuardia}</div>
+            <div class="days">L–V</div>
+            <div class="time">15:30 – 19:00</div>
+            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+              ${getEstadoTexto(estados[mecGuardia])}
+            </small>
+          </div>
+        </div>
+      </div>
+    `;
   }
- });
+  
+  renderHistory();
+  
+  // Centrar automáticamente la tarjeta del medio
+  setTimeout(() => {
+    if (carousel.children[1]) {
+      const cardWidth = carousel.children[0].offsetWidth;
+      const gap = 14;
+      carousel.scrollLeft = (cardWidth + gap) * 1;
+      
+      // Inicializar scroll táctil después de renderizar
+      initTouchScroll();
+    }
+  }, 100);
 }
 
+// ========== SCROLL TÁCTIL MEJORADO ==========
+function initTouchScroll() {
+  const carousel = document.getElementById('carousel');
+  if (!carousel) return;
+  
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+  
+  // Para ratón (PC)
+  carousel.addEventListener('mousedown', (e) => {
+    isDown = true;
+    carousel.classList.add('active');
+    startX = e.pageX - carousel.offsetLeft;
+    scrollLeft = carousel.scrollLeft;
+  });
+  
+  carousel.addEventListener('mouseleave', () => {
+    isDown = false;
+    carousel.classList.remove('active');
+  });
+  
+  carousel.addEventListener('mouseup', () => {
+    isDown = false;
+    carousel.classList.remove('active');
+    snapToNearestCard();
+  });
+  
+  carousel.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - carousel.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    carousel.scrollLeft = scrollLeft - walk;
+  });
+  
+  // Para touch (móviles)
+  carousel.addEventListener('touchstart', (e) => {
+    isDown = true;
+    startX = e.touches[0].pageX - carousel.offsetLeft;
+    scrollLeft = carousel.scrollLeft;
+    carousel.style.cursor = 'grabbing';
+  });
+  
+  carousel.addEventListener('touchend', () => {
+    isDown = false;
+    carousel.style.cursor = 'grab';
+    snapToNearestCard();
+  });
+  
+  carousel.addEventListener('touchmove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.touches[0].pageX - carousel.offsetLeft;
+    const walk = (x - startX) * 1.2;
+    carousel.scrollLeft = scrollLeft - walk;
+  });
+  
+  // Snap a la tarjeta más cercana
+  function snapToNearestCard() {
+    const cards = carousel.querySelectorAll('.card');
+    if (cards.length === 0) return;
+    
+    const cardWidth = cards[0].offsetWidth;
+    const gap = 14;
+    const scrollPos = carousel.scrollLeft;
+    const cardIndex = Math.round(scrollPos / (cardWidth + gap));
+    
+    carousel.scrollTo({
+      left: cardIndex * (cardWidth + gap),
+      behavior: 'smooth'
+    });
+    
+    // Actualizar offset basado en la tarjeta centrada
+    if (cardIndex === 0) offset--;
+    else if (cardIndex === 2) offset++;
+    
+    // Re-renderizar si cambió el offset
+    if (cardIndex !== 1) {
+      setTimeout(() => {
+        const newCardIndex = Math.round(carousel.scrollLeft / (cardWidth + gap));
+        if (newCardIndex === 0 || newCardIndex === 2) {
+          render();
+        }
+      }, 300);
+    }
+  }
+  
+  // Botones de navegación
+  document.getElementById('prev').addEventListener('click', () => {
+    offset--;
+    render();
+  });
+  
+  document.getElementById('next').addEventListener('click', () => {
+    offset++;
+    render();
+  });
+}
+
+// ========== HISTORIAL ==========
 function logCompletedWeek(){
- const now=new Date(),fri=lunes(now);fri.setDate(fri.getDate()+4);
- if(now<fri)return;
- const key=fd(lunes(now));
- if(history.some(h=>h.startsWith(key)))return;
- history.unshift(`${key} ⚡ ${guardia(electricos,0)} · 🔧 ${guardia(mecanicos,0)}`);
- history=history.slice(0,30);
- localStorage.history=JSON.stringify(history);
+  const hoy=new Date();
+  const viernes=obtenerLunes(hoy);
+  viernes.setDate(viernes.getDate()+4);
+  
+  if(hoy<viernes)return;
+  
+  const numeroSemana=calcularNumeroSemana(hoy);
+  const clave=fd(obtenerLunes(hoy));
+  
+  if(history.some(h=>h.startsWith(clave)))return;
+  
+  const elecGuardia=guardia(electricos,numeroSemana);
+  const mecGuardia=guardia(mecanicos,numeroSemana);
+  
+  history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
+  history=history.slice(0,30);
+  localStorage.history=JSON.stringify(history);
 }
 
 function renderHistory(){
- historyList.innerHTML="";
- history.forEach(h=>{
-  const [fecha, ...resto] = h.split(' ');
-  const guardias = resto.join(' ');
-  historyList.innerHTML+=`
-   <div class="history-item">
-    <span>${fecha}</span>
-    <span>${guardias}</span>
-   </div>`;
- });
+  historyList.innerHTML="";
+  history.forEach(h=>{
+    const [fecha, ...resto] = h.split(' ');
+    const guardias = resto.join(' ');
+    historyList.innerHTML+=`
+      <div class="history-item">
+        <span>${fecha}</span>
+        <span>${guardias}</span>
+      </div>
+    `;
+  });
 }
 
-// Event listeners
-prev.onclick=()=>{offset--;render()};
-next.onclick=()=>{offset++;render()};
-
-// Inicialización
+// ========== INICIALIZACIÓN ==========
 renderCalendar();
 renderPersonasList();
 logCompletedWeek();
 render();
+
+// Inicializar scroll táctil después de cargar
+window.addEventListener('load', () => {
+  setTimeout(initTouchScroll, 500);
+});
 </script>
 </body>
 </html>
