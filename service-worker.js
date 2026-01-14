@@ -1,5 +1,5 @@
 // Nombre de la caché
-const CACHE_NAME = 'guardias-alsi-v3.0';
+const CACHE_NAME = 'guardias-alsi-v3.1';
 const urlsToCache = [
   '/Guardias/',
   '/Guardias/index.html',
@@ -101,6 +101,7 @@ self.addEventListener('message', event => {
     self.skipWaiting();
   }
 });
+
 
 
 
