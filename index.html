@@ -13,7 +13,6 @@
 <link rel="apple-touch-icon" href="icon-152.png">
 <meta name="msapplication-TileImage" content="icon-144.png">
 <meta name="msapplication-TileColor" content="#1e88e5">
-<meta name="msapplication-config" content="browserconfig.xml">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
 <!-- ========== FIN META TAGS PWA ========== -->
@@ -44,57 +43,31 @@ button:hover{opacity:0.9}
 .nav{display:flex;justify-content:space-between;padding:10px}
 .container{max-width:960px;margin:auto;padding:10px}
 
-/* ===== CARRUSEL CON SCROLL TÁCTIL MEJORADO ===== */
-.carousel{
- display:flex;gap:14px;overflow-x:auto;
- scroll-snap-type:x mandatory;
- padding-bottom:10px;
- -webkit-overflow-scrolling: touch;
- scroll-behavior: smooth;
- touch-action: pan-x;
- cursor: grab;
- position: relative;
-}
-.carousel:active {
- cursor: grabbing;
+/* ===== CARRUSEL SIMPLE Y FUNCIONAL ===== */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
 }
 
-/* Ocultar scrollbar pero mantener funcionalidad */
-.carousel::-webkit-scrollbar {
- height: 6px;
-}
-.carousel::-webkit-scrollbar-track {
- background: rgba(0,0,0,0.05);
- border-radius: 3px;
-}
-.carousel::-webkit-scrollbar-thumb {
- background: var(--primary);
- border-radius: 3px;
- opacity: 0.6;
-}
-.carousel::-webkit-scrollbar-thumb:hover {
- opacity: 1;
-}
-
-/* Indicador visual para móviles */
-.carousel::after {
- content: '← Desliza →';
- position: absolute;
- bottom: -25px;
- left: 50%;
- transform: translateX(-50%);
- color: var(--muted);
- font-size: 0.8em;
- white-space: nowrap;
- display: none;
+.carousel-track {
+  display: flex;
+  transition: transform 0.3s ease;
+  gap: 14px;
+  padding: 10px;
+  width: 100%;
 }
 
 .card{
- min-width:320px;background:var(--card);
+ width:100%;
+ max-width:320px;
+ min-width:280px;
+ background:var(--card);
  border-radius:var(--radius);
  box-shadow:var(--shadow);
- padding:20px;scroll-snap-align:center;
+ padding:20px;
  flex-shrink: 0;
+ margin: 0 7px;
 }
 .guardias{display:flex;gap:14px;margin-top:14px}
 .guardia{
@@ -112,6 +85,28 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 .status-viaje{color:#8b5cf6}
 .status-baja{color:#ef4444}
 .status-inactivo{color:#6b7280}
+
+/* Indicadores del carrusel */
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.carousel-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.carousel-indicator.active {
+  background: var(--primary);
+  transform: scale(1.2);
+}
 
 /* ===== CALENDARIO ===== */
 #calendar{
@@ -195,38 +190,22 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 }
 
 /* ===== RESPONSIVE ===== */
-@media(max-width:768px){
- .carousel::after {
-  display: block;
- }
- 
- .card {
-  min-width: 85vw;
-  margin: 0 5px;
- }
- 
- .container {
-  padding: 5px;
- }
-}
-
 @media(max-width:480px){
  .calendar-day{font-size:.6rem;min-height:60px}
  .personas-grid{grid-template-columns:1fr}
  .guardia-info{font-size:8px}
  
  .nav button {
-  padding: 14px 12px;
+  padding: 12px 10px;
   font-size: 0.9em;
   flex: 1;
-  margin: 0 5px;
+  margin: 0 2px;
   min-height: 44px;
  }
  
- .carousel::after {
-  content: '👉 Desliza con el dedo 👈';
-  bottom: -30px;
-  font-size: 0.75em;
+ .card {
+  min-width: 85vw;
+  margin: 0 5px;
  }
 }
 
@@ -280,7 +259,14 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <button id="next">Siguiente ➡</button>
 </div>
 <div class="container">
-<div class="carousel" id="carousel"></div>
+<div class="carousel-container">
+  <div class="carousel-track" id="carousel"></div>
+  <div class="carousel-indicators" id="indicators">
+    <span class="carousel-indicator active" data-index="0"></span>
+    <span class="carousel-indicator" data-index="1"></span>
+    <span class="carousel-indicator" data-index="2"></span>
+  </div>
+</div>
 </div>
 <div id="calendar">
 <div style="display:flex;justify-content:space-between;align-items:center">
@@ -333,15 +319,11 @@ function createInstallButton() {
   `;
   
   installButton.onclick = installPWA;
-  installButton.onmouseover = () => installButton.style.transform = 'translateY(-2px)';
-  installButton.onmouseout = () => installButton.style.transform = 'translateY(0)';
-  
   document.body.appendChild(installButton);
 }
 
 // Evento para detectar cuándo se puede instalar
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('beforeinstallprompt fired');
   e.preventDefault();
   deferredPrompt = e;
   createInstallButton();
@@ -349,9 +331,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   setTimeout(() => {
     if (installButton && deferredPrompt) {
       installButton.style.display = 'block';
-      setTimeout(() => {
-        if (installButton) installButton.style.display = 'none';
-      }, 10000);
     }
   }, 3000);
 });
@@ -369,18 +348,9 @@ function installPWA() {
       console.log('Usuario aceptó la instalación');
       if (installButton) {
         installButton.style.display = 'none';
-        installButton.innerHTML = '✅ Instalada';
-        setTimeout(() => installButton.style.display = 'none', 2000);
       }
-      document.dispatchEvent(new CustomEvent('appInstalled'));
     } else {
       console.log('Usuario rechazó la instalación');
-      if (installButton) {
-        installButton.style.display = 'none';
-        setTimeout(() => {
-          if (installButton && deferredPrompt) installButton.style.display = 'block';
-        }, 30000);
-      }
     }
     deferredPrompt = null;
   });
@@ -391,149 +361,17 @@ window.addEventListener('appinstalled', (e) => {
   console.log('App instalada exitosamente');
   deferredPrompt = null;
   if (installButton) installButton.style.display = 'none';
-  setTimeout(() => {
-    alert('¡App instalada exitosamente! 🎉\n\nAhora puedes acceder a Guardias Alsi desde tu pantalla de inicio.');
-  }, 1000);
 });
 
 // ========== SERVICE WORKER REGISTRATION ==========
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    console.log('Registrando Service Worker...');
     navigator.serviceWorker.register('service-worker.js')
-      .then(function(registration) {
-        console.log('Service Worker registrado con éxito:', registration.scope);
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          console.log('Nueva versión del Service Worker encontrada:', newWorker);
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateNotification();
-            }
-          });
-        });
-      })
       .catch(function(error) {
         console.log('Error registrando Service Worker:', error);
       });
   });
 }
-
-// Mostrar notificación de actualización
-function showUpdateNotification() {
-  const updateDiv = document.createElement('div');
-  updateDiv.id = 'update-notification';
-  updateDiv.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #FF9800, #F57C00);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    z-index: 1001;
-    text-align: center;
-    max-width: 90%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  `;
-  
-  updateDiv.innerHTML = `
-    <div style="font-weight: bold;">🔄 Nueva versión disponible</div>
-    <div style="font-size: 0.9em;">Hay una actualización de la app</div>
-    <div style="display: flex; gap: 10px; justify-content: center;">
-      <button id="update-now" style="background: white; color: #FF9800; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">
-        Actualizar ahora
-      </button>
-      <button id="update-later" style="background: transparent; color: white; border: 1px solid white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
-        Más tarde
-      </button>
-    </div>
-  `;
-  
-  document.body.appendChild(updateDiv);
-  
-  document.getElementById('update-now').onclick = () => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        window.location.reload();
-      });
-    }
-  };
-  
-  document.getElementById('update-later').onclick = () => updateDiv.style.display = 'none';
-  
-  setTimeout(() => {
-    if (updateDiv.parentNode) {
-      updateDiv.style.opacity = '0';
-      updateDiv.style.transition = 'opacity 1s';
-      setTimeout(() => updateDiv.parentNode && updateDiv.remove(), 1000);
-    }
-  }, 30000);
-}
-
-// Detectar modo standalone (app instalada)
-function detectStandaloneMode() {
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                      window.navigator.standalone === true;
-  if (isStandalone) {
-    console.log('App ejecutándose en modo standalone');
-    document.documentElement.classList.add('standalone-mode');
-    if (CSS.supports('padding-top: env(safe-area-inset-top)')) {
-      document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top)');
-      document.documentElement.style.setProperty('--safe-area-bottom', 'env(safe-area-inset-bottom)');
-    }
-  }
-  return isStandalone;
-}
-
-window.addEventListener('load', () => {
-  detectStandaloneMode();
-  window.matchMedia('(display-mode: standalone)').addListener(detectStandaloneMode);
-});
-
-// ========== OFFLINE DETECTION ==========
-function updateOnlineStatus() {
-  if (!navigator.onLine) showOfflineNotification();
-  else hideOfflineNotification();
-}
-
-function showOfflineNotification() {
-  if (document.getElementById('offline-notification')) return;
-  const offlineDiv = document.createElement('div');
-  offlineDiv.id = 'offline-notification';
-  offlineDiv.style.cssText = `
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #f44336;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    z-index: 1002;
-    font-size: 0.9em;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  `;
-  offlineDiv.innerHTML = `<span>⚠️</span><span>Sin conexión - Modo offline</span>`;
-  document.body.appendChild(offlineDiv);
-}
-
-function hideOfflineNotification() {
-  const offlineDiv = document.getElementById('offline-notification');
-  if (offlineDiv) offlineDiv.remove();
-}
-
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-updateOnlineStatus();
 </script>
 <!-- ========== FIN SCRIPT PWA ========== -->
 
@@ -546,7 +384,7 @@ night.onclick=()=>{
 };
 if(localStorage.dark==="true") document.body.classList.add("dark");
 
-// Datos iniciales (se sincronizan desde la versión admin)
+// Datos iniciales
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
 let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
 let estados=JSON.parse(localStorage.estados||"{}");
@@ -554,6 +392,7 @@ let history=JSON.parse(localStorage.history||"[]");
 let manualOverrides=JSON.parse(localStorage.manualOverrides||"{}");
 let offset=0;
 let calendarMonth=new Date();
+let currentSlide = 1; // 0: anterior, 1: actual, 2: siguiente
 
 // ========== FUNCIONES CORREGIDAS ==========
 // FECHA BASE FIJA: Lunes 1 de Enero de 2024
@@ -659,7 +498,7 @@ function renderPersonasList() {
  document.getElementById('personasList').innerHTML = html;
 }
 
-// ========== CALENDARIO CORREGIDO ==========
+// ========== CALENDARIO ==========
 function renderCalendar() {
   calendarGrid.innerHTML = "";
   const y = calendarMonth.getFullYear();
@@ -727,9 +566,8 @@ function changeMonth(delta) {
   renderCalendar();
 }
 
-// ========== RENDERIZAR SEMANAS CON SCROLL TÁCTIL MEJORADO ==========
+// ========== CARRUSEL SIMPLE Y FUNCIONAL ==========
 function render() {
-  carousel.innerHTML = "";
   const hoy = new Date();
   const numeroSemanaActual = calcularNumeroSemana(hoy);
   
@@ -741,6 +579,8 @@ function render() {
   fechaFin.setDate(fechaFin.getDate() + 4);
   
   subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
+  
+  let carouselHTML = '';
   
   // Crear 3 semanas: anterior, actual, siguiente
   for (let i = -1; i <= 1; i++) {
@@ -756,7 +596,7 @@ function render() {
     const mecGuardia = guardia(mecanicos, numeroSemana);
     const tieneOverride = manualOverrides[numeroSemana.toString()];
     
-    carousel.innerHTML += `
+    carouselHTML += `
       <div class="card">
         <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
         <div class="guardias">
@@ -783,108 +623,187 @@ function render() {
     `;
   }
   
+  document.getElementById('carousel').innerHTML = carouselHTML;
+  updateCarouselPosition();
   renderHistory();
+}
+
+function updateCarouselPosition() {
+  const carousel = document.getElementById('carousel');
+  const cards = document.querySelectorAll('.card');
+  if (cards.length === 0) return;
   
-  // Centrar automáticamente la tarjeta del medio
-  setTimeout(() => {
-    if (carousel.children[1]) {
-      const cardWidth = carousel.children[0].offsetWidth;
-      const gap = 14;
-      carousel.scrollLeft = (cardWidth + gap) * 1;
-      
-      // Inicializar scroll táctil después de renderizar
-      initTouchScroll();
+  const cardWidth = cards[0].offsetWidth + 28; // Ancho + márgenes
+  const newPosition = -currentSlide * cardWidth;
+  carousel.style.transform = `translateX(${newPosition}px)`;
+  
+  // Actualizar indicadores
+  const indicators = document.querySelectorAll('.carousel-indicator');
+  indicators.forEach((indicator, index) => {
+    if (index === currentSlide) {
+      indicator.classList.add('active');
+    } else {
+      indicator.classList.remove('active');
     }
-  }, 100);
+  });
 }
 
 // ========== SCROLL TÁCTIL MEJORADO ==========
-function initTouchScroll() {
+function setupCarouselTouch() {
   const carousel = document.getElementById('carousel');
   if (!carousel) return;
   
-  let isDown = false;
-  let startX;
-  let scrollLeft;
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
   
-  // Para ratón (PC)
-  carousel.addEventListener('mousedown', (e) => {
-    isDown = true;
-    carousel.classList.add('active');
-    startX = e.pageX - carousel.offsetLeft;
-    scrollLeft = carousel.scrollLeft;
-  });
-  
-  carousel.addEventListener('mouseleave', () => {
-    isDown = false;
-    carousel.classList.remove('active');
-  });
-  
-  carousel.addEventListener('mouseup', () => {
-    isDown = false;
-    carousel.classList.remove('active');
-    snapToNearestCard();
-  });
-  
-  carousel.addEventListener('mousemove', (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const x = e.pageX - carousel.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    carousel.scrollLeft = scrollLeft - walk;
-  });
-  
-  // Para touch (móviles)
+  // Eventos táctiles
   carousel.addEventListener('touchstart', (e) => {
-    isDown = true;
-    startX = e.touches[0].pageX - carousel.offsetLeft;
-    scrollLeft = carousel.scrollLeft;
-    carousel.style.cursor = 'grabbing';
-  });
-  
-  carousel.addEventListener('touchend', () => {
-    isDown = false;
-    carousel.style.cursor = 'grab';
-    snapToNearestCard();
+    startX = e.touches[0].clientX;
+    currentX = startX;
+    isDragging = true;
+    carousel.style.transition = 'none';
   });
   
   carousel.addEventListener('touchmove', (e) => {
-    if (!isDown) return;
+    if (!isDragging) return;
     e.preventDefault();
-    const x = e.touches[0].pageX - carousel.offsetLeft;
-    const walk = (x - startX) * 1.2;
-    carousel.scrollLeft = scrollLeft - walk;
-  });
-  
-  // Snap a la tarjeta más cercana
-  function snapToNearestCard() {
-    const cards = carousel.querySelectorAll('.card');
+    currentX = e.touches[0].clientX;
+    const diff = currentX - startX;
+    const cards = document.querySelectorAll('.card');
     if (cards.length === 0) return;
     
-    const cardWidth = cards[0].offsetWidth;
-    const gap = 14;
-    const scrollPos = carousel.scrollLeft;
-    const cardIndex = Math.round(scrollPos / (cardWidth + gap));
+    const cardWidth = cards[0].offsetWidth + 28;
+    const basePosition = -currentSlide * cardWidth;
+    const dragOffset = diff * 0.5; // Reducir sensibilidad
+    carousel.style.transform = `translateX(${basePosition + dragOffset}px)`;
+  });
+  
+  carousel.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    carousel.style.transition = 'transform 0.3s ease';
     
-    carousel.scrollTo({
-      left: cardIndex * (cardWidth + gap),
-      behavior: 'smooth'
-    });
+    const diff = currentX - startX;
+    const threshold = 50; // Mínimo desplazamiento para cambiar slide
     
-    // Actualizar offset basado en la tarjeta centrada
-    if (cardIndex === 0) offset--;
-    else if (cardIndex === 2) offset++;
-    
-    // Re-renderizar si cambió el offset
-    if (cardIndex !== 1) {
-      setTimeout(() => {
-        const newCardIndex = Math.round(carousel.scrollLeft / (cardWidth + gap));
-        if (newCardIndex === 0 || newCardIndex === 2) {
+    if (diff > threshold && currentSlide > 0) {
+      // Deslizó hacia la izquierda (siguiente slide)
+      currentSlide--;
+      updateCarouselPosition();
+      // Actualizar offset si es necesario
+      if (currentSlide === 0) {
+        offset--;
+        setTimeout(() => {
           render();
-        }
-      }, 300);
+          currentSlide = 1; // Volver al centro
+          updateCarouselPosition();
+        }, 300);
+      }
+    } else if (diff < -threshold && currentSlide < 2) {
+      // Deslizó hacia la derecha (slide anterior)
+      currentSlide++;
+      updateCarouselPosition();
+      // Actualizar offset si es necesario
+      if (currentSlide === 2) {
+        offset++;
+        setTimeout(() => {
+          render();
+          currentSlide = 1; // Volver al centro
+          updateCarouselPosition();
+        }, 300);
+      }
+    } else {
+      // Volver a la posición original
+      updateCarouselPosition();
     }
-  }
+  });
+  
+  // Eventos de ratón (para desktop)
+  carousel.addEventListener('mousedown', (e) => {
+    startX = e.clientX;
+    currentX = startX;
+    isDragging = true;
+    carousel.style.transition = 'none';
+    carousel.style.cursor = 'grabbing';
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    currentX = e.clientX;
+    const diff = currentX - startX;
+    const cards = document.querySelectorAll('.card');
+    if (cards.length === 0) return;
+    
+    const cardWidth = cards[0].offsetWidth + 28;
+    const basePosition = -currentSlide * cardWidth;
+    const dragOffset = diff;
+    carousel.style.transform = `translateX(${basePosition + dragOffset}px)`;
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    carousel.style.transition = 'transform 0.3s ease';
+    carousel.style.cursor = 'grab';
+    
+    const diff = currentX - startX;
+    const threshold = 80; // Mayor threshold para mouse
+    
+    if (diff > threshold && currentSlide > 0) {
+      currentSlide--;
+      updateCarouselPosition();
+      if (currentSlide === 0) {
+        offset--;
+        setTimeout(() => {
+          render();
+          currentSlide = 1;
+          updateCarouselPosition();
+        }, 300);
+      }
+    } else if (diff < -threshold && currentSlide < 2) {
+      currentSlide++;
+      updateCarouselPosition();
+      if (currentSlide === 2) {
+        offset++;
+        setTimeout(() => {
+          render();
+          currentSlide = 1;
+          updateCarouselPosition();
+        }, 300);
+      }
+    } else {
+      updateCarouselPosition();
+    }
+  });
+  
+  // Click en indicadores
+  document.querySelectorAll('.carousel-indicator').forEach(indicator => {
+    indicator.addEventListener('click', () => {
+      const index = parseInt(indicator.getAttribute('data-index'));
+      if (index !== currentSlide) {
+        currentSlide = index;
+        updateCarouselPosition();
+        
+        // Si cambiamos de semana, actualizar
+        if (index === 0) {
+          offset--;
+          setTimeout(() => {
+            render();
+            currentSlide = 1;
+            updateCarouselPosition();
+          }, 300);
+        } else if (index === 2) {
+          offset++;
+          setTimeout(() => {
+            render();
+            currentSlide = 1;
+            updateCarouselPosition();
+          }, 300);
+        }
+      }
+    });
+  });
   
   // Botones de navegación
   document.getElementById('prev').addEventListener('click', () => {
@@ -939,10 +858,17 @@ renderPersonasList();
 logCompletedWeek();
 render();
 
-// Inicializar scroll táctil después de cargar
+// Inicializar carrusel táctil después de cargar
 window.addEventListener('load', () => {
-  setTimeout(initTouchScroll, 500);
+  setTimeout(setupCarouselTouch, 100);
 });
+
+// Re-inicializar carrusel después de cada render
+const originalRender = render;
+window.render = function() {
+  originalRender();
+  setTimeout(setupCarouselTouch, 50);
+};
 </script>
 </body>
 </html>
