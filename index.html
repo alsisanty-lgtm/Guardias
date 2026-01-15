@@ -43,31 +43,37 @@ button:hover{opacity:0.9}
 .nav{display:flex;justify-content:space-between;padding:10px}
 .container{max-width:960px;margin:auto;padding:10px}
 
-/* ===== CARRUSEL SIMPLE Y FUNCIONAL ===== */
-.carousel-container {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
+/* ===== CARRUSEL IDÉNTICO AL ADMIN ===== */
+.carousel{
+ display:flex;
+ gap:14px;
+ overflow-x:auto;
+ scroll-snap-type:x mandatory;
+ padding:10px 0;
+ -webkit-overflow-scrolling: touch; /* Esto es clave para iOS */
+ scroll-behavior: smooth;
 }
 
-.carousel-track {
-  display: flex;
-  transition: transform 0.3s ease;
-  gap: 14px;
-  padding: 10px;
-  width: 100%;
+/* Ocultar scrollbar en móviles pero mantener funcionalidad */
+.carousel::-webkit-scrollbar {
+ height: 4px;
+}
+.carousel::-webkit-scrollbar-track {
+ background: transparent;
+}
+.carousel::-webkit-scrollbar-thumb {
+ background: var(--primary);
+ border-radius: 2px;
 }
 
 .card{
- width:100%;
- max-width:320px;
- min-width:280px;
+ min-width:320px;
  background:var(--card);
  border-radius:var(--radius);
  box-shadow:var(--shadow);
  padding:20px;
- flex-shrink: 0;
- margin: 0 7px;
+ scroll-snap-align:center;
+ flex-shrink: 0; /* Esto es importante */
 }
 .guardias{display:flex;gap:14px;margin-top:14px}
 .guardia{
@@ -86,26 +92,13 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 .status-baja{color:#ef4444}
 .status-inactivo{color:#6b7280}
 
-/* Indicadores del carrusel */
-.carousel-indicators {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 15px;
-}
-
-.carousel-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.2);
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.carousel-indicator.active {
-  background: var(--primary);
-  transform: scale(1.2);
+/* Indicador visual para deslizar */
+.carousel-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8em;
+  margin-top: 5px;
+  display: none;
 }
 
 /* ===== CALENDARIO ===== */
@@ -190,13 +183,23 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 }
 
 /* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+ .carousel-hint {
+  display: block;
+ }
+ 
+ .card {
+  min-width: 85vw;
+ }
+}
+
 @media(max-width:480px){
  .calendar-day{font-size:.6rem;min-height:60px}
  .personas-grid{grid-template-columns:1fr}
  .guardia-info{font-size:8px}
  
  .nav button {
-  padding: 12px 10px;
+  padding: 14px 12px;
   font-size: 0.9em;
   flex: 1;
   margin: 0 2px;
@@ -204,8 +207,13 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  }
  
  .card {
-  min-width: 85vw;
-  margin: 0 5px;
+  min-width: 90vw;
+ }
+ 
+ .carousel {
+  gap: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
  }
 }
 
@@ -259,14 +267,8 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <button id="next">Siguiente ➡</button>
 </div>
 <div class="container">
-<div class="carousel-container">
-  <div class="carousel-track" id="carousel"></div>
-  <div class="carousel-indicators" id="indicators">
-    <span class="carousel-indicator active" data-index="0"></span>
-    <span class="carousel-indicator" data-index="1"></span>
-    <span class="carousel-indicator" data-index="2"></span>
-  </div>
-</div>
+<div class="carousel" id="carousel"></div>
+<div class="carousel-hint">← Desliza con el dedo →</div>
 </div>
 <div id="calendar">
 <div style="display:flex;justify-content:space-between;align-items:center">
@@ -287,95 +289,54 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <div id="historyList"></div>
 </div>
 
-<!-- ========== SCRIPT PWA ========== -->
+<!-- ========== SCRIPT PWA SIMPLIFICADO ========== -->
 <script>
-// ========== PWA INSTALLATION ==========
-let deferredPrompt;
-let installButton = null;
-
-// Crear botón de instalación dinámicamente
-function createInstallButton() {
-  if (installButton) return;
-  
-  installButton = document.createElement('button');
-  installButton.id = 'install-button';
-  installButton.innerHTML = '📱 Instalar App';
-  installButton.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 1000;
-    cursor: pointer;
-    display: none;
-    transition: all 0.3s;
-    font-size: 14px;
-  `;
-  
-  installButton.onclick = installPWA;
-  document.body.appendChild(installButton);
+// PWA simplificado
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js');
+  });
 }
 
-// Evento para detectar cuándo se puede instalar
+// Instalación PWA
+let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  createInstallButton();
   
+  // Mostrar botón después de 3 segundos
   setTimeout(() => {
-    if (installButton && deferredPrompt) {
-      installButton.style.display = 'block';
+    if (deferredPrompt) {
+      const installBtn = document.createElement('button');
+      installBtn.innerHTML = '📱 Instalar App';
+      installBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 1000;
+        cursor: pointer;
+      `;
+      installBtn.onclick = () => {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          installBtn.remove();
+        });
+      };
+      document.body.appendChild(installBtn);
     }
   }, 3000);
 });
-
-// Función para instalar la PWA
-function installPWA() {
-  if (!deferredPrompt) {
-    alert('La aplicación ya está instalada o no se puede instalar en este navegador.');
-    return;
-  }
-  
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then((choiceResult) => {
-    if (choiceResult.outcome === 'accepted') {
-      console.log('Usuario aceptó la instalación');
-      if (installButton) {
-        installButton.style.display = 'none';
-      }
-    } else {
-      console.log('Usuario rechazó la instalación');
-    }
-    deferredPrompt = null;
-  });
-}
-
-// Detectar si la app ya está instalada
-window.addEventListener('appinstalled', (e) => {
-  console.log('App instalada exitosamente');
-  deferredPrompt = null;
-  if (installButton) installButton.style.display = 'none';
-});
-
-// ========== SERVICE WORKER REGISTRATION ==========
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('service-worker.js')
-      .catch(function(error) {
-        console.log('Error registrando Service Worker:', error);
-      });
-  });
-}
 </script>
-<!-- ========== FIN SCRIPT PWA ========== -->
 
-<!-- ========== CÓDIGO PRINCIPAL DE LA APLICACIÓN ========== -->
+<!-- ========== CÓDIGO PRINCIPAL - IGUAL QUE EL ADMIN ========== -->
 <script>
 // Toggle modo oscuro
 night.onclick=()=>{
@@ -392,14 +353,12 @@ let history=JSON.parse(localStorage.history||"[]");
 let manualOverrides=JSON.parse(localStorage.manualOverrides||"{}");
 let offset=0;
 let calendarMonth=new Date();
-let currentSlide = 1; // 0: anterior, 1: actual, 2: siguiente
 
-// ========== FUNCIONES CORREGIDAS ==========
+// ========== FUNCIONES BÁSICAS ==========
 // FECHA BASE FIJA: Lunes 1 de Enero de 2024
 const FECHA_BASE = new Date(2024, 0, 1);
 const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
 
-// Función para obtener el lunes de cualquier semana
 function obtenerLunes(fecha) {
   const d = new Date(fecha);
   const dia = d.getDay();
@@ -407,7 +366,6 @@ function obtenerLunes(fecha) {
   return new Date(d.setDate(diff));
 }
 
-// Función para calcular número de semana desde fecha base
 function calcularNumeroSemana(fecha) {
   const fechaLunes = obtenerLunes(fecha);
   fechaLunes.setHours(12, 0, 0, 0);
@@ -421,7 +379,6 @@ function calcularNumeroSemana(fecha) {
   return numeroSemana;
 }
 
-// Función para formatear fecha
 const fd = d => {
   const date = new Date(d);
   return date.toLocaleDateString('es-ES', {
@@ -430,15 +387,12 @@ const fd = d => {
   });
 };
 
-// Obtener lista de activos
 const activos = l => l.filter(p => !estados[p] || estados[p] === "activo");
 
-// Obtener guardia para una semana específica
 const guardia = (l, numeroSemana) => {
   const a = activos(l);
   if (a.length === 0) return "Nadie";
   
-  // Verificar override manual primero
   const semanaKey = numeroSemana.toString();
   if (manualOverrides[semanaKey]) {
     const tipo = l === electricos ? 'electrico' : 'mecanico';
@@ -447,7 +401,6 @@ const guardia = (l, numeroSemana) => {
     }
   }
   
-  // Rotación automática
   const indice = ((numeroSemana % a.length) + a.length) % a.length;
   return a[indice];
 };
@@ -463,39 +416,76 @@ function getEstadoTexto(estado){
  }
 }
 
-// Renderizar lista de personas
-function renderPersonasList() {
- let html = '';
- 
- electricos.forEach(persona => {
-  const estado = estados[persona] || 'activo';
-  if (estado !== 'inactivo') {
-   html += `
-    <div class="persona-item">
-     <span class="icon">⚡</span>
-     <span>${persona}</span>
-     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
-      ${getEstadoTexto(estado)}
-     </span>
-    </div>`;
+// ========== RENDERIZAR CARRUSEL ==========
+function render() {
+  const hoy = new Date();
+  const numeroSemanaActual = calcularNumeroSemana(hoy);
+  
+  const fechaBase = obtenerLunes(hoy);
+  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
+  
+  const fechaInicio = new Date(fechaBase);
+  const fechaFin = new Date(fechaInicio);
+  fechaFin.setDate(fechaFin.getDate() + 4);
+  
+  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
+  
+  let carouselHTML = '';
+  
+  // Crear 3 semanas: anterior, actual, siguiente
+  for (let i = -1; i <= 1; i++) {
+    const semanaOffset = offset + i;
+    const numeroSemana = numeroSemanaActual + semanaOffset;
+    
+    const semanaInicio = new Date(fechaBase);
+    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
+    const semanaFin = new Date(semanaInicio);
+    semanaFin.setDate(semanaFin.getDate() + 4);
+    
+    const elecGuardia = guardia(electricos, numeroSemana);
+    const mecGuardia = guardia(mecanicos, numeroSemana);
+    const tieneOverride = manualOverrides[numeroSemana.toString()];
+    
+    carouselHTML += `
+      <div class="card">
+        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
+        <div class="guardias">
+          <div class="guardia">
+            <div class="icono">⚡</div>
+            <div class="nombre">${elecGuardia}</div>
+            <div class="days">L–V</div>
+            <div class="time">15:30 – 19:00</div>
+            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+              ${getEstadoTexto(estados[elecGuardia])}
+            </small>
+          </div>
+          <div class="guardia">
+            <div class="icono">🔧</div>
+            <div class="nombre">${mecGuardia}</div>
+            <div class="days">L–V</div>
+            <div class="time">15:30 – 19:00</div>
+            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+              ${getEstadoTexto(estados[mecGuardia])}
+            </small>
+          </div>
+        </div>
+      </div>
+    `;
   }
- });
- 
- mecanicos.forEach(persona => {
-  const estado = estados[persona] || 'activo';
-  if (estado !== 'inactivo') {
-   html += `
-    <div class="persona-item">
-     <span class="icon">🔧</span>
-     <span>${persona}</span>
-     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
-      ${getEstadoTexto(estado)}
-     </span>
-    </div>`;
-  }
- });
- 
- document.getElementById('personasList').innerHTML = html;
+  
+  document.getElementById('carousel').innerHTML = carouselHTML;
+  
+  // Centrar la tarjeta del medio automáticamente
+  setTimeout(() => {
+    const carousel = document.getElementById('carousel');
+    const cards = carousel.querySelectorAll('.card');
+    if (cards.length > 1) {
+      const cardWidth = cards[0].offsetWidth + 14; // + gap
+      carousel.scrollLeft = cardWidth; // Centrar la segunda tarjeta
+    }
+  }, 100);
+  
+  renderHistory();
 }
 
 // ========== CALENDARIO ==========
@@ -566,255 +556,39 @@ function changeMonth(delta) {
   renderCalendar();
 }
 
-// ========== CARRUSEL SIMPLE Y FUNCIONAL ==========
-function render() {
-  const hoy = new Date();
-  const numeroSemanaActual = calcularNumeroSemana(hoy);
-  
-  const fechaBase = obtenerLunes(hoy);
-  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
-  
-  const fechaInicio = new Date(fechaBase);
-  const fechaFin = new Date(fechaInicio);
-  fechaFin.setDate(fechaFin.getDate() + 4);
-  
-  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
-  
-  let carouselHTML = '';
-  
-  // Crear 3 semanas: anterior, actual, siguiente
-  for (let i = -1; i <= 1; i++) {
-    const semanaOffset = offset + i;
-    const numeroSemana = numeroSemanaActual + semanaOffset;
-    
-    const semanaInicio = new Date(fechaBase);
-    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
-    const semanaFin = new Date(semanaInicio);
-    semanaFin.setDate(semanaFin.getDate() + 4);
-    
-    const elecGuardia = guardia(electricos, numeroSemana);
-    const mecGuardia = guardia(mecanicos, numeroSemana);
-    const tieneOverride = manualOverrides[numeroSemana.toString()];
-    
-    carouselHTML += `
-      <div class="card">
-        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
-        <div class="guardias">
-          <div class="guardia">
-            <div class="icono">⚡</div>
-            <div class="nombre">${elecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[elecGuardia])}
-            </small>
-          </div>
-          <div class="guardia">
-            <div class="icono">🔧</div>
-            <div class="nombre">${mecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[mecGuardia])}
-            </small>
-          </div>
-        </div>
-      </div>
-    `;
+// ========== PERSONAS ==========
+function renderPersonasList() {
+ let html = '';
+ 
+ electricos.forEach(persona => {
+  const estado = estados[persona] || 'activo';
+  if (estado !== 'inactivo') {
+   html += `
+    <div class="persona-item">
+     <span class="icon">⚡</span>
+     <span>${persona}</span>
+     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
+      ${getEstadoTexto(estado)}
+     </span>
+    </div>`;
   }
-  
-  document.getElementById('carousel').innerHTML = carouselHTML;
-  updateCarouselPosition();
-  renderHistory();
-}
-
-function updateCarouselPosition() {
-  const carousel = document.getElementById('carousel');
-  const cards = document.querySelectorAll('.card');
-  if (cards.length === 0) return;
-  
-  const cardWidth = cards[0].offsetWidth + 28; // Ancho + márgenes
-  const newPosition = -currentSlide * cardWidth;
-  carousel.style.transform = `translateX(${newPosition}px)`;
-  
-  // Actualizar indicadores
-  const indicators = document.querySelectorAll('.carousel-indicator');
-  indicators.forEach((indicator, index) => {
-    if (index === currentSlide) {
-      indicator.classList.add('active');
-    } else {
-      indicator.classList.remove('active');
-    }
-  });
-}
-
-// ========== SCROLL TÁCTIL MEJORADO ==========
-function setupCarouselTouch() {
-  const carousel = document.getElementById('carousel');
-  if (!carousel) return;
-  
-  let startX = 0;
-  let currentX = 0;
-  let isDragging = false;
-  
-  // Eventos táctiles
-  carousel.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    currentX = startX;
-    isDragging = true;
-    carousel.style.transition = 'none';
-  });
-  
-  carousel.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    currentX = e.touches[0].clientX;
-    const diff = currentX - startX;
-    const cards = document.querySelectorAll('.card');
-    if (cards.length === 0) return;
-    
-    const cardWidth = cards[0].offsetWidth + 28;
-    const basePosition = -currentSlide * cardWidth;
-    const dragOffset = diff * 0.5; // Reducir sensibilidad
-    carousel.style.transform = `translateX(${basePosition + dragOffset}px)`;
-  });
-  
-  carousel.addEventListener('touchend', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    carousel.style.transition = 'transform 0.3s ease';
-    
-    const diff = currentX - startX;
-    const threshold = 50; // Mínimo desplazamiento para cambiar slide
-    
-    if (diff > threshold && currentSlide > 0) {
-      // Deslizó hacia la izquierda (siguiente slide)
-      currentSlide--;
-      updateCarouselPosition();
-      // Actualizar offset si es necesario
-      if (currentSlide === 0) {
-        offset--;
-        setTimeout(() => {
-          render();
-          currentSlide = 1; // Volver al centro
-          updateCarouselPosition();
-        }, 300);
-      }
-    } else if (diff < -threshold && currentSlide < 2) {
-      // Deslizó hacia la derecha (slide anterior)
-      currentSlide++;
-      updateCarouselPosition();
-      // Actualizar offset si es necesario
-      if (currentSlide === 2) {
-        offset++;
-        setTimeout(() => {
-          render();
-          currentSlide = 1; // Volver al centro
-          updateCarouselPosition();
-        }, 300);
-      }
-    } else {
-      // Volver a la posición original
-      updateCarouselPosition();
-    }
-  });
-  
-  // Eventos de ratón (para desktop)
-  carousel.addEventListener('mousedown', (e) => {
-    startX = e.clientX;
-    currentX = startX;
-    isDragging = true;
-    carousel.style.transition = 'none';
-    carousel.style.cursor = 'grabbing';
-  });
-  
-  document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    currentX = e.clientX;
-    const diff = currentX - startX;
-    const cards = document.querySelectorAll('.card');
-    if (cards.length === 0) return;
-    
-    const cardWidth = cards[0].offsetWidth + 28;
-    const basePosition = -currentSlide * cardWidth;
-    const dragOffset = diff;
-    carousel.style.transform = `translateX(${basePosition + dragOffset}px)`;
-  });
-  
-  document.addEventListener('mouseup', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    carousel.style.transition = 'transform 0.3s ease';
-    carousel.style.cursor = 'grab';
-    
-    const diff = currentX - startX;
-    const threshold = 80; // Mayor threshold para mouse
-    
-    if (diff > threshold && currentSlide > 0) {
-      currentSlide--;
-      updateCarouselPosition();
-      if (currentSlide === 0) {
-        offset--;
-        setTimeout(() => {
-          render();
-          currentSlide = 1;
-          updateCarouselPosition();
-        }, 300);
-      }
-    } else if (diff < -threshold && currentSlide < 2) {
-      currentSlide++;
-      updateCarouselPosition();
-      if (currentSlide === 2) {
-        offset++;
-        setTimeout(() => {
-          render();
-          currentSlide = 1;
-          updateCarouselPosition();
-        }, 300);
-      }
-    } else {
-      updateCarouselPosition();
-    }
-  });
-  
-  // Click en indicadores
-  document.querySelectorAll('.carousel-indicator').forEach(indicator => {
-    indicator.addEventListener('click', () => {
-      const index = parseInt(indicator.getAttribute('data-index'));
-      if (index !== currentSlide) {
-        currentSlide = index;
-        updateCarouselPosition();
-        
-        // Si cambiamos de semana, actualizar
-        if (index === 0) {
-          offset--;
-          setTimeout(() => {
-            render();
-            currentSlide = 1;
-            updateCarouselPosition();
-          }, 300);
-        } else if (index === 2) {
-          offset++;
-          setTimeout(() => {
-            render();
-            currentSlide = 1;
-            updateCarouselPosition();
-          }, 300);
-        }
-      }
-    });
-  });
-  
-  // Botones de navegación
-  document.getElementById('prev').addEventListener('click', () => {
-    offset--;
-    render();
-  });
-  
-  document.getElementById('next').addEventListener('click', () => {
-    offset++;
-    render();
-  });
+ });
+ 
+ mecanicos.forEach(persona => {
+  const estado = estados[persona] || 'activo';
+  if (estado !== 'inactivo') {
+   html += `
+    <div class="persona-item">
+     <span class="icon">🔧</span>
+     <span>${persona}</span>
+     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
+      ${getEstadoTexto(estado)}
+     </span>
+    </div>`;
+  }
+ });
+ 
+ document.getElementById('personasList').innerHTML = html;
 }
 
 // ========== HISTORIAL ==========
@@ -852,23 +626,97 @@ function renderHistory(){
   });
 }
 
+// ========== DETECCIÓN DE SCROLL PARA CAMBIAR SEMANA ==========
+function setupCarouselScroll() {
+  const carousel = document.getElementById('carousel');
+  if (!carousel) return;
+  
+  let isScrolling = false;
+  let scrollTimeout;
+  
+  carousel.addEventListener('scroll', () => {
+    // Limpiar timeout anterior
+    clearTimeout(scrollTimeout);
+    
+    // Si no está ya scrolleando, marcar que empieza
+    if (!isScrolling) {
+      isScrolling = true;
+    }
+    
+    // Esperar a que termine el scroll
+    scrollTimeout = setTimeout(() => {
+      isScrolling = false;
+      
+      // Calcular qué tarjeta está más centrada
+      const cards = carousel.querySelectorAll('.card');
+      if (cards.length === 0) return;
+      
+      const cardWidth = cards[0].offsetWidth + 14; // + gap
+      const scrollPos = carousel.scrollLeft;
+      const cardIndex = Math.round(scrollPos / cardWidth);
+      
+      // Si la tarjeta centrada no es la del medio (índice 1), cambiar offset
+      if (cardIndex === 0) {
+        // Usuario deslizó a la izquierda (semana anterior)
+        offset--;
+        render();
+      } else if (cardIndex === 2) {
+        // Usuario deslizó a la derecha (semana siguiente)
+        offset++;
+        render();
+      }
+    }, 150); // Esperar 150ms después del último scroll
+  });
+  
+  // También detectar gestos táctiles para mejor experiencia
+  let startX = 0;
+  let isDragging = false;
+  
+  carousel.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isDragging = true;
+  });
+  
+  carousel.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const currentX = e.touches[0].clientX;
+    const diff = startX - currentX;
+    
+    // Si el desplazamiento es significativo, permitir scroll
+    if (Math.abs(diff) > 10) {
+      e.preventDefault(); // Permitir scroll horizontal
+    }
+  });
+  
+  carousel.addEventListener('touchend', () => {
+    isDragging = false;
+  });
+}
+
+// ========== BOTONES DE NAVEGACIÓN ==========
+document.getElementById('prev').addEventListener('click', () => {
+  offset--;
+  render();
+});
+
+document.getElementById('next').addEventListener('click', () => {
+  offset++;
+  render();
+});
+
 // ========== INICIALIZACIÓN ==========
 renderCalendar();
 renderPersonasList();
 logCompletedWeek();
 render();
 
-// Inicializar carrusel táctil después de cargar
-window.addEventListener('load', () => {
-  setTimeout(setupCarouselTouch, 100);
-});
+// Configurar detección de scroll después de cargar
+setTimeout(setupCarouselScroll, 500);
 
-// Re-inicializar carrusel después de cada render
-const originalRender = render;
-window.render = function() {
-  originalRender();
-  setTimeout(setupCarouselTouch, 50);
-};
+// También configurar cuando se redimensiona la ventana
+window.addEventListener('resize', () => {
+  setTimeout(setupCarouselScroll, 100);
+});
 </script>
 </body>
 </html>
