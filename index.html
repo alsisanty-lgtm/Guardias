@@ -2,23 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Guardias Alsi</title>
-
-<!-- ========== META TAGS PWA ========== -->
-<meta name="theme-color" content="#1e88e5">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Guardias Alsi">
-<link rel="apple-touch-icon" href="/Guardias/icon-192.png">
-<meta name="msapplication-TileImage" content="/Guardias/icon-144.png">
-<meta name="msapplication-TileColor" content="#1e88e5">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="/Guardias/manifest.json">
-<!-- ========== FIN META TAGS PWA ========== -->
-
-<link rel="icon" href="/Guardias/icon-192.png">
 <style>
 :root{
  --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
@@ -29,27 +14,16 @@
 body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--muted:#9ca3af}
 body{
  margin:0;
- font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+ font-family:system-ui;
  background:var(--bg);
  color:var(--text);
  -webkit-tap-highlight-color: transparent;
- -webkit-touch-callout: none;
- overflow-x: hidden;
-}
-* {
- -webkit-user-select: none;
- user-select: none;
- box-sizing: border-box;
 }
 header{
  background:linear-gradient(135deg,#1e88e5,#1565c0);
  color:#fff;
  padding:20px;
  text-align:center;
- position:sticky;
- top:0;
- z-index:100;
- padding-top: env(safe-area-inset-top, 20px);
 }
 button{
  background:var(--primary);
@@ -59,71 +33,28 @@ button{
  border-radius:14px;
  font-weight:700;
  cursor:pointer;
- transition:opacity 0.3s;
- font-size:16px;
- min-height:44px;
 }
-button:hover{opacity:0.9}
-#night{
- position:fixed;
- top: calc(env(safe-area-inset-top, 0px) + 12px);
- right:12px;
- z-index:200;
- padding:10px;
- min-height:44px;
-}
-.nav{
- display:flex;
- justify-content:space-between;
- padding:10px;
- gap:10px;
-}
-.container{
- max-width:960px;
- margin:auto;
- padding:10px;
- padding-bottom: env(safe-area-inset-bottom, 10px);
-}
+#night{position:fixed;top:12px;right:12px;z-index:200}
+.nav{display:flex;justify-content:space-between;padding:10px}
+.container{max-width:960px;margin:auto;padding:10px}
 
-/* ===== CARRUSEL SIN SNAP NATIVO ===== */
+/* ===== CARRUSEL SIMPLE ===== */
 .carousel-container {
  position: relative;
  width: 100%;
  overflow: hidden;
 }
 
-.carousel{
- display:flex;
- gap:14px;
- overflow-x:auto;
- padding:10px;
- -webkit-overflow-scrolling: touch;
- scroll-behavior: smooth;
- scrollbar-width: none;
- -ms-overflow-style: none;
- touch-action: pan-x;
- /* REMOVIDO: scroll-snap-type:x mandatory; */
+.carousel {
+ display: flex;
+ transition: transform 0.3s ease;
+ width: 300%; /* 3 semanas */
 }
 
-.carousel::-webkit-scrollbar {
- display: none;
-}
-
-.card{
- min-width: calc(100vw - 40px);
- background:var(--card);
- border-radius:var(--radius);
- box-shadow:var(--shadow);
- padding:20px;
- /* REMOVIDO: scroll-snap-align:center; */
- flex-shrink: 0;
- position: relative;
- transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.card.active {
- transform: scale(1.02);
- box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+.card {
+ flex: 0 0 33.333%; /* Cada tarjeta ocupa 1/3 del contenedor */
+ padding: 20px;
+ box-sizing: border-box;
 }
 
 .guardias{
@@ -149,42 +80,10 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 .status-baja{color:#ef4444}
 .status-inactivo{color:#6b7280}
 
-.carousel-hint {
- text-align: center;
- color: var(--muted);
- font-size: 0.8em;
- margin-top: 5px;
- padding-bottom: 10px;
-}
-
-.carousel-indicators {
- display: flex;
- justify-content: center;
- gap: 8px;
- margin-top: 10px;
-}
-
-.carousel-indicator {
- width: 8px;
- height: 8px;
- border-radius: 50%;
- background: var(--muted);
- opacity: 0.5;
- transition: opacity 0.3s, transform 0.3s;
-}
-
-.carousel-indicator.active {
- opacity: 1;
- background: var(--primary);
- transform: scale(1.2);
-}
-
 /* ===== CALENDARIO ===== */
 #calendar{
- margin:20px;
- background:var(--card);
- border-radius:var(--radius);
- padding:16px;
+ margin:20px;background:var(--card);
+ border-radius:var(--radius);padding:16px
 }
 .calendar-head{
  display:grid;
@@ -193,19 +92,17 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
  font-weight:700;
  color:var(--muted);
  text-align:center;
- margin-top:8px;
+ margin-top:8px
 }
 .calendar-grid{
  display:grid;
  grid-template-columns:repeat(7,1fr);
  gap:4px;
- margin-top:10px;
+ margin-top:10px
 }
 .calendar-day{
- font-size:.7rem;
- text-align:center;
- padding:6px;
- border-radius:8px;
+ font-size:.7rem;text-align:center;
+ padding:6px;border-radius:8px;
  background:rgba(0,0,0,.04);
  min-height:70px;
  display:flex;
@@ -222,8 +119,7 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 body.dark .weekday{background:rgba(30,136,229,.18)}
 body.dark .weekend{background:rgba(255,255,255,.03)}
 .calendar-day.outside{
- background:rgba(0,0,0,.02);
- color:var(--muted);
+ background:rgba(0,0,0,.02);color:var(--muted)
 }
 .guardia-info{
  font-size:9px;
@@ -233,10 +129,8 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 
 /* ===== INFO ===== */
 .info-section{
- margin:20px;
- background:var(--card);
- padding:16px;
- border-radius:var(--radius);
+ margin:20px;background:var(--card);
+ padding:16px;border-radius:var(--radius);
 }
 .info-section h3{margin-top:0}
 .personas-grid{
@@ -246,117 +140,30 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  margin-top:10px;
 }
 .persona-item{
- padding:12px;
+ padding:8px 12px;
  border-radius:8px;
  background:rgba(0,0,0,.03);
  display:flex;
  align-items:center;
  gap:8px;
- min-height:44px;
 }
 .persona-item .icon{font-size:1.2em}
 
 /* ===== HISTORIAL ===== */
 #history{
- margin:20px;
- background:var(--card);
- padding:16px;
- border-radius:var(--radius);
+ margin:20px;background:var(--card);
+ padding:16px;border-radius:var(--radius)
 }
 .history-item{
- font-size:.9em;
- border-bottom:1px dashed rgba(0,0,0,.2);
- padding:8px 0;
+ font-size:.9em;border-bottom:1px dashed rgba(0,0,0,.2);
+ padding:6px 0;
  display:flex;
  justify-content:space-between;
-}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:768px){
- .carousel-hint {
-  display: block;
- }
- 
- .card {
-  min-width: calc(100vw - 40px);
-  margin: 0 5px;
- }
- 
- .guardias {
-  flex-direction: column;
-  gap: 10px;
- }
- 
- .guardia {
-  padding: 20px;
- }
-}
-
-@media(max-width:480px){
- .calendar-day{
-  font-size:.6rem;
-  min-height:60px;
-  padding: 4px;
- }
- 
- .personas-grid{
-  grid-template-columns:1fr;
- }
- 
- .guardia-info{
-  font-size:8px;
- }
- 
- .nav {
-  padding: 10px 5px;
- }
- 
- .nav button {
-  padding: 14px 10px;
-  font-size: 14px;
-  flex: 1;
-  min-height: 48px;
- }
- 
- .card {
-  min-width: calc(100vw - 30px);
-  padding: 15px;
- }
-}
-
-/* ========== ESTILOS PWA ========== */
-@media (display-mode: standalone) {
- body {
-  background: var(--bg);
-  -webkit-tap-highlight-color: transparent;
- }
- 
- header {
-  padding-top: env(safe-area-inset-top, 30px);
- }
- 
- #night {
-  top: calc(env(safe-area-inset-top, 0px) + 15px);
- }
- 
- .container {
-  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 10px);
- }
-}
-
-@keyframes pulse {
- 0% { transform: scale(1); }
- 50% { transform: scale(1.05); }
- 100% { transform: scale(1); }
-}
-
-#install-button {
- animation: pulse 2s infinite;
 }
 </style>
 </head>
 <body>
-<button id="night" aria-label="Cambiar tema">🌙</button>
+<button id="night">🌙</button>
 <header>
 <h1>Guardias Alsi</h1>
 <div id="subtitle"></div>
@@ -365,12 +172,12 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <button id="prev">⬅ Anterior</button>
 <button id="next">Siguiente ➡</button>
 </div>
-
 <div class="container">
 <div class="carousel-container">
  <div class="carousel" id="carousel"></div>
- <div class="carousel-hint">← Desliza con el dedo →</div>
- <div class="carousel-indicators" id="indicators"></div>
+</div>
+<div style="text-align:center;color:#666;font-size:0.9em;margin-top:10px;">
+ ← Desliza con el dedo →
 </div>
 </div>
 
@@ -393,74 +200,8 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <div id="historyList"></div>
 </div>
 
-<!-- ========== SCRIPT PWA ========== -->
 <script>
-// Registrar Service Worker
-if ('serviceWorker' in navigator) {
- window.addEventListener('load', async () => {
-  try {
-   const registration = await navigator.serviceWorker.register('/Guardias/service-worker.js');
-   console.log('ServiceWorker registrado');
-   registration.update();
-  } catch (error) {
-   console.error('Error registrando ServiceWorker:', error);
-  }
- });
-}
-
-// Instalación PWA
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
- e.preventDefault();
- deferredPrompt = e;
- 
- setTimeout(() => {
-  if (deferredPrompt && !window.matchMedia('(display-mode: standalone)').matches) {
-   const installBtn = document.createElement('button');
-   installBtn.id = 'install-button';
-   installBtn.innerHTML = '📱 Instalar App';
-   installBtn.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 1000;
-    cursor: pointer;
-    font-size: 16px;
-    min-height: 44px;
-   `;
-   
-   installBtn.onclick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') console.log('App instalada');
-    deferredPrompt = null;
-    installBtn.remove();
-   };
-   
-   document.body.appendChild(installBtn);
-  }
- }, 3000);
-});
-</script>
-
-<!-- ========== CÓDIGO PRINCIPAL CON CARRUSEL FIXED ========== -->
-<script>
-// Toggle modo oscuro
-document.getElementById('night').onclick = () => {
- document.body.classList.toggle("dark");
- localStorage.dark = document.body.classList.contains("dark") ? "true" : "false";
-};
-if (localStorage.dark === "true") document.body.classList.add("dark");
-
-// Datos iniciales
+// ========== VARIABLES GLOBALES ==========
 let electricos = ["Fran Ruiz", "Hicham", "Jose", "Abde", "Dani", "Fran"];
 let mecanicos = ["Ramon", "Traian", "Manu", "Fran Alba", "Cele", "Santy"];
 let estados = JSON.parse(localStorage.estados || "{}");
@@ -468,7 +209,12 @@ let history = JSON.parse(localStorage.history || "[]");
 let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
 let offset = 0;
 let calendarMonth = new Date();
-let currentCardIndex = 2; // Índice de la tarjeta central (0-4)
+
+// Variables para el carrusel táctil
+let startX = 0;
+let currentX = 0;
+let carousel = document.getElementById('carousel');
+let isDragging = false;
 
 // ========== FUNCIONES BÁSICAS ==========
 const FECHA_BASE = new Date(2024, 0, 1);
@@ -478,10 +224,7 @@ function obtenerLunes(fecha) {
  const d = new Date(fecha);
  const dia = d.getDay();
  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
- const lunes = new Date(d);
- lunes.setDate(diff);
- lunes.setHours(12, 0, 0, 0);
- return lunes;
+ return new Date(d.setDate(diff));
 }
 
 function calcularNumeroSemana(fecha) {
@@ -517,17 +260,6 @@ const guardia = (l, numeroSemana) => {
  return a[indice];
 };
 
-function getEstadoTexto(estado) {
- const estadosMap = {
-  'activo': 'Activo',
-  'vacaciones': 'Vacaciones',
-  'viaje': 'Viaje',
-  'baja': 'Baja',
-  'inactivo': 'Inactivo'
- };
- return estadosMap[estado] || 'Activo';
-}
-
 // ========== RENDERIZAR CARRUSEL ==========
 function render() {
  const hoy = new Date();
@@ -544,8 +276,8 @@ function render() {
  
  let carouselHTML = '';
  
- // Crear 5 semanas para mejor scroll
- for (let i = -2; i <= 2; i++) {
+ // Crear 3 semanas: anterior, actual, siguiente
+ for (let i = -1; i <= 1; i++) {
   const semanaOffset = offset + i;
   const numeroSemana = numeroSemanaActual + semanaOffset;
   
@@ -558,12 +290,8 @@ function render() {
   const mecGuardia = guardia(mecanicos, numeroSemana);
   const tieneOverride = manualOverrides[numeroSemana.toString()];
   
-  const esActual = i === 0;
-  const esCentral = i === 0; // La semana actual es la central
-  
   carouselHTML += `
-   <div class="card ${esCentral ? 'active' : ''}" data-index="${i + 2}" data-week="${numeroSemana}">
-    ${esActual ? '<div style="position:absolute;top:10px;right:10px;background:var(--primary);color:white;padding:2px 8px;border-radius:10px;font-size:0.8em;">ACTUAL</div>' : ''}
+   <div class="card">
     <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
     <div class="guardias">
      <div class="guardia">
@@ -571,181 +299,109 @@ function render() {
       <div class="nombre">${elecGuardia}</div>
       <div class="days">L–V</div>
       <div class="time">15:30 – 19:00</div>
-      <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-       ${getEstadoTexto(estados[elecGuardia])}
-      </small>
      </div>
      <div class="guardia">
       <div class="icono">🔧</div>
       <div class="nombre">${mecGuardia}</div>
       <div class="days">L–V</div>
       <div class="time">15:30 – 19:00</div>
-      <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-       ${getEstadoTexto(estados[mecGuardia])}
-      </small>
      </div>
     </div>
    </div>
   `;
  }
  
- const carousel = document.getElementById('carousel');
  carousel.innerHTML = carouselHTML;
  
- // Actualizar indicadores
- updateIndicators();
- 
- // Scroll a la tarjeta central (índice 2 de 5)
- setTimeout(() => {
-  const cards = carousel.querySelectorAll('.card');
-  if (cards.length > 2) {
-   const cardWidth = cards[0].offsetWidth + 14;
-   carousel.scrollLeft = cardWidth * 2; // Posición central
-   currentCardIndex = 2;
-  }
- }, 50);
+ // Posicionar en la tarjeta del medio
+ carousel.style.transform = `translateX(-33.333%)`;
  
  renderHistory();
 }
 
-function updateIndicators() {
- const indicators = document.getElementById('indicators');
- indicators.innerHTML = '';
+// ========== CARRUSEL TÁCTIL - VERSIÓN SUPER SIMPLE ==========
+function setupTouchCarousel() {
+ carousel = document.getElementById('carousel');
  
- // Solo mostramos 3 indicadores
- for (let i = 0; i < 3; i++) {
-  const indicator = document.createElement('div');
-  indicator.className = `carousel-indicator ${i === 1 ? 'active' : ''}`;
-  indicators.appendChild(indicator);
- }
-}
-
-// ========== CARRUSEL TÁCTIL CON SNAP MANUAL ==========
-function setupCarouselTouch() {
- const carousel = document.getElementById('carousel');
- if (!carousel) return;
- 
- let isDragging = false;
- let startPos = 0;
- let currentTranslate = 0;
- let prevTranslate = 0;
- let animationID = 0;
- let currentIndex = 2;
- 
- // Obtener posición actual
- const getPositionX = (event) => {
-  return event.type.includes('mouse') ? event.pageX : event.touches[0].clientX;
- };
- 
- // Touch/Mouse start
- const touchStart = (index) => {
-  return (event) => {
-   isDragging = true;
-   startPos = getPositionX(event);
-   currentIndex = index;
-   carousel.style.cursor = 'grabbing';
-   carousel.style.scrollBehavior = 'auto';
-   
-   // Animación
-   animationID = requestAnimationFrame(animation);
-  };
- };
- 
- // Touch/Mouse move
- const touchMove = (event) => {
-  if (!isDragging) return;
-   
-  const currentPosition = getPositionX(event);
-  currentTranslate = prevTranslate + currentPosition - startPos;
- };
- 
- // Touch/Mouse end
- const touchEnd = () => {
-  if (!isDragging) return;
-   
-  isDragging = false;
-  cancelAnimationFrame(animationID);
-  carousel.style.cursor = 'grab';
-  carousel.style.scrollBehavior = 'smooth';
-  
-  const movedBy = currentTranslate - prevTranslate;
-  
-  // Si el movimiento fue significativo, cambiar de tarjeta
-  if (Math.abs(movedBy) > 50) {
-   if (movedBy < 0 && currentIndex < 4) {
-    // Deslizó a la izquierda -> siguiente
-    offset++;
-   } else if (movedBy > 0 && currentIndex > 0) {
-    // Deslizó a la derecha -> anterior
-    offset--;
-   }
-   
-   render();
-   
-   // Feedback táctil
-   if (navigator.vibrate) navigator.vibrate(30);
-  } else {
-   // Volver a la posición original
-   const cards = carousel.querySelectorAll('.card');
-   const cardWidth = cards[0].offsetWidth + 14;
-   carousel.scrollLeft = cardWidth * 2;
-  }
-  
-  prevTranslate = 0;
-  currentTranslate = 0;
- };
- 
- // Animación
- const animation = () => {
-  if (!isDragging) return;
-  setSliderPosition();
-  requestAnimationFrame(animation);
- };
- 
- const setSliderPosition = () => {
-  carousel.style.transform = `translateX(${currentTranslate}px)`;
- };
- 
- // Añadir eventos a las tarjetas
- const cards = carousel.querySelectorAll('.card');
- cards.forEach((card, index) => {
-  // Touch events
-  card.addEventListener('touchstart', touchStart(index));
-  card.addEventListener('touchend', touchEnd);
-  card.addEventListener('touchmove', touchMove);
-  
-  // Mouse events
-  card.addEventListener('mousedown', touchStart(index));
-  card.addEventListener('mouseup', touchEnd);
-  card.addEventListener('mouseleave', touchEnd);
-  card.addEventListener('mousemove', touchMove);
+ // Touch start
+ carousel.addEventListener('touchstart', (e) => {
+  isDragging = true;
+  startX = e.touches[0].clientX;
+  currentX = startX;
+  carousel.style.transition = 'none';
  });
  
- // Prevenir arrastre de imágenes
- carousel.addEventListener('dragstart', (e) => e.preventDefault());
+ // Touch move
+ carousel.addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+  e.preventDefault();
+  
+  currentX = e.touches[0].clientX;
+  const diff = currentX - startX;
+  
+  // Mover el carrusel proporcionalmente al desplazamiento
+  const movePercent = (diff / window.innerWidth) * 100;
+  carousel.style.transform = `translateX(calc(-33.333% + ${movePercent}%))`;
+ });
  
- // También manejar scroll para detectar cambios
- let scrollTimeout;
- carousel.addEventListener('scroll', () => {
-  clearTimeout(scrollTimeout);
-  scrollTimeout = setTimeout(() => {
-   const cards = carousel.querySelectorAll('.card');
-   if (cards.length === 0) return;
-   
-   const cardWidth = cards[0].offsetWidth + 14;
-   const scrollPos = carousel.scrollLeft;
-   const newIndex = Math.round(scrollPos / cardWidth);
-   
-   // Solo cambiar si realmente estamos en una tarjeta diferente
-   if (Math.abs(newIndex - currentCardIndex) >= 1) {
-    if (newIndex > currentCardIndex && offset < 2) {
-     offset++;
-    } else if (newIndex < currentCardIndex && offset > -2) {
-     offset--;
-    }
-    render();
+ // Touch end
+ carousel.addEventListener('touchend', () => {
+  if (!isDragging) return;
+  isDragging = false;
+  carousel.style.transition = 'transform 0.3s ease';
+  
+  const diff = currentX - startX;
+  const threshold = 50; // 50px mínimo para cambiar
+  
+  if (Math.abs(diff) > threshold) {
+   if (diff > 0) {
+    // Deslizó a la derecha -> semana anterior
+    offset--;
+   } else {
+    // Deslizó a la izquierda -> semana siguiente
+    offset++;
    }
-  }, 150);
+   render();
+  } else {
+   // Volver a la posición central
+   carousel.style.transform = `translateX(-33.333%)`;
+  }
+ });
+ 
+ // También para ratón
+ carousel.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  startX = e.clientX;
+  currentX = startX;
+  carousel.style.transition = 'none';
+ });
+ 
+ document.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  currentX = e.clientX;
+  const diff = currentX - startX;
+  const movePercent = (diff / window.innerWidth) * 100;
+  carousel.style.transform = `translateX(calc(-33.333% + ${movePercent}%))`;
+ });
+ 
+ document.addEventListener('mouseup', () => {
+  if (!isDragging) return;
+  isDragging = false;
+  carousel.style.transition = 'transform 0.3s ease';
+  
+  const diff = currentX - startX;
+  const threshold = 50;
+  
+  if (Math.abs(diff) > threshold) {
+   if (diff > 0) {
+    offset--;
+   } else {
+    offset++;
+   }
+   render();
+  } else {
+   carousel.style.transform = `translateX(-33.333%)`;
+  }
  });
 }
 
@@ -782,15 +438,14 @@ function renderCalendar() {
   const numeroSemana = calcularNumeroSemana(fechaActual);
   const elecGuardia = guardia(electricos, numeroSemana);
   const mecGuardia = guardia(mecanicos, numeroSemana);
-  const tieneOverride = manualOverrides[numeroSemana.toString()];
   
   let contenidoHTML = `<div class="day-number">${fechaActual.getDate()}</div>`;
   
   if (esDiaLaboral && !esFueraMes) {
    contenidoHTML += `
     <div class="guardia-info">
-     <div class="${tieneOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</div>
-     <div class="${tieneOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</div>
+     <div>⚡ ${elecGuardia}</div>
+     <div>🔧 ${mecGuardia}</div>
     </div>
    `;
   }
@@ -827,9 +482,6 @@ function renderPersonasList() {
     <div class="persona-item">
      <span class="icon">⚡</span>
      <span>${persona}</span>
-     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
-      ${getEstadoTexto(estado)}
-     </span>
     </div>`;
   }
  });
@@ -841,9 +493,6 @@ function renderPersonasList() {
     <div class="persona-item">
      <span class="icon">🔧</span>
      <span>${persona}</span>
-     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
-      ${getEstadoTexto(estado)}
-     </span>
     </div>`;
   }
  });
@@ -892,101 +541,38 @@ function renderHistory() {
 document.getElementById('prev').addEventListener('click', () => {
  offset--;
  render();
- if (navigator.vibrate) navigator.vibrate(30);
 });
 
 document.getElementById('next').addEventListener('click', () => {
  offset++;
  render();
- if (navigator.vibrate) navigator.vibrate(30);
 });
 
+// ========== MODO OSCURO ==========
+document.getElementById('night').addEventListener('click', () => {
+ document.body.classList.toggle("dark");
+ localStorage.dark = document.body.classList.contains("dark");
+});
+
+if (localStorage.dark === "true") document.body.classList.add("dark");
+
 // ========== INICIALIZACIÓN ==========
-function initApp() {
+function init() {
  renderCalendar();
  renderPersonasList();
  logCompletedWeek();
  render();
  
- // Configurar carrusel táctil después de que se renderice
- setTimeout(() => {
-  setupCarouselTouch();
- }, 100);
+ // Configurar carrusel después de un pequeño delay
+ setTimeout(setupTouchCarousel, 100);
 }
 
-// Iniciar la app
+// Iniciar cuando el DOM esté listo
 if (document.readyState === 'loading') {
- document.addEventListener('DOMContentLoaded', initApp);
+ document.addEventListener('DOMContentLoaded', init);
 } else {
- initApp();
+ init();
 }
-
-// Manejar cambios de orientación
-window.addEventListener('orientationchange', () => {
- setTimeout(() => {
-  render();
-  renderCalendar();
- }, 300);
-});
-
-// Prevenir pull-to-refresh en PWA
-if (window.matchMedia('(display-mode: standalone)').matches) {
- document.body.style.overscrollBehavior = 'none';
-}
-
-// Alternativa más simple si lo anterior no funciona
-function setupSimpleSwipe() {
-  const carousel = document.getElementById('carousel');
-  let startX = 0;
-  let isSwiping = false;
-  
-  carousel.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    isSwiping = true;
-    carousel.style.scrollBehavior = 'auto';
-  }, { passive: true });
-  
-  carousel.addEventListener('touchmove', (e) => {
-    if (!isSwiping) return;
-    const currentX = e.touches[0].clientX;
-    const diff = startX - currentX;
-    
-    // Mover el scroll manualmente
-    carousel.scrollLeft += diff;
-    startX = currentX;
-  }, { passive: false });
-  
-  carousel.addEventListener('touchend', (e) => {
-    if (!isSwiping) return;
-    isSwiping = false;
-    carousel.style.scrollBehavior = 'smooth';
-    
-    // Snap manual a la tarjeta más cercana
-    const cards = carousel.querySelectorAll('.card');
-    if (cards.length === 0) return;
-    
-    const cardWidth = cards[0].offsetWidth + 14;
-    const scrollPos = carousel.scrollLeft;
-    const nearestIndex = Math.round(scrollPos / cardWidth);
-    
-    // Ajustar a la posición central
-    carousel.scrollLeft = cardWidth * 2;
-    
-    // Determinar dirección
-    if (nearestIndex > 2 && offset < 2) {
-      offset++;
-      render();
-    } else if (nearestIndex < 2 && offset > -2) {
-      offset--;
-      render();
-    }
-  }, { passive: true });
-}
-
-// También probar esta versión alternativa
-setTimeout(() => {
-  setupSimpleSwipe();
-}, 200);
 </script>
 </body>
 </html>
