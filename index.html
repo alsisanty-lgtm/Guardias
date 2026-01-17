@@ -2,18 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Guardias Alsi</title>
 
-<!-- ========== META TAGS PWA ========== -->
+<!-- ========== META TAGS PWA CORREGIDOS ========== -->
 <meta name="theme-color" content="#1e88e5">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Guardias Alsi">
 <link rel="apple-touch-icon" href="icon-152.png">
 <meta name="msapplication-TileImage" content="icon-144.png">
 <meta name="msapplication-TileColor" content="#1e88e5">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
 <!-- ========== FIN META TAGS PWA ========== -->
 
@@ -26,60 +29,112 @@
  --radius:18px;
 }
 body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--muted:#9ca3af}
-body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
+body{
+ margin:0;
+ font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+ background:var(--bg);
+ color:var(--text);
+ -webkit-tap-highlight-color: transparent;
+ -webkit-touch-callout: none;
+}
+* {
+ -webkit-user-select: none;
+ user-select: none;
+ box-sizing: border-box;
+}
 header{
  background:linear-gradient(135deg,#1e88e5,#1565c0);
- color:#fff;padding:20px;text-align:center;
- position:sticky;top:0;z-index:100
+ color:#fff;
+ padding:20px;
+ text-align:center;
+ position:sticky;
+ top:0;
+ z-index:100;
+ padding-top: env(safe-area-inset-top, 20px);
 }
 button{
- background:var(--primary);color:#fff;border:none;
- padding:10px 16px;border-radius:14px;font-weight:700;
+ background:var(--primary);
+ color:#fff;
+ border:none;
+ padding:12px 18px;
+ border-radius:14px;
+ font-weight:700;
  cursor:pointer;
  transition:opacity 0.3s;
+ font-size:16px;
+ min-height:44px; /* Tamaño mínimo para PWA */
 }
 button:hover{opacity:0.9}
-#night{position:fixed;top:12px;right:12px;z-index:200}
-.nav{display:flex;justify-content:space-between;padding:10px}
-.container{max-width:960px;margin:auto;padding:10px}
+#night{
+ position:fixed;
+ top: calc(env(safe-area-inset-top, 0px) + 12px);
+ right:12px;
+ z-index:200;
+ padding:10px;
+ min-height:44px;
+}
+.nav{
+ display:flex;
+ justify-content:space-between;
+ padding:10px;
+ gap:10px;
+}
+.container{
+ max-width:960px;
+ margin:auto;
+ padding:10px;
+ padding-bottom: env(safe-area-inset-bottom, 10px);
+}
 
-/* ===== CARRUSEL IDÉNTICO AL ADMIN ===== */
+/* ===== CARRUSEL MEJORADO ===== */
+.carousel-container {
+ position: relative;
+ width: 100%;
+ overflow: hidden;
+}
+
 .carousel{
  display:flex;
  gap:14px;
  overflow-x:auto;
  scroll-snap-type:x mandatory;
- padding:10px 0;
- -webkit-overflow-scrolling: touch; /* Esto es clave para iOS */
+ padding:10px;
+ -webkit-overflow-scrolling: touch;
  scroll-behavior: smooth;
+ scrollbar-width: none; /* Firefox */
+ -ms-overflow-style: none; /* IE/Edge */
+ touch-action: pan-x pinch-zoom;
 }
 
-/* Ocultar scrollbar en móviles pero mantener funcionalidad */
+/* Ocultar scrollbar completamente en móviles */
 .carousel::-webkit-scrollbar {
- height: 4px;
-}
-.carousel::-webkit-scrollbar-track {
+ display: none;
+ width: 0;
  background: transparent;
-}
-.carousel::-webkit-scrollbar-thumb {
- background: var(--primary);
- border-radius: 2px;
 }
 
 .card{
- min-width:320px;
+ min-width: calc(100vw - 40px);
  background:var(--card);
  border-radius:var(--radius);
  box-shadow:var(--shadow);
  padding:20px;
  scroll-snap-align:center;
- flex-shrink: 0; /* Esto es importante */
+ flex-shrink: 0;
+ touch-action: pan-y;
 }
-.guardias{display:flex;gap:14px;margin-top:14px}
+
+.guardias{
+ display:flex;
+ gap:14px;
+ margin-top:14px;
+}
 .guardia{
- flex:1;text-align:center;
+ flex:1;
+ text-align:center;
  background:rgba(0,0,0,.05);
- border-radius:14px;padding:14px;
+ border-radius:14px;
+ padding:14px;
 }
 body.dark .guardia{background:rgba(255,255,255,.06)}
 .icono{font-size:2.2em}
@@ -94,17 +149,41 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 
 /* Indicador visual para deslizar */
 .carousel-hint {
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.8em;
-  margin-top: 5px;
-  display: none;
+ text-align: center;
+ color: var(--muted);
+ font-size: 0.8em;
+ margin-top: 5px;
+ padding-bottom: 10px;
+}
+
+/* Indicadores de posición */
+.carousel-indicators {
+ display: flex;
+ justify-content: center;
+ gap: 8px;
+ margin-top: 10px;
+}
+
+.carousel-indicator {
+ width: 8px;
+ height: 8px;
+ border-radius: 50%;
+ background: var(--muted);
+ opacity: 0.5;
+ transition: opacity 0.3s;
+}
+
+.carousel-indicator.active {
+ opacity: 1;
+ background: var(--primary);
 }
 
 /* ===== CALENDARIO ===== */
 #calendar{
- margin:20px;background:var(--card);
- border-radius:var(--radius);padding:16px
+ margin:20px;
+ background:var(--card);
+ border-radius:var(--radius);
+ padding:16px;
 }
 .calendar-head{
  display:grid;
@@ -113,22 +192,25 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
  font-weight:700;
  color:var(--muted);
  text-align:center;
- margin-top:8px
+ margin-top:8px;
 }
 .calendar-grid{
  display:grid;
  grid-template-columns:repeat(7,1fr);
  gap:4px;
- margin-top:10px
+ margin-top:10px;
 }
 .calendar-day{
- font-size:.7rem;text-align:center;
- padding:6px;border-radius:8px;
+ font-size:.7rem;
+ text-align:center;
+ padding:6px;
+ border-radius:8px;
  background:rgba(0,0,0,.04);
  min-height:70px;
  display:flex;
  flex-direction:column;
  justify-content:flex-start;
+ touch-action: manipulation;
 }
 .day-number{
  font-weight:bold;
@@ -140,7 +222,8 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 body.dark .weekday{background:rgba(30,136,229,.18)}
 body.dark .weekend{background:rgba(255,255,255,.03)}
 .calendar-day.outside{
- background:rgba(0,0,0,.02);color:var(--muted)
+ background:rgba(0,0,0,.02);
+ color:var(--muted);
 }
 .guardia-info{
  font-size:9px;
@@ -150,8 +233,10 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 
 /* ===== INFO ===== */
 .info-section{
- margin:20px;background:var(--card);
- padding:16px;border-radius:var(--radius);
+ margin:20px;
+ background:var(--card);
+ padding:16px;
+ border-radius:var(--radius);
 }
 .info-section h3{margin-top:0}
 .personas-grid{
@@ -161,23 +246,27 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  margin-top:10px;
 }
 .persona-item{
- padding:8px 12px;
+ padding:12px;
  border-radius:8px;
  background:rgba(0,0,0,.03);
  display:flex;
  align-items:center;
  gap:8px;
+ min-height:44px;
 }
 .persona-item .icon{font-size:1.2em}
 
 /* ===== HISTORIAL ===== */
 #history{
- margin:20px;background:var(--card);
- padding:16px;border-radius:var(--radius)
+ margin:20px;
+ background:var(--card);
+ padding:16px;
+ border-radius:var(--radius);
 }
 .history-item{
- font-size:.9em;border-bottom:1px dashed rgba(0,0,0,.2);
- padding:6px 0;
+ font-size:.9em;
+ border-bottom:1px dashed rgba(0,0,0,.2);
+ padding:8px 0;
  display:flex;
  justify-content:space-between;
 }
@@ -189,75 +278,111 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  }
  
  .card {
-  min-width: 85vw;
+  min-width: calc(100vw - 40px);
+  margin: 0 5px;
+ }
+ 
+ .guardias {
+  flex-direction: column;
+  gap: 10px;
+ }
+ 
+ .guardia {
+  padding: 20px;
  }
 }
 
 @media(max-width:480px){
- .calendar-day{font-size:.6rem;min-height:60px}
- .personas-grid{grid-template-columns:1fr}
- .guardia-info{font-size:8px}
+ .calendar-day{
+  font-size:.6rem;
+  min-height:60px;
+  padding: 4px;
+ }
+ 
+ .personas-grid{
+  grid-template-columns:1fr;
+ }
+ 
+ .guardia-info{
+  font-size:8px;
+ }
+ 
+ .nav {
+  padding: 10px 5px;
+ }
  
  .nav button {
-  padding: 14px 12px;
-  font-size: 0.9em;
+  padding: 14px 10px;
+  font-size: 14px;
   flex: 1;
-  margin: 0 2px;
-  min-height: 44px;
+  min-height: 48px;
  }
  
  .card {
-  min-width: 90vw;
+  min-width: calc(100vw - 30px);
+  padding: 15px;
+ }
+}
+
+/* ========== ESTILOS PWA MEJORADOS ========== */
+@media (display-mode: standalone) {
+ body {
+  background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
  }
  
- .carousel {
-  gap: 10px;
-  padding-left: 10px;
-  padding-right: 10px;
+ header {
+  padding-top: env(safe-area-inset-top, 30px);
+ }
+ 
+ #night {
+  top: calc(env(safe-area-inset-top, 0px) + 15px);
+ }
+ 
+ .container {
+  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 10px);
  }
 }
 
-/* ========== ESTILOS PWA ========== */
-.standalone-mode header {
-  padding-top: env(safe-area-inset-top, 20px);
+/* Prevenir zoom en inputs en iOS */
+input, select, textarea {
+ font-size: 16px;
 }
 
-.standalone-mode #night {
-  top: calc(env(safe-area-inset-top, 12px) + 12px);
+/* Mejorar rendimiento táctil */
+.carousel, .calendar-day, button {
+ -webkit-transform: translateZ(0);
+ transform: translateZ(0);
 }
 
-@media (display-mode: standalone) {
-  button, select, .calendar-day {
-    min-height: 44px;
-  }
-  
-  .guardia {
-    padding: 20px;
-  }
-  
-  body {
-    -webkit-tap-highlight-color: transparent;
-  }
+/* ========== ANIMACIONES ========== */
+@keyframes fadeIn {
+ from { opacity: 0; transform: translateY(10px); }
+ to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+ animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+ 0% { transform: scale(1); }
+ 50% { transform: scale(1.05); }
+ 100% { transform: scale(1); }
 }
 
 #install-button {
-  animation: pulse 2s infinite;
+ animation: pulse 2s infinite;
 }
 
 #install-button:hover {
-  animation: none;
+ animation: none;
 }
 /* ========== FIN ESTILOS PWA ========== */
 </style>
 </head>
 <body>
-<button id="night">🌙</button>
+<button id="night" aria-label="Cambiar tema">🌙</button>
 <header>
 <h1>Guardias Alsi</h1>
 <div id="subtitle"></div>
@@ -266,10 +391,15 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <button id="prev">⬅ Anterior</button>
 <button id="next">Siguiente ➡</button>
 </div>
+
 <div class="container">
-<div class="carousel" id="carousel"></div>
-<div class="carousel-hint">← Desliza con el dedo →</div>
+<div class="carousel-container">
+ <div class="carousel" id="carousel"></div>
+ <div class="carousel-hint">← Desliza con el dedo →</div>
+ <div class="carousel-indicators" id="indicators"></div>
 </div>
+</div>
+
 <div id="calendar">
 <div style="display:flex;justify-content:space-between;align-items:center">
 <button onclick="changeMonth(-1)">◀</button>
@@ -289,271 +419,502 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <div id="historyList"></div>
 </div>
 
-<!-- ========== SCRIPT PWA SIMPLIFICADO ========== -->
+<!-- ========== MANIFEST CORREGIDO (INLINE) ========== -->
+<script type="application/json" id="manifest-data">
+{
+ "name": "Guardias Alsi",
+ "short_name": "Guardias",
+ "description": "Sistema de gestión de guardias",
+ "start_url": "/",
+ "display": "standalone",
+ "background_color": "#1e88e5",
+ "theme_color": "#1e88e5",
+ "orientation": "portrait-primary",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}
+</script>
+
+<!-- ========== SCRIPT PWA CORREGIDO ========== -->
 <script>
-// PWA simplificado
+// PWA Service Worker
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js');
-  });
+ window.addEventListener('load', async () => {
+  try {
+   const registration = await navigator.serviceWorker.register('service-worker.js');
+   console.log('ServiceWorker registrado:', registration.scope);
+   
+   // Forzar actualización del service worker
+   registration.update();
+  } catch (error) {
+   console.log('Error registrando ServiceWorker:', error);
+  }
+ });
 }
 
-// Instalación PWA
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
+// Detectar modo standalone y prevenir bloqueo
+if (window.matchMedia('(display-mode: standalone)').matches) {
+ document.body.classList.add('standalone-mode');
+ console.log('Aplicación en modo standalone');
+ 
+ // Prevenir que el dispositivo se bloquee en PWA
+ if ('wakeLock' in navigator) {
+  let wakeLock = null;
   
-  // Mostrar botón después de 3 segundos
-  setTimeout(() => {
-    if (deferredPrompt) {
-      const installBtn = document.createElement('button');
-      installBtn.innerHTML = '📱 Instalar App';
-      installBtn.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #4CAF50, #2E7D32);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 25px;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 1000;
-        cursor: pointer;
-      `;
-      installBtn.onclick = () => {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-          deferredPrompt = null;
-          installBtn.remove();
-        });
-      };
-      document.body.appendChild(installBtn);
+  const requestWakeLock = async () => {
+   try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    console.log('Wake Lock activado para PWA');
+    
+    wakeLock.addEventListener('release', () => {
+     console.log('Wake Lock liberado');
+    });
+   } catch (err) {
+    console.log('Wake Lock no soportado:', err);
+   }
+  };
+  
+  // Solicitar wake lock cuando la app esté visible
+  const handleVisibilityChange = () => {
+   if (wakeLock !== null && document.visibilityState === 'visible') {
+    requestWakeLock();
+   }
+  };
+  
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  requestWakeLock();
+ }
+}
+
+// Instalación PWA mejorada
+let deferredPrompt;
+let installButton = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+ e.preventDefault();
+ deferredPrompt = e;
+ 
+ // Mostrar botón de instalación después de 5 segundos
+ setTimeout(() => {
+  if (deferredPrompt && !installButton) {
+   installButton = document.createElement('button');
+   installButton.id = 'install-button';
+   installButton.innerHTML = '📱 Instalar App';
+   installButton.setAttribute('aria-label', 'Instalar aplicación');
+   installButton.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    cursor: pointer;
+    font-size: 16px;
+    min-height: 44px;
+   `;
+   
+   installButton.onclick = async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+     console.log('Usuario aceptó instalar');
+     installButton.style.display = 'none';
+    } else {
+     console.log('Usuario rechazó instalar');
     }
-  }, 3000);
+    
+    deferredPrompt = null;
+    if (installButton && installButton.parentNode) {
+     installButton.parentNode.removeChild(installButton);
+    }
+   };
+   
+   document.body.appendChild(installButton);
+  }
+ }, 5000);
+});
+
+// Eliminar botón si ya está instalado
+window.addEventListener('appinstalled', () => {
+ console.log('Aplicación instalada');
+ if (installButton && installButton.parentNode) {
+  installButton.parentNode.removeChild(installButton);
+ }
+ deferredPrompt = null;
 });
 </script>
 
-<!-- ========== CÓDIGO PRINCIPAL - IGUAL QUE EL ADMIN ========== -->
+<!-- ========== CÓDIGO PRINCIPAL CORREGIDO ========== -->
 <script>
 // Toggle modo oscuro
-night.onclick=()=>{
+document.getElementById('night').onclick = () => {
  document.body.classList.toggle("dark");
- localStorage.dark=document.body.classList.contains("dark");
+ localStorage.dark = document.body.classList.contains("dark") ? "true" : "false";
+ 
+ // Añadir feedback táctil
+ if (navigator.vibrate) {
+  navigator.vibrate(50);
+ }
 };
-if(localStorage.dark==="true") document.body.classList.add("dark");
+if (localStorage.dark === "true") document.body.classList.add("dark");
 
 // Datos iniciales
-let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
-let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
-let estados=JSON.parse(localStorage.estados||"{}");
-let history=JSON.parse(localStorage.history||"[]");
-let manualOverrides=JSON.parse(localStorage.manualOverrides||"{}");
-let offset=0;
-let calendarMonth=new Date();
+let electricos = ["Fran Ruiz", "Hicham", "Jose", "Abde", "Dani", "Fran"];
+let mecanicos = ["Ramon", "Traian", "Manu", "Fran Alba", "Cele", "Santy"];
+let estados = JSON.parse(localStorage.estados || "{}");
+let history = JSON.parse(localStorage.history || "[]");
+let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
+let offset = 0;
+let calendarMonth = new Date();
+let currentCardIndex = 1; // Índice de la tarjeta centrada (0, 1, 2)
 
 // ========== FUNCIONES BÁSICAS ==========
-// FECHA BASE FIJA: Lunes 1 de Enero de 2024
 const FECHA_BASE = new Date(2024, 0, 1);
 const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
 
 function obtenerLunes(fecha) {
-  const d = new Date(fecha);
-  const dia = d.getDay();
-  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
+ const d = new Date(fecha);
+ const dia = d.getDay();
+ const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
+ const lunes = new Date(d);
+ lunes.setDate(diff);
+ lunes.setHours(12, 0, 0, 0);
+ return lunes;
 }
 
 function calcularNumeroSemana(fecha) {
-  const fechaLunes = obtenerLunes(fecha);
-  fechaLunes.setHours(12, 0, 0, 0);
-  
-  const fechaBaseLunes = obtenerLunes(FECHA_BASE);
-  fechaBaseLunes.setHours(12, 0, 0, 0);
-  
-  const diferenciaMs = fechaLunes - fechaBaseLunes;
-  const numeroSemana = Math.floor(diferenciaMs / MS_POR_SEMANA);
-  
-  return numeroSemana;
+ const fechaLunes = obtenerLunes(fecha);
+ const fechaBaseLunes = obtenerLunes(FECHA_BASE);
+ const diferenciaMs = fechaLunes - fechaBaseLunes;
+ return Math.floor(diferenciaMs / MS_POR_SEMANA);
 }
 
 const fd = d => {
-  const date = new Date(d);
-  return date.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: '2-digit'
-  });
+ const date = new Date(d);
+ return date.toLocaleDateString('es-ES', {
+  day: '2-digit',
+  month: '2-digit'
+ });
 };
 
 const activos = l => l.filter(p => !estados[p] || estados[p] === "activo");
 
 const guardia = (l, numeroSemana) => {
-  const a = activos(l);
-  if (a.length === 0) return "Nadie";
-  
-  const semanaKey = numeroSemana.toString();
-  if (manualOverrides[semanaKey]) {
-    const tipo = l === electricos ? 'electrico' : 'mecanico';
-    if (manualOverrides[semanaKey][tipo]) {
-      return manualOverrides[semanaKey][tipo];
-    }
+ const a = activos(l);
+ if (a.length === 0) return "Nadie";
+ 
+ const semanaKey = numeroSemana.toString();
+ if (manualOverrides[semanaKey]) {
+  const tipo = l === electricos ? 'electrico' : 'mecanico';
+  if (manualOverrides[semanaKey][tipo]) {
+   return manualOverrides[semanaKey][tipo];
   }
-  
-  const indice = ((numeroSemana % a.length) + a.length) % a.length;
-  return a[indice];
+ }
+ 
+ const indice = ((numeroSemana % a.length) + a.length) % a.length;
+ return a[indice];
 };
 
-function getEstadoTexto(estado){
- switch(estado){
-  case 'activo': return 'Activo';
-  case 'vacaciones': return 'Vacaciones';
-  case 'viaje': return 'Viaje';
-  case 'baja': return 'Baja';
-  case 'inactivo': return 'Inactivo';
-  default: return 'Activo';
+function getEstadoTexto(estado) {
+ const estadosMap = {
+  'activo': 'Activo',
+  'vacaciones': 'Vacaciones',
+  'viaje': 'Viaje',
+  'baja': 'Baja',
+  'inactivo': 'Inactivo'
+ };
+ return estadosMap[estado] || 'Activo';
+}
+
+// ========== RENDERIZAR CARRUSEL MEJORADO ==========
+function render() {
+ const hoy = new Date();
+ const numeroSemanaActual = calcularNumeroSemana(hoy);
+ 
+ const fechaBase = obtenerLunes(hoy);
+ fechaBase.setDate(fechaBase.getDate() + (offset * 7));
+ 
+ const fechaInicio = new Date(fechaBase);
+ const fechaFin = new Date(fechaInicio);
+ fechaFin.setDate(fechaFin.getDate() + 4);
+ 
+ document.getElementById('subtitle').textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
+ 
+ let carouselHTML = '';
+ 
+ // Crear 3 semanas: anterior, actual, siguiente
+ for (let i = -1; i <= 1; i++) {
+  const semanaOffset = offset + i;
+  const numeroSemana = numeroSemanaActual + semanaOffset;
+  
+  const semanaInicio = new Date(fechaBase);
+  semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
+  const semanaFin = new Date(semanaInicio);
+  semanaFin.setDate(semanaFin.getDate() + 4);
+  
+  const elecGuardia = guardia(electricos, numeroSemana);
+  const mecGuardia = guardia(mecanicos, numeroSemana);
+  const tieneOverride = manualOverrides[numeroSemana.toString()];
+  
+  const esActual = i === 0;
+  
+  carouselHTML += `
+   <div class="card" data-index="${i + 1}">
+    ${esActual ? '<div style="position:absolute;top:10px;right:10px;background:var(--primary);color:white;padding:2px 8px;border-radius:10px;font-size:0.8em;">ACTUAL</div>' : ''}
+    <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
+    <div class="guardias">
+     <div class="guardia">
+      <div class="icono">⚡</div>
+      <div class="nombre">${elecGuardia}</div>
+      <div class="days">L–V</div>
+      <div class="time">15:30 – 19:00</div>
+      <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+       ${getEstadoTexto(estados[elecGuardia])}
+      </small>
+     </div>
+     <div class="guardia">
+      <div class="icono">🔧</div>
+      <div class="nombre">${mecGuardia}</div>
+      <div class="days">L–V</div>
+      <div class="time">15:30 – 19:00</div>
+      <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+       ${getEstadoTexto(estados[mecGuardia])}
+      </small>
+     </div>
+    </div>
+   </div>
+  `;
+ }
+ 
+ const carousel = document.getElementById('carousel');
+ carousel.innerHTML = carouselHTML;
+ 
+ // Actualizar indicadores
+ updateIndicators();
+ 
+ // Scroll a la tarjeta central
+ setTimeout(() => {
+  const cards = carousel.querySelectorAll('.card');
+  if (cards.length > 1) {
+   const cardWidth = cards[0].offsetWidth + 14;
+   carousel.scrollLeft = cardWidth;
+   currentCardIndex = 1;
+  }
+ }, 50);
+ 
+ renderHistory();
+}
+
+function updateIndicators() {
+ const indicators = document.getElementById('indicators');
+ indicators.innerHTML = '';
+ 
+ for (let i = 0; i < 3; i++) {
+  const indicator = document.createElement('div');
+  indicator.className = `carousel-indicator ${i === 1 ? 'active' : ''}`;
+  indicators.appendChild(indicator);
  }
 }
 
-// ========== RENDERIZAR CARRUSEL ==========
-function render() {
-  const hoy = new Date();
-  const numeroSemanaActual = calcularNumeroSemana(hoy);
+// ========== GESTIÓN TÁCTIL DEL CARRUSEL MEJORADA ==========
+function setupCarouselTouch() {
+ const carousel = document.getElementById('carousel');
+ if (!carousel) return;
+ 
+ let startX = 0;
+ let currentX = 0;
+ let isDragging = false;
+ let velocity = 0;
+ let lastX = 0;
+ let lastTime = 0;
+ 
+ const threshold = 50; // Umbral mínimo para cambiar de semana
+ const minVelocity = 0.3; // Velocidad mínima para cambiar
+ 
+ function handleTouchStart(e) {
+  isDragging = true;
+  startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+  lastX = startX;
+  lastTime = Date.now();
+  carousel.style.scrollBehavior = 'auto';
+  e.preventDefault();
+ }
+ 
+ function handleTouchMove(e) {
+  if (!isDragging) return;
   
-  const fechaBase = obtenerLunes(hoy);
-  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
+  currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+  const deltaX = currentX - lastX;
+  const currentTime = Date.now();
+  const deltaTime = currentTime - lastTime;
   
-  const fechaInicio = new Date(fechaBase);
-  const fechaFin = new Date(fechaInicio);
-  fechaFin.setDate(fechaFin.getDate() + 4);
-  
-  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
-  
-  let carouselHTML = '';
-  
-  // Crear 3 semanas: anterior, actual, siguiente
-  for (let i = -1; i <= 1; i++) {
-    const semanaOffset = offset + i;
-    const numeroSemana = numeroSemanaActual + semanaOffset;
-    
-    const semanaInicio = new Date(fechaBase);
-    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
-    const semanaFin = new Date(semanaInicio);
-    semanaFin.setDate(semanaFin.getDate() + 4);
-    
-    const elecGuardia = guardia(electricos, numeroSemana);
-    const mecGuardia = guardia(mecanicos, numeroSemana);
-    const tieneOverride = manualOverrides[numeroSemana.toString()];
-    
-    carouselHTML += `
-      <div class="card">
-        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
-        <div class="guardias">
-          <div class="guardia">
-            <div class="icono">⚡</div>
-            <div class="nombre">${elecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[elecGuardia])}
-            </small>
-          </div>
-          <div class="guardia">
-            <div class="icono">🔧</div>
-            <div class="nombre">${mecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[mecGuardia])}
-            </small>
-          </div>
-        </div>
-      </div>
-    `;
+  if (deltaTime > 0) {
+   velocity = deltaX / deltaTime;
   }
   
-  document.getElementById('carousel').innerHTML = carouselHTML;
+  lastX = currentX;
+  lastTime = currentTime;
   
-  // Centrar la tarjeta del medio automáticamente
-  setTimeout(() => {
-    const carousel = document.getElementById('carousel');
+  // Permitir scroll natural
+  carousel.scrollLeft -= deltaX;
+  e.preventDefault();
+ }
+ 
+ function handleTouchEnd(e) {
+  if (!isDragging) return;
+  
+  isDragging = false;
+  carousel.style.scrollBehavior = 'smooth';
+  
+  const deltaX = currentX - startX;
+  const currentTime = Date.now();
+  const deltaTime = currentTime - lastTime;
+  
+  // Calcular velocidad final
+  if (deltaTime > 0) {
+   velocity = (currentX - lastX) / deltaTime;
+  }
+  
+  // Decidir si cambiar de semana basado en velocidad o desplazamiento
+  const shouldChange = Math.abs(velocity) > minVelocity || Math.abs(deltaX) > threshold;
+  
+  if (shouldChange) {
+   if ((deltaX > 0 || velocity > minVelocity) && currentCardIndex > 0) {
+    // Deslizó a la derecha -> semana anterior
+    offset--;
+    currentCardIndex--;
+    render();
+    
+    // Feedback táctil
+    if (navigator.vibrate) navigator.vibrate(30);
+   } else if ((deltaX < 0 || velocity < -minVelocity) && currentCardIndex < 2) {
+    // Deslizó a la izquierda -> semana siguiente
+    offset++;
+    currentCardIndex++;
+    render();
+    
+    // Feedback táctil
+    if (navigator.vibrate) navigator.vibrate(30);
+   } else {
+    // Volver a la posición original
     const cards = carousel.querySelectorAll('.card');
-    if (cards.length > 1) {
-      const cardWidth = cards[0].offsetWidth + 14; // + gap
-      carousel.scrollLeft = cardWidth; // Centrar la segunda tarjeta
-    }
-  }, 100);
+    const cardWidth = cards[0].offsetWidth + 14;
+    carousel.scrollLeft = cardWidth * currentCardIndex;
+   }
+  } else {
+   // Volver a la posición original si no superó el umbral
+   const cards = carousel.querySelectorAll('.card');
+   const cardWidth = cards[0].offsetWidth + 14;
+   carousel.scrollLeft = cardWidth * currentCardIndex;
+  }
   
-  renderHistory();
+  // Resetear valores
+  velocity = 0;
+  startX = 0;
+  currentX = 0;
+ }
+ 
+ // Eventos táctiles
+ carousel.addEventListener('touchstart', handleTouchStart, { passive: false });
+ carousel.addEventListener('touchmove', handleTouchMove, { passive: false });
+ carousel.addEventListener('touchend', handleTouchEnd, { passive: false });
+ 
+ // Eventos de ratón para debugging
+ carousel.addEventListener('mousedown', handleTouchStart);
+ carousel.addEventListener('mousemove', (e) => {
+  if (isDragging) handleTouchMove(e);
+ });
+ carousel.addEventListener('mouseup', handleTouchEnd);
+ carousel.addEventListener('mouseleave', handleTouchEnd);
+ 
+ // Prevenir arrastre de imágenes
+ carousel.addEventListener('dragstart', (e) => e.preventDefault());
 }
 
 // ========== CALENDARIO ==========
 function renderCalendar() {
-  calendarGrid.innerHTML = "";
-  const y = calendarMonth.getFullYear();
-  const m = calendarMonth.getMonth();
+ document.getElementById('calendarGrid').innerHTML = "";
+ const y = calendarMonth.getFullYear();
+ const m = calendarMonth.getMonth();
+ 
+ document.getElementById('calendarTitle').textContent = 
+  `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
+ 
+ const primerDia = new Date(y, m, 1);
+ const ultimoDia = new Date(y, m + 1, 0);
+ 
+ const inicio = new Date(primerDia);
+ const diaSemana = inicio.getDay();
+ const diasAtras = diaSemana === 0 ? 6 : diaSemana - 1;
+ inicio.setDate(inicio.getDate() - diasAtras);
+ 
+ const fin = new Date(ultimoDia);
+ const diaSemanaFin = fin.getDay();
+ const diasAdelante = diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin;
+ fin.setDate(fin.getDate() + diasAdelante);
+ 
+ let fechaActual = new Date(inicio);
+ while (fechaActual <= fin) {
+  const esMesAnterior = fechaActual.getMonth() < m;
+  const esMesSiguiente = fechaActual.getMonth() > m;
+  const esFueraMes = esMesAnterior || esMesSiguiente;
+  const diaSemana = fechaActual.getDay();
+  const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
   
-  calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
+  const numeroSemana = calcularNumeroSemana(fechaActual);
+  const elecGuardia = guardia(electricos, numeroSemana);
+  const mecGuardia = guardia(mecanicos, numeroSemana);
+  const tieneOverride = manualOverrides[numeroSemana.toString()];
   
-  const primerDia = new Date(y, m, 1);
-  const ultimoDia = new Date(y, m + 1, 0);
+  let contenidoHTML = `<div class="day-number">${fechaActual.getDate()}</div>`;
   
-  const inicio = new Date(primerDia);
-  const diaSemana = inicio.getDay();
-  const diasAtras = diaSemana === 0 ? 6 : diaSemana - 1;
-  inicio.setDate(inicio.getDate() - diasAtras);
-  
-  const fin = new Date(ultimoDia);
-  const diaSemanaFin = fin.getDay();
-  const diasAdelante = diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin;
-  fin.setDate(fin.getDate() + diasAdelante);
-  
-  let fechaActual = new Date(inicio);
-  while (fechaActual <= fin) {
-    const esMesAnterior = fechaActual.getMonth() < m;
-    const esMesSiguiente = fechaActual.getMonth() > m;
-    const esFueraMes = esMesAnterior || esMesSiguiente;
-    const diaSemana = fechaActual.getDay();
-    const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
-    
-    const numeroSemana = calcularNumeroSemana(fechaActual);
-    const elecGuardia = guardia(electricos, numeroSemana);
-    const mecGuardia = guardia(mecanicos, numeroSemana);
-    const tieneOverride = manualOverrides[numeroSemana.toString()];
-    
-    let contenidoHTML = `
-      <div class="day-number">${fechaActual.getDate()}</div>
-    `;
-    
-    if (esDiaLaboral && !esFueraMes) {
-      contenidoHTML += `
-        <div class="guardia-info">
-          <div class="${tieneOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</div>
-          <div class="${tieneOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</div>
-        </div>
-      `;
-    }
-    
-    const clases = [
-      'calendar-day',
-      esFueraMes ? 'outside' : '',
-      esDiaLaboral ? 'weekday' : 'weekend'
-    ].filter(c => c).join(' ');
-    
-    calendarGrid.innerHTML += `
-      <div class="${clases}">
-        ${contenidoHTML}
-      </div>
-    `;
-    
-    fechaActual.setDate(fechaActual.getDate() + 1);
+  if (esDiaLaboral && !esFueraMes) {
+   contenidoHTML += `
+    <div class="guardia-info">
+     <div class="${tieneOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</div>
+     <div class="${tieneOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</div>
+    </div>
+   `;
   }
+  
+  const clases = [
+   'calendar-day',
+   esFueraMes ? 'outside' : '',
+   esDiaLaboral ? 'weekday' : 'weekend'
+  ].filter(c => c).join(' ');
+  
+  document.getElementById('calendarGrid').innerHTML += `
+   <div class="${clases}">
+    ${contenidoHTML}
+   </div>
+  `;
+  
+  fechaActual.setDate(fechaActual.getDate() + 1);
+ }
 }
 
 function changeMonth(delta) {
-  calendarMonth.setMonth(calendarMonth.getMonth() + delta);
-  renderCalendar();
+ calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+ renderCalendar();
 }
 
 // ========== PERSONAS ==========
@@ -592,131 +953,123 @@ function renderPersonasList() {
 }
 
 // ========== HISTORIAL ==========
-function logCompletedWeek(){
-  const hoy=new Date();
-  const viernes=obtenerLunes(hoy);
-  viernes.setDate(viernes.getDate()+4);
-  
-  if(hoy<viernes)return;
-  
-  const numeroSemana=calcularNumeroSemana(hoy);
-  const clave=fd(obtenerLunes(hoy));
-  
-  if(history.some(h=>h.startsWith(clave)))return;
-  
-  const elecGuardia=guardia(electricos,numeroSemana);
-  const mecGuardia=guardia(mecanicos,numeroSemana);
-  
-  history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
-  history=history.slice(0,30);
-  localStorage.history=JSON.stringify(history);
+function logCompletedWeek() {
+ const hoy = new Date();
+ const viernes = obtenerLunes(hoy);
+ viernes.setDate(viernes.getDate() + 4);
+ 
+ if (hoy < viernes) return;
+ 
+ const numeroSemana = calcularNumeroSemana(hoy);
+ const clave = fd(obtenerLunes(hoy));
+ 
+ if (history.some(h => h.startsWith(clave))) return;
+ 
+ const elecGuardia = guardia(electricos, numeroSemana);
+ const mecGuardia = guardia(mecanicos, numeroSemana);
+ 
+ history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
+ history = history.slice(0, 30);
+ localStorage.history = JSON.stringify(history);
 }
 
-function renderHistory(){
-  historyList.innerHTML="";
-  history.forEach(h=>{
-    const [fecha, ...resto] = h.split(' ');
-    const guardias = resto.join(' ');
-    historyList.innerHTML+=`
-      <div class="history-item">
-        <span>${fecha}</span>
-        <span>${guardias}</span>
-      </div>
-    `;
-  });
-}
-
-// ========== DETECCIÓN DE SCROLL PARA CAMBIAR SEMANA ==========
-function setupCarouselScroll() {
-  const carousel = document.getElementById('carousel');
-  if (!carousel) return;
-  
-  let isScrolling = false;
-  let scrollTimeout;
-  
-  carousel.addEventListener('scroll', () => {
-    // Limpiar timeout anterior
-    clearTimeout(scrollTimeout);
-    
-    // Si no está ya scrolleando, marcar que empieza
-    if (!isScrolling) {
-      isScrolling = true;
-    }
-    
-    // Esperar a que termine el scroll
-    scrollTimeout = setTimeout(() => {
-      isScrolling = false;
-      
-      // Calcular qué tarjeta está más centrada
-      const cards = carousel.querySelectorAll('.card');
-      if (cards.length === 0) return;
-      
-      const cardWidth = cards[0].offsetWidth + 14; // + gap
-      const scrollPos = carousel.scrollLeft;
-      const cardIndex = Math.round(scrollPos / cardWidth);
-      
-      // Si la tarjeta centrada no es la del medio (índice 1), cambiar offset
-      if (cardIndex === 0) {
-        // Usuario deslizó a la izquierda (semana anterior)
-        offset--;
-        render();
-      } else if (cardIndex === 2) {
-        // Usuario deslizó a la derecha (semana siguiente)
-        offset++;
-        render();
-      }
-    }, 150); // Esperar 150ms después del último scroll
-  });
-  
-  // También detectar gestos táctiles para mejor experiencia
-  let startX = 0;
-  let isDragging = false;
-  
-  carousel.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    isDragging = true;
-  });
-  
-  carousel.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    const currentX = e.touches[0].clientX;
-    const diff = startX - currentX;
-    
-    // Si el desplazamiento es significativo, permitir scroll
-    if (Math.abs(diff) > 10) {
-      e.preventDefault(); // Permitir scroll horizontal
-    }
-  });
-  
-  carousel.addEventListener('touchend', () => {
-    isDragging = false;
-  });
+function renderHistory() {
+ const historyList = document.getElementById('historyList');
+ historyList.innerHTML = "";
+ 
+ history.forEach(h => {
+  const [fecha, ...resto] = h.split(' ');
+  const guardias = resto.join(' ');
+  historyList.innerHTML += `
+   <div class="history-item">
+    <span>${fecha}</span>
+    <span>${guardias}</span>
+   </div>
+  `;
+ });
 }
 
 // ========== BOTONES DE NAVEGACIÓN ==========
 document.getElementById('prev').addEventListener('click', () => {
+ if (currentCardIndex > 0) {
   offset--;
+  currentCardIndex--;
   render();
+  
+  // Feedback táctil
+  if (navigator.vibrate) navigator.vibrate(30);
+ }
 });
 
 document.getElementById('next').addEventListener('click', () => {
+ if (currentCardIndex < 2) {
   offset++;
+  currentCardIndex++;
   render();
+  
+  // Feedback táctil
+  if (navigator.vibrate) navigator.vibrate(30);
+ }
 });
 
-// ========== INICIALIZACIÓN ==========
-renderCalendar();
-renderPersonasList();
-logCompletedWeek();
-render();
+// ========== INICIALIZACIÓN MEJORADA ==========
+function initApp() {
+ // Renderizar todo
+ renderCalendar();
+ renderPersonasList();
+ logCompletedWeek();
+ render();
+ 
+ // Configurar carrusel táctil
+ setTimeout(setupCarouselTouch, 100);
+ 
+ // Prevenir comportamientos no deseados en PWA
+ if ('standalone' in window.navigator || window.matchMedia('(display-mode: standalone)').matches) {
+  // Prevenir que el teclado se abra innecesariamente
+  document.addEventListener('focusin', (e) => {
+   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    setTimeout(() => {
+     e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+   }
+  });
+ }
+ 
+ // Manejar tecla Escape para salir de modales (si los hubiera)
+ document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+   // Aquí puedes añadir lógica para cerrar modales
+  }
+ });
+}
 
-// Configurar detección de scroll después de cargar
-setTimeout(setupCarouselScroll, 500);
+// Iniciar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+ document.addEventListener('DOMContentLoaded', initApp);
+} else {
+ initApp();
+}
 
-// También configurar cuando se redimensiona la ventana
-window.addEventListener('resize', () => {
-  setTimeout(setupCarouselScroll, 100);
+// Manejar cambios de orientación
+window.addEventListener('orientationchange', () => {
+ setTimeout(() => {
+  render();
+  renderCalendar();
+ }, 300);
 });
+
+// Prevenir recarga accidental en PWA
+let touchStartY = 0;
+window.addEventListener('touchstart', (e) => {
+ touchStartY = e.touches[0].clientY;
+});
+
+window.addEventListener('touchmove', (e) => {
+ // Prevenir pull-to-refresh en la parte superior
+ if (window.scrollY === 0 && e.touches[0].clientY > touchStartY) {
+  e.preventDefault();
+ }
+}, { passive: false });
 </script>
 </body>
 </html>
