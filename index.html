@@ -1,807 +1,780 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardias Alsi</title>
-    <style>
-        /* RESET Y VARIABLES */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary: #1e88e5;
-            --bg: #f2f4f8;
-            --card: #fff;
-            --text: #1f2937;
-            --muted: #6b7280;
-            --shadow: 0 10px 25px rgba(0,0,0,.12);
-            --radius: 18px;
-        }
-        
-        body.dark {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #e5e7eb;
-            --muted: #9ca3af;
-        }
-        
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        /* HEADER */
-        header {
-            background: linear-gradient(135deg, var(--primary), #1565c0);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        /* BOTÓN TEMA OSCURO */
-        #themeToggle {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.2em;
-            cursor: pointer;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* BOTONES NAVEGACIÓN */
-        .nav-buttons {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px;
-            gap: 10px;
-        }
-        
-        .nav-button {
-            flex: 1;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        
-        .nav-button:hover {
-            opacity: 0.9;
-        }
-        
-        /* CONTENEDOR PRINCIPAL */
-        .container {
-            max-width: 100%;
-            padding: 0 10px;
-        }
-        
-        /* CARRUSEL - ESTILOS SIMPLIFICADOS */
-        .carousel-wrapper {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            touch-action: pan-y;
-        }
-        
-        .carousel {
-            display: flex;
-            transition: transform 0.3s ease;
-            width: 300%; /* 3 slides */
-        }
-        
-        .carousel-slide {
-            flex: 0 0 33.333%;
-            width: 33.333%;
-            padding: 10px;
-        }
-        
-        /* TARJETA */
-        .card {
-            background: var(--card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 25px;
-            width: 100%;
-        }
-        
-        /* GUARDIAS */
-        .guardias-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .guardia {
-            text-align: center;
-            background: rgba(0,0,0,0.05);
-            border-radius: 14px;
-            padding: 20px;
-        }
-        
-        body.dark .guardia {
-            background: rgba(255,255,255,0.06);
-        }
-        
-        .icono {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        .nombre {
-            font-size: 1.2em;
-            font-weight: 800;
-            margin: 5px 0;
-        }
-        
-        .detalles {
-            font-size: 0.9em;
-            color: var(--muted);
-            margin: 5px 0;
-        }
-        
-        /* INDICADORES */
-        .indicators {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin: 20px 0;
-            padding: 0 10px;
-        }
-        
-        .indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--muted);
-            opacity: 0.5;
-            transition: all 0.3s;
-        }
-        
-        .indicator.active {
-            opacity: 1;
-            background: var(--primary);
-            transform: scale(1.3);
-        }
-        
-        /* HINT */
-        .hint {
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.9em;
-            margin: 10px 0 30px;
-            padding: 10px;
-        }
-        
-        /* SECCIONES */
-        .section {
-            background: var(--card);
-            border-radius: var(--radius);
-            margin: 20px;
-            padding: 20px;
-            box-shadow: var(--shadow);
-        }
-        
-        .section h3 {
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-        
-        /* CALENDARIO */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            margin-top: 10px;
-        }
-        
-        .calendar-day {
-            font-size: 0.8em;
-            text-align: center;
-            padding: 8px 4px;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.04);
-            min-height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
-        
-        .day-number {
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-        
-        .weekday {
-            background: rgba(30,136,229,0.08);
-        }
-        
-        .weekend {
-            background: rgba(0,0,0,0.02);
-            color: var(--muted);
-        }
-        
-        body.dark .weekday {
-            background: rgba(30,136,229,0.18);
-        }
-        
-        body.dark .weekend {
-            background: rgba(255,255,255,0.03);
-        }
-        
-        .guardia-info {
-            font-size: 0.7em;
-            line-height: 1.2;
-            margin-top: 2px;
-        }
-        
-        /* PERSONAS */
-        .personas-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .persona {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.03);
-        }
-        
-        /* HISTORIAL */
-        .history-item {
-            padding: 8px 0;
-            border-bottom: 1px dashed rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9em;
-        }
-        
-        /* RESPONSIVE */
-        @media (min-width: 768px) {
-            .guardias-container {
-                flex-direction: row;
-            }
-            
-            .guardia {
-                flex: 1;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardias Alsi</title>
+<style>
+/* RESET COMPLETO */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow-x: hidden; }
+
+:root {
+    --primary: #1e88e5;
+    --bg: #f2f4f8;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --shadow: 0 10px 25px rgba(0,0,0,0.12);
+    --radius: 18px;
+}
+
+body.dark {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* HEADER */
+header {
+    background: linear-gradient(135deg, var(--primary), #1565c0);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+#themeToggle {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.2em;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* NAVEGACIÓN */
+.nav-buttons {
+    display: flex;
+    padding: 15px;
+    gap: 10px;
+    background: var(--bg);
+}
+
+.nav-button {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.nav-button:hover {
+    opacity: 0.9;
+}
+
+/* CARRUSEL SIMPLE QUE SÍ FUNCIONA */
+.carousel-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    width: 300%;
+}
+
+.carousel-slide {
+    flex: 0 0 33.333%;
+    width: 33.333%;
+    padding: 10px;
+}
+
+.card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 25px;
+    margin: 0;
+    user-select: none;
+}
+
+/* GUARDIAS */
+.guardias {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+@media (min-width: 768px) {
+    .guardias {
+        flex-direction: row;
+    }
+}
+
+.guardia {
+    flex: 1;
+    text-align: center;
+    background: rgba(0,0,0,0.05);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+body.dark .guardia {
+    background: rgba(255,255,255,0.06);
+}
+
+.icono { font-size: 2.5em; margin-bottom: 10px; }
+.nombre { font-size: 1.2em; font-weight: 800; margin: 5px 0; }
+.dias { font-size: 0.9em; color: var(--muted); margin: 5px 0; }
+.horario { font-weight: bold; font-size: 0.95em; margin: 5px 0; }
+.estado { font-size: 0.8em; margin-top: 5px; }
+
+/* INDICADORES */
+.indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+    padding: 0 10px;
+}
+
+.indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+.indicator.active {
+    opacity: 1;
+    background: var(--primary);
+    transform: scale(1.3);
+}
+
+.hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9em;
+    margin: 10px 0 30px;
+    padding: 10px;
+}
+
+/* SECCIONES */
+.section {
+    background: var(--card);
+    border-radius: var(--radius);
+    margin: 20px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
+
+.section h3 {
+    margin-bottom: 15px;
+    color: var(--primary);
+}
+
+/* CALENDARIO */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 10px;
+}
+
+.calendar-day {
+    font-size: 0.8em;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.04);
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.day-number {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.weekday { background: rgba(30,136,229,0.08); }
+.weekend { background: rgba(0,0,0,0.02); color: var(--muted); }
+body.dark .weekday { background: rgba(30,136,229,0.18); }
+body.dark .weekend { background: rgba(255,255,255,0.03); }
+
+.guardia-info {
+    font-size: 0.7em;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+/* PERSONAS */
+.personas-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+@media (min-width: 480px) {
+    .personas-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.persona {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.03);
+}
+
+/* HISTORIAL */
+.history-item {
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+}
+</style>
 </head>
 <body>
-    <button id="themeToggle">🌙</button>
-    
-    <header>
-        <h1>Guardias Alsi</h1>
-        <div id="subtitle">Cargando...</div>
-    </header>
-    
-    <div class="nav-buttons">
-        <button class="nav-button" id="prevBtn">⬅ Anterior</button>
-        <button class="nav-button" id="nextBtn">Siguiente ➡</button>
-    </div>
-    
-    <div class="container">
-        <!-- CARRUSEL -->
-        <div class="carousel-wrapper">
-            <div class="carousel" id="carousel">
-                <!-- Slides se generan dinámicamente -->
-            </div>
-        </div>
-        
-        <div class="indicators" id="indicators">
-            <!-- Indicadores se generan dinámicamente -->
-        </div>
-        
-        <div class="hint">← Desliza con el dedo para cambiar de semana →</div>
-        
-        <!-- CALENDARIO -->
-        <div class="section" id="calendarSection">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <button class="nav-button" onclick="changeMonth(-1)" style="padding: 8px 12px; flex: 0 0 auto;">◀</button>
-                <h3 id="monthTitle">Enero 2024</h3>
-                <button class="nav-button" onclick="changeMonth(1)" style="padding: 8px 12px; flex: 0 0 auto;">▶</button>
-            </div>
-            <div class="calendar-grid" id="calendar">
-                <!-- Días del calendario se generan dinámicamente -->
-            </div>
-        </div>
-        
-        <!-- PERSONAS -->
-        <div class="section">
-            <h3>👥 Personal Actual</h3>
-            <div class="personas-grid" id="personas">
-                <!-- Personas se generan dinámicamente -->
-            </div>
-        </div>
-        
-        <!-- HISTORIAL -->
-        <div class="section">
-            <h3>📜 Historial</h3>
-            <div id="history">
-                <!-- Historial se genera dinámicamente -->
-            </div>
-        </div>
-    </div>
+<button id="themeToggle">🌙</button>
 
-    <script>
-        // ========== DATOS INICIALES ==========
-        let electricos = JSON.parse(localStorage.ordenElectricos || '["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"]');
-        let mecanicos = JSON.parse(localStorage.ordenMecanicos || '["Ramon","Traian","Manu","Fran Alba","Cele","Santy"]');
-        let estados = JSON.parse(localStorage.estados || "{}");
-        let history = JSON.parse(localStorage.history || "[]");
-        let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
-        
-        // ========== VARIABLES DEL CARRUSEL ==========
-        let currentWeek = 0; // Semana actual (0 = esta semana)
-        let currentMonth = new Date(); // Mes actual para calendario
-        let currentSlide = 1; // Slide actual (0: anterior, 1: actual, 2: siguiente)
-        
-        // ========== ELEMENTOS DOM ==========
-        const carousel = document.getElementById('carousel');
-        const indicators = document.getElementById('indicators');
-        const subtitle = document.getElementById('subtitle');
-        
-        // ========== FUNCIONES DE FECHAS ==========
-        function getMonday(date) {
-            const d = new Date(date);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
+<header>
+    <h1>Guardias Alsi</h1>
+    <div id="subtitle">Cargando...</div>
+</header>
+
+<div class="nav-buttons">
+    <button class="nav-button" id="prevBtn">⬅ Anterior</button>
+    <button class="nav-button" id="nextBtn">Siguiente ➡</button>
+</div>
+
+<div class="carousel-container">
+    <div class="carousel-track" id="carouselTrack"></div>
+    <div class="indicators" id="indicators"></div>
+    <div class="hint">← Desliza con el dedo para cambiar de semana →</div>
+</div>
+
+<div class="section">
+    <div class="calendar-header">
+        <button class="nav-button" onclick="changeMonth(-1)" style="padding: 8px 12px;">◀</button>
+        <h3 id="monthTitle">Enero 2024</h3>
+        <button class="nav-button" onclick="changeMonth(1)" style="padding: 8px 12px;">▶</button>
+    </div>
+    <div class="calendar-grid" id="calendar"></div>
+</div>
+
+<div class="section">
+    <h3>👥 Personal Actual</h3>
+    <div class="personas-grid" id="personas"></div>
+</div>
+
+<div class="section">
+    <h3>📜 Historial</h3>
+    <div id="history"></div>
+</div>
+
+<script>
+// ============================================
+// VARIABLES GLOBALES
+// ============================================
+let electricos = JSON.parse(localStorage.ordenElectricos || '["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"]');
+let mecanicos = JSON.parse(localStorage.ordenMecanicos || '["Ramon","Traian","Manu","Fran Alba","Cele","Santy"]');
+let estados = JSON.parse(localStorage.estados || "{}");
+let history = JSON.parse(localStorage.history || "[]");
+let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
+
+let currentWeek = 0; // 0 = semana actual, -1 = anterior, +1 = siguiente
+let currentMonth = new Date();
+let currentSlide = 1; // 0:anterior, 1:actual, 2:siguiente
+
+// ============================================
+// FUNCIONES DE FECHAS
+// ============================================
+function obtenerLunes(fecha) {
+    const d = new Date(fecha);
+    const dia = d.getDay();
+    const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+}
+
+function calcularNumeroSemana(fecha) {
+    const lunes = obtenerLunes(fecha);
+    const lunesBase = obtenerLunes(new Date(2024, 0, 1));
+    const diff = lunes - lunesBase;
+    return Math.floor(diff / (7 * 24 * 60 * 60 * 1000));
+}
+
+function formatearFecha(fecha) {
+    return fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit'
+    });
+}
+
+function formatearFechaCompleta(fecha) {
+    return fecha.toLocaleDateString('es-ES', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short'
+    });
+}
+
+// ============================================
+// FUNCIONES DE GUARDIAS
+// ============================================
+function obtenerActivos(lista) {
+    return lista.filter(persona => !estados[persona] || estados[persona] === "activo");
+}
+
+function obtenerGuardia(lista, semana) {
+    const activos = obtenerActivos(lista);
+    if (activos.length === 0) return "Nadie";
+    
+    // Verificar override manual
+    const semanaKey = semana.toString();
+    if (manualOverrides[semanaKey]) {
+        const tipo = lista === electricos ? 'electrico' : 'mecanico';
+        if (manualOverrides[semanaKey][tipo]) {
+            return manualOverrides[semanaKey][tipo];
         }
+    }
+    
+    // Rotación automática
+    const indice = ((semana % activos.length) + activos.length) % activos.length;
+    return activos[indice];
+}
+
+function obtenerEstadoTexto(estado) {
+    const estados = {
+        'activo': 'Activo',
+        'vacaciones': 'Vacaciones',
+        'viaje': 'Viaje',
+        'baja': 'Baja',
+        'inactivo': 'Inactivo'
+    };
+    return estados[estado] || 'Activo';
+}
+
+// ============================================
+// RENDERIZAR TODO
+// ============================================
+function renderizarTodo() {
+    renderizarCarousel();
+    renderizarCalendario();
+    renderizarPersonas();
+    renderizarHistorial();
+}
+
+// ============================================
+// CARRUSEL - SIMPLE Y FUNCIONAL
+// ============================================
+function renderizarCarousel() {
+    const hoy = new Date();
+    const semanaHoy = calcularNumeroSemana(hoy);
+    
+    // Calcular fecha base (lunes de la semana actual + desplazamiento)
+    const fechaBase = obtenerLunes(hoy);
+    fechaBase.setDate(fechaBase.getDate() + (currentWeek * 7));
+    
+    let carouselHTML = '';
+    let indicatorsHTML = '';
+    
+    // Crear 3 slides: anterior, actual, siguiente
+    for (let i = -1; i <= 1; i++) {
+        const semanaDesplazada = currentWeek + i;
+        const numeroSemana = semanaHoy + semanaDesplazada;
         
-        function getWeekNumber(date) {
-            const monday = getMonday(date);
-            const baseMonday = getMonday(new Date(2024, 0, 1));
-            const diff = monday - baseMonday;
-            return Math.floor(diff / (7 * 24 * 60 * 60 * 1000));
-        }
+        // Calcular fechas de esta slide
+        const inicio = new Date(fechaBase);
+        inicio.setDate(inicio.getDate() + (i * 7));
+        const fin = new Date(inicio);
+        fin.setDate(fin.getDate() + 4);
         
-        function formatDate(date) {
-            return date.toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: '2-digit'
-            });
-        }
+        // Obtener guardias
+        const electrico = obtenerGuardia(electricos, numeroSemana);
+        const mecanico = obtenerGuardia(mecanicos, numeroSemana);
+        const tieneOverride = manualOverrides[numeroSemana.toString()];
         
-        function formatFullDate(date) {
-            return date.toLocaleDateString('es-ES', {
-                weekday: 'short',
-                day: '2-digit',
-                month: '2-digit'
-            });
-        }
+        // Estado visual
+        const estadoElec = estados[electrico] || 'activo';
+        const estadoMec = estados[mecanico] || 'activo';
+        const colorOverride = tieneOverride ? '#8b5cf6' : '';
+        const colorActivo = '#10b981';
+        const colorInactivo = '#6b7280';
         
-        // ========== FUNCIONES DE GUARDIAS ==========
-        function getActivePeople(list) {
-            return list.filter(person => !estados[person] || estados[person] === "activo");
-        }
-        
-        function getGuardia(list, weekNumber) {
-            const active = getActivePeople(list);
-            if (active.length === 0) return "Nadie";
-            
-            const semanaKey = weekNumber.toString();
-            if (manualOverrides[semanaKey]) {
-                const tipo = list === electricos ? 'electrico' : 'mecanico';
-                if (manualOverrides[semanaKey][tipo]) {
-                    return manualOverrides[semanaKey][tipo];
-                }
-            }
-            
-            const index = ((weekNumber % active.length) + active.length) % active.length;
-            return active[index];
-        }
-        
-        function getEstadoTexto(estado) {
-            const map = {
-                'activo': 'Activo',
-                'vacaciones': 'Vacaciones',
-                'viaje': 'Viaje',
-                'baja': 'Baja',
-                'inactivo': 'Inactivo'
-            };
-            return map[estado] || 'Activo';
-        }
-        
-        // ========== RENDERIZAR CARRUSEL ==========
-        function renderCarousel() {
-            const hoy = new Date();
-            const semanaActual = getWeekNumber(hoy);
-            
-            // Calcular fechas para cada slide
-            const slides = [
-                { offset: -1, label: "Anterior" },
-                { offset: 0, label: "Actual" },
-                { offset: 1, label: "Siguiente" }
-            ];
-            
-            let carouselHTML = '';
-            let indicatorsHTML = '';
-            
-            slides.forEach((slide, index) => {
-                const weekOffset = currentWeek + slide.offset;
-                const weekNumber = semanaActual + weekOffset;
-                
-                // Calcular fechas de la semana
-                const fechaBase = getMonday(hoy);
-                fechaBase.setDate(fechaBase.getDate() + (weekOffset * 7));
-                
-                const inicio = new Date(fechaBase);
-                const fin = new Date(inicio);
-                fin.setDate(fin.getDate() + 4);
-                
-                // Obtener guardias
-                const elecGuardia = getGuardia(electricos, weekNumber);
-                const mecGuardia = getGuardia(mecanicos, weekNumber);
-                const tieneOverride = manualOverrides[weekNumber.toString()];
-                
-                // Renderizar slide
-                carouselHTML += `
-                    <div class="carousel-slide">
-                        <div class="card">
-                            <h2 style="margin-bottom: 10px; color: var(--primary);">
-                                ${formatDate(inicio)} - ${formatDate(fin)}
-                                ${tieneOverride ? ' 🔄' : ''}
-                            </h2>
-                            <div class="guardias-container">
-                                <div class="guardia">
-                                    <div class="icono">⚡</div>
-                                    <div class="nombre">${elecGuardia}</div>
-                                    <div class="detalles">Lunes a Viernes</div>
-                                    <div class="detalles" style="font-weight: bold;">15:30 – 19:00</div>
-                                    <div class="detalles" style="color: ${tieneOverride ? '#8b5cf6' : '#10b981'}; font-size: 0.8em;">
-                                        ${getEstadoTexto(estados[elecGuardia] || 'activo')}
-                                    </div>
-                                </div>
-                                <div class="guardia">
-                                    <div class="icono">🔧</div>
-                                    <div class="nombre">${mecGuardia}</div>
-                                    <div class="detalles">Lunes a Viernes</div>
-                                    <div class="detalles" style="font-weight: bold;">15:30 – 19:00</div>
-                                    <div class="detalles" style="color: ${tieneOverride ? '#8b5cf6' : '#10b981'}; font-size: 0.8em;">
-                                        ${getEstadoTexto(estados[mecGuardia] || 'activo')}
-                                    </div>
-                                </div>
+        // HTML de la slide
+        carouselHTML += `
+            <div class="carousel-slide">
+                <div class="card">
+                    <h2 style="margin-bottom: 15px; color: var(--primary);">
+                        ${formatearFecha(inicio)} - ${formatearFecha(fin)}
+                        ${tieneOverride ? ' 🔄' : ''}
+                    </h2>
+                    <div class="guardias">
+                        <div class="guardia">
+                            <div class="icono">⚡</div>
+                            <div class="nombre">${electrico}</div>
+                            <div class="dias">Lunes a Viernes</div>
+                            <div class="horario">15:30 – 19:00</div>
+                            <div class="estado" style="color: ${colorOverride || (estadoElec === 'activo' ? colorActivo : colorInactivo)}">
+                                ${obtenerEstadoTexto(estadoElec)}
+                            </div>
+                        </div>
+                        <div class="guardia">
+                            <div class="icono">🔧</div>
+                            <div class="nombre">${mecanico}</div>
+                            <div class="dias">Lunes a Viernes</div>
+                            <div class="horario">15:30 – 19:00</div>
+                            <div class="estado" style="color: ${colorOverride || (estadoMec === 'activo' ? colorActivo : colorInactivo)}">
+                                ${obtenerEstadoTexto(estadoMec)}
                             </div>
                         </div>
                     </div>
-                `;
-                
-                // Renderizar indicador
-                indicatorsHTML += `<div class="indicator ${index === 1 ? 'active' : ''}"></div>`;
-            });
-            
-            // Actualizar DOM
-            carousel.innerHTML = carouselHTML;
-            indicators.innerHTML = indicatorsHTML;
-            
-            // Actualizar subtítulo (semana actual)
-            const fechaBaseActual = getMonday(hoy);
-            fechaBaseActual.setDate(fechaBaseActual.getDate() + (currentWeek * 7));
-            const inicioActual = new Date(fechaBaseActual);
-            const finActual = new Date(inicioActual);
-            finActual.setDate(finActual.getDate() + 4);
-            
-            subtitle.textContent = `${formatDate(inicioActual)} - ${formatDate(finActual)}`;
-            
-            // Posicionar carrusel en slide central
-            setTimeout(() => {
-                carousel.style.transform = `translateX(-${currentSlide * 33.333}%)`;
-            }, 50);
-        }
+                </div>
+            </div>
+        `;
         
-        // ========== CARRUSEL TÁCTIL ==========
-        function setupCarouselTouch() {
-            let isDragging = false;
-            let startPos = 0;
-            let currentPos = 0;
-            let velocity = 0;
-            let lastPos = 0;
-            let lastTime = 0;
-            
-            carousel.addEventListener('touchstart', handleStart);
-            carousel.addEventListener('touchmove', handleMove);
-            carousel.addEventListener('touchend', handleEnd);
-            
-            carousel.addEventListener('mousedown', handleStart);
-            document.addEventListener('mousemove', handleMove);
-            document.addEventListener('mouseup', handleEnd);
-            
-            function handleStart(e) {
-                isDragging = true;
-                startPos = getPosition(e);
-                lastPos = startPos;
-                lastTime = Date.now();
-                carousel.style.transition = 'none';
-                e.preventDefault();
-            }
-            
-            function handleMove(e) {
-                if (!isDragging) return;
-                
-                currentPos = getPosition(e);
-                const deltaPos = currentPos - lastPos;
-                const deltaTime = Date.now() - lastTime;
-                
-                if (deltaTime > 0) {
-                    velocity = deltaPos / deltaTime;
+        // Indicador
+        indicatorsHTML += `<div class="indicator ${i === 0 ? 'active' : ''}"></div>`;
+    }
+    
+    // Actualizar DOM
+    document.getElementById('carouselTrack').innerHTML = carouselHTML;
+    document.getElementById('indicators').innerHTML = indicatorsHTML;
+    
+    // Actualizar subtítulo con fecha actual
+    const inicioActual = new Date(fechaBase);
+    const finActual = new Date(inicioActual);
+    finActual.setDate(finActual.getDate() + 4);
+    document.getElementById('subtitle').textContent = 
+        `${formatearFecha(inicioActual)} - ${formatearFecha(finActual)}`;
+    
+    // Posicionar carrusel en slide central
+    const track = document.getElementById('carouselTrack');
+    setTimeout(() => {
+        track.style.transform = `translateX(-33.333%)`;
+        currentSlide = 1;
+    }, 50);
+}
+
+// ============================================
+// CARRUSEL TÁCTIL - ESTA VERSIÓN SÍ FUNCIONA
+// ============================================
+function configurarCarouselTactil() {
+    const track = document.getElementById('carouselTrack');
+    let isDragging = false;
+    let startX = 0;
+    let currentX = 0;
+    let translateX = 0;
+    
+    // Eventos táctiles
+    track.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        startX = e.touches[0].clientX;
+        track.style.transition = 'none';
+        e.preventDefault();
+    });
+    
+    track.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        
+        // Mover el carrusel proporcionalmente
+        translateX = -33.333 + (diff / window.innerWidth * 100);
+        track.style.transform = `translateX(${translateX}%)`;
+        
+        e.preventDefault();
+    });
+    
+    track.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const diff = currentX - startX;
+        const threshold = window.innerWidth * 0.15; // 15% del ancho
+        
+        // Determinar dirección
+        if (Math.abs(diff) > threshold) {
+            if (diff > 0) {
+                // Deslizó a la derecha -> semana anterior
+                if (currentSlide > 0) {
+                    currentWeek--;
+                    renderizarTodo();
+                    return;
                 }
-                
-                // Mover carrusel
-                const offset = currentPos - startPos;
-                const translateX = -currentSlide * 33.333 + (offset / window.innerWidth * 100);
-                carousel.style.transform = `translateX(${translateX}%)`;
-                
-                lastPos = currentPos;
-                lastTime = Date.now();
-                e.preventDefault();
-            }
-            
-            function handleEnd() {
-                if (!isDragging) return;
-                isDragging = false;
-                
-                const offset = currentPos - startPos;
-                const threshold = window.innerWidth * 0.15; // 15% del ancho
-                
-                // Determinar si cambiar de slide
-                if (Math.abs(offset) > threshold || Math.abs(velocity) > 0.3) {
-                    if (offset > 0 || velocity > 0) {
-                        // Deslizó a la derecha -> slide anterior
-                        if (currentSlide > 0) {
-                            currentWeek--;
-                            currentSlide = 0;
-                        }
-                    } else {
-                        // Deslizó a la izquierda -> slide siguiente
-                        if (currentSlide < 2) {
-                            currentWeek++;
-                            currentSlide = 2;
-                        }
-                    }
-                }
-                
-                // Volver a slide central
-                currentSlide = 1;
-                carousel.style.transition = 'transform 0.3s ease';
-                carousel.style.transform = `translateX(-33.333%)`;
-                
-                // Si cambió la semana, re-renderizar
-                if (Math.abs(offset) > threshold || Math.abs(velocity) > 0.3) {
-                    setTimeout(() => {
-                        renderCarousel();
-                        renderCalendar();
-                        renderPersonas();
-                        renderHistory();
-                    }, 300);
+            } else {
+                // Deslizó a la izquierda -> semana siguiente
+                if (currentSlide < 2) {
+                    currentWeek++;
+                    renderizarTodo();
+                    return;
                 }
             }
-            
-            function getPosition(e) {
-                return e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+        }
+        
+        // Si no cambió, volver a posición central
+        track.style.transition = 'transform 0.3s ease';
+        track.style.transform = `translateX(-33.333%)`;
+    });
+    
+    // Eventos de ratón para pruebas
+    track.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        track.style.transition = 'none';
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        currentX = e.clientX;
+        const diff = currentX - startX;
+        translateX = -33.333 + (diff / window.innerWidth * 100);
+        track.style.transform = `translateX(${translateX}%)`;
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const diff = currentX - startX;
+        const threshold = window.innerWidth * 0.15;
+        
+        if (Math.abs(diff) > threshold) {
+            if (diff > 0) {
+                currentWeek--;
+            } else {
+                currentWeek++;
             }
-        }
-        
-        // ========== RENDERIZAR CALENDARIO ==========
-        function renderCalendar() {
-            const year = currentMonth.getFullYear();
-            const month = currentMonth.getMonth();
-            
-            // Actualizar título del mes
-            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                               'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-            document.getElementById('monthTitle').textContent = `${monthNames[month]} ${year}`;
-            
-            // Calcular primer y último día del mes
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            
-            // Calcular día de inicio (domingo de la semana que contiene el primer día)
-            const startDate = new Date(firstDay);
-            const startDay = startDate.getDay();
-            const daysToSubtract = startDay === 0 ? 6 : startDay - 1;
-            startDate.setDate(startDate.getDate() - daysToSubtract);
-            
-            // Calcular día final (sábado de la semana que contiene el último día)
-            const endDate = new Date(lastDay);
-            const endDay = endDate.getDay();
-            const daysToAdd = endDay === 0 ? 0 : 7 - endDay;
-            endDate.setDate(endDate.getDate() + daysToAdd);
-            
-            // Generar días
-            let calendarHTML = '';
-            let currentDate = new Date(startDate);
-            
-            while (currentDate <= endDate) {
-                const dayMonth = currentDate.getMonth();
-                const isCurrentMonth = dayMonth === month;
-                const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-                const isToday = currentDate.toDateString() === new Date().toDateString();
-                
-                // Calcular semana y guardias
-                const weekNumber = getWeekNumber(currentDate);
-                const elecGuardia = getGuardia(electricos, weekNumber);
-                const mecGuardia = getGuardia(mecanicos, weekNumber);
-                const tieneOverride = manualOverrides[weekNumber.toString()];
-                const isWorkDay = currentDate.getDay() >= 1 && currentDate.getDay() <= 5;
-                
-                let dayHTML = `
-                    <div class="day-number">${currentDate.getDate()}</div>
-                `;
-                
-                if (isWorkDay && isCurrentMonth) {
-                    dayHTML += `
-                        <div class="guardia-info">
-                            <div style="color: ${tieneOverride ? '#8b5cf6' : '#10b981'}">⚡ ${elecGuardia}</div>
-                            <div style="color: ${tieneOverride ? '#8b5cf6' : '#10b981'}">🔧 ${mecGuardia}</div>
-                        </div>
-                    `;
-                }
-                
-                const classes = [
-                    'calendar-day',
-                    isCurrentMonth ? '' : 'outside',
-                    isWeekend ? 'weekend' : 'weekday'
-                ].filter(c => c).join(' ');
-                
-                calendarHTML += `
-                    <div class="${classes}">
-                        ${dayHTML}
-                    </div>
-                `;
-                
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            
-            document.getElementById('calendar').innerHTML = calendarHTML;
-        }
-        
-        function changeMonth(delta) {
-            currentMonth.setMonth(currentMonth.getMonth() + delta);
-            renderCalendar();
-        }
-        
-        // ========== RENDERIZAR PERSONAS ==========
-        function renderPersonas() {
-            let personasHTML = '';
-            
-            // Eléctricos
-            electricos.forEach(persona => {
-                const estado = estados[persona] || 'activo';
-                if (estado !== 'inactivo') {
-                    personasHTML += `
-                        <div class="persona">
-                            <span style="font-size: 1.2em;">⚡</span>
-                            <span>${persona}</span>
-                            <span style="margin-left: auto; font-size: 0.8em; color: ${
-                                estado === 'activo' ? '#10b981' :
-                                estado === 'vacaciones' ? '#f59e0b' :
-                                estado === 'viaje' ? '#8b5cf6' :
-                                estado === 'baja' ? '#ef4444' : '#6b7280'
-                            }">
-                                ${getEstadoTexto(estado)}
-                            </span>
-                        </div>
-                    `;
-                }
-            });
-            
-            // Mecánicos
-            mecanicos.forEach(persona => {
-                const estado = estados[persona] || 'activo';
-                if (estado !== 'inactivo') {
-                    personasHTML += `
-                        <div class="persona">
-                            <span style="font-size: 1.2em;">🔧</span>
-                            <span>${persona}</span>
-                            <span style="margin-left: auto; font-size: 0.8em; color: ${
-                                estado === 'activo' ? '#10b981' :
-                                estado === 'vacaciones' ? '#f59e0b' :
-                                estado === 'viaje' ? '#8b5cf6' :
-                                estado === 'baja' ? '#ef4444' : '#6b7280'
-                            }">
-                                ${getEstadoTexto(estado)}
-                            </span>
-                        </div>
-                    `;
-                }
-            });
-            
-            document.getElementById('personas').innerHTML = personasHTML;
-        }
-        
-        // ========== RENDERIZAR HISTORIAL ==========
-        function renderHistory() {
-            let historyHTML = '';
-            
-            history.slice(0, 10).forEach(item => {
-                historyHTML += `
-                    <div class="history-item">
-                        <span>${item}</span>
-                    </div>
-                `;
-            });
-            
-            document.getElementById('history').innerHTML = historyHTML;
-        }
-        
-        // ========== EVENT LISTENERS ==========
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            currentWeek--;
-            renderCarousel();
-            renderCalendar();
-            renderPersonas();
-            renderHistory();
-        });
-        
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            currentWeek++;
-            renderCarousel();
-            renderCalendar();
-            renderPersonas();
-            renderHistory();
-        });
-        
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-        });
-        
-        // ========== INICIALIZACIÓN ==========
-        function init() {
-            // Cargar tema oscuro
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.body.classList.add('dark');
-            }
-            
-            // Renderizar todo
-            renderCarousel();
-            renderCalendar();
-            renderPersonas();
-            renderHistory();
-            
-            // Configurar carrusel táctil
-            setTimeout(setupCarouselTouch, 100);
-            
-            console.log('Aplicación cargada correctamente');
-        }
-        
-        // Iniciar cuando el DOM esté listo
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
+            renderizarTodo();
         } else {
-            init();
+            track.style.transition = 'transform 0.3s ease';
+            track.style.transform = `translateX(-33.333%)`;
         }
-    </script>
+    });
+}
+
+// ============================================
+// CALENDARIO
+// ============================================
+function renderizarCalendario() {
+    const año = currentMonth.getFullYear();
+    const mes = currentMonth.getMonth();
+    
+    // Actualizar título
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    document.getElementById('monthTitle').textContent = `${meses[mes]} ${año}`;
+    
+    // Calcular primer y último día
+    const primerDia = new Date(año, mes, 1);
+    const ultimoDia = new Date(año, mes + 1, 0);
+    
+    // Calcular inicio del calendario (domingo de la semana que contiene el primer día)
+    const inicio = new Date(primerDia);
+    const diaInicio = inicio.getDay();
+    const diasAtras = diaInicio === 0 ? 6 : diaInicio - 1;
+    inicio.setDate(inicio.getDate() - diasAtras);
+    
+    // Calcular fin del calendario (sábado de la semana que contiene el último día)
+    const fin = new Date(ultimoDia);
+    const diaFin = fin.getDay();
+    const diasAdelante = diaFin === 0 ? 0 : 7 - diaFin;
+    fin.setDate(fin.getDate() + diasAdelante);
+    
+    // Generar días
+    let htmlCalendario = '';
+    let fechaActual = new Date(inicio);
+    
+    while (fechaActual <= fin) {
+        const mesDia = fechaActual.getMonth();
+        const esMesActual = mesDia === mes;
+        const esFinSemana = fechaActual.getDay() === 0 || fechaActual.getDay() === 6;
+        const esDiaLaboral = fechaActual.getDay() >= 1 && fechaActual.getDay() <= 5;
+        
+        // Calcular semana y guardias
+        const semana = calcularNumeroSemana(fechaActual);
+        const electrico = obtenerGuardia(electricos, semana);
+        const mecanico = obtenerGuardia(mecanicos, semana);
+        const tieneOverride = manualOverrides[semana.toString()];
+        
+        let contenido = `<div class="day-number">${fechaActual.getDate()}</div>`;
+        
+        if (esDiaLaboral && esMesActual) {
+            contenido += `
+                <div class="guardia-info">
+                    <div style="color: ${tieneOverride ? '#8b5cf6' : '#10b981'}">⚡ ${electrico}</div>
+                    <div style="color: ${tieneOverride ? '#8b5cf6' : '#10b981'}">🔧 ${mecanico}</div>
+                </div>
+            `;
+        }
+        
+        const clases = [
+            'calendar-day',
+            esMesActual ? '' : 'outside',
+            esFinSemana ? 'weekend' : 'weekday'
+        ].filter(c => c).join(' ');
+        
+        htmlCalendario += `<div class="${clases}">${contenido}</div>`;
+        
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
+    
+    document.getElementById('calendar').innerHTML = htmlCalendario;
+}
+
+function changeMonth(delta) {
+    currentMonth.setMonth(currentMonth.getMonth() + delta);
+    renderizarCalendario();
+}
+
+// ============================================
+// PERSONAS
+// ============================================
+function renderizarPersonas() {
+    let html = '';
+    
+    // Eléctricos
+    electricos.forEach(persona => {
+        const estado = estados[persona] || 'activo';
+        if (estado !== 'inactivo') {
+            const color = estado === 'activo' ? '#10b981' :
+                         estado === 'vacaciones' ? '#f59e0b' :
+                         estado === 'viaje' ? '#8b5cf6' :
+                         estado === 'baja' ? '#ef4444' : '#6b7280';
+            
+            html += `
+                <div class="persona">
+                    <span style="font-size: 1.2em;">⚡</span>
+                    <span>${persona}</span>
+                    <span style="margin-left: auto; font-size: 0.8em; color: ${color}">
+                        ${obtenerEstadoTexto(estado)}
+                    </span>
+                </div>
+            `;
+        }
+    });
+    
+    // Mecánicos
+    mecanicos.forEach(persona => {
+        const estado = estados[persona] || 'activo';
+        if (estado !== 'inactivo') {
+            const color = estado === 'activo' ? '#10b981' :
+                         estado === 'vacaciones' ? '#f59e0b' :
+                         estado === 'viaje' ? '#8b5cf6' :
+                         estado === 'baja' ? '#ef4444' : '#6b7280';
+            
+            html += `
+                <div class="persona">
+                    <span style="font-size: 1.2em;">🔧</span>
+                    <span>${persona}</span>
+                    <span style="margin-left: auto; font-size: 0.8em; color: ${color}">
+                        ${obtenerEstadoTexto(estado)}
+                    </span>
+                </div>
+            `;
+        }
+    });
+    
+    document.getElementById('personas').innerHTML = html;
+}
+
+// ============================================
+// HISTORIAL
+// ============================================
+function renderizarHistorial() {
+    let html = '';
+    
+    history.slice(0, 10).forEach(item => {
+        const [fecha, ...guardias] = item.split(' ');
+        html += `
+            <div class="history-item">
+                <span>${fecha}</span>
+                <span>${guardias.join(' ')}</span>
+            </div>
+        `;
+    });
+    
+    document.getElementById('history').innerHTML = html;
+}
+
+// ============================================
+// EVENT LISTENERS
+// ============================================
+document.getElementById('prevBtn').addEventListener('click', () => {
+    currentWeek--;
+    renderizarTodo();
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+    currentWeek++;
+    renderizarTodo();
+});
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+});
+
+// ============================================
+// INICIALIZACIÓN
+// ============================================
+function inicializar() {
+    // Tema oscuro
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark');
+    }
+    
+    // Renderizar todo
+    renderizarTodo();
+    
+    // Configurar carrusel táctil
+    setTimeout(configurarCarouselTactil, 100);
+    
+    console.log('Aplicación inicializada correctamente');
+}
+
+// Iniciar
+document.addEventListener('DOMContentLoaded', inicializar);
+</script>
 </body>
 </html>
