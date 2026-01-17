@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Guardias Alsi</title>
 
 <!-- ========== META TAGS PWA CORREGIDOS ========== -->
@@ -10,17 +10,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Guardias Alsi">
-<link rel="apple-touch-icon" href="icon-152.png">
-<meta name="msapplication-TileImage" content="icon-144.png">
+<link rel="apple-touch-icon" href="/Guardias/icon-192.png">
+<meta name="msapplication-TileImage" content="/Guardias/icon-144.png">
 <meta name="msapplication-TileColor" content="#1e88e5">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/Guardias/manifest.json">
 <!-- ========== FIN META TAGS PWA ========== -->
 
-<link rel="icon" href="icon-192.png">
+<link rel="icon" href="/Guardias/icon-192.png">
 <style>
 :root{
  --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
@@ -62,7 +60,7 @@ button{
  cursor:pointer;
  transition:opacity 0.3s;
  font-size:16px;
- min-height:44px; /* Tamaño mínimo para PWA */
+ min-height:44px;
 }
 button:hover{opacity:0.9}
 #night{
@@ -101,12 +99,11 @@ button:hover{opacity:0.9}
  padding:10px;
  -webkit-overflow-scrolling: touch;
  scroll-behavior: smooth;
- scrollbar-width: none; /* Firefox */
- -ms-overflow-style: none; /* IE/Edge */
+ scrollbar-width: none;
+ -ms-overflow-style: none;
  touch-action: pan-x pinch-zoom;
 }
 
-/* Ocultar scrollbar completamente en móviles */
 .carousel::-webkit-scrollbar {
  display: none;
  width: 0;
@@ -147,7 +144,6 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 .status-baja{color:#ef4444}
 .status-inactivo{color:#6b7280}
 
-/* Indicador visual para deslizar */
 .carousel-hint {
  text-align: center;
  color: var(--muted);
@@ -156,7 +152,6 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
  padding-bottom: 10px;
 }
 
-/* Indicadores de posición */
 .carousel-indicators {
  display: flex;
  justify-content: center;
@@ -344,18 +339,12 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  }
 }
 
-/* Prevenir zoom en inputs en iOS */
-input, select, textarea {
- font-size: 16px;
-}
-
 /* Mejorar rendimiento táctil */
 .carousel, .calendar-day, button {
  -webkit-transform: translateZ(0);
  transform: translateZ(0);
 }
 
-/* ========== ANIMACIONES ========== */
 @keyframes fadeIn {
  from { opacity: 0; transform: translateY(10px); }
  to { opacity: 1; transform: translateY(0); }
@@ -374,11 +363,6 @@ input, select, textarea {
 #install-button {
  animation: pulse 2s infinite;
 }
-
-#install-button:hover {
- animation: none;
-}
-/* ========== FIN ESTILOS PWA ========== */
 </style>
 </head>
 <body>
@@ -419,85 +403,60 @@ input, select, textarea {
 <div id="historyList"></div>
 </div>
 
-<!-- ========== MANIFEST CORREGIDO (INLINE) ========== -->
-<script type="application/json" id="manifest-data">
-{
- "name": "Guardias Alsi",
- "short_name": "Guardias",
- "description": "Sistema de gestión de guardias",
- "start_url": "/",
- "display": "standalone",
- "background_color": "#1e88e5",
- "theme_color": "#1e88e5",
- "orientation": "portrait-primary",
- "icons": [
-  {
-   "src": "icon-192.png",
-   "sizes": "192x192",
-   "type": "image/png",
-   "purpose": "any maskable"
-  },
-  {
-   "src": "icon-512.png",
-   "sizes": "512x512",
-   "type": "image/png"
-  }
- ]
-}
-</script>
-
-<!-- ========== SCRIPT PWA CORREGIDO ========== -->
+<!-- ========== SCRIPT PWA ========== -->
 <script>
-// PWA Service Worker
+// Registrar Service Worker
 if ('serviceWorker' in navigator) {
  window.addEventListener('load', async () => {
   try {
-   const registration = await navigator.serviceWorker.register('service-worker.js');
-   console.log('ServiceWorker registrado:', registration.scope);
+   // IMPORTANTE: Usa la ruta correcta '/Guardias/service-worker.js'
+   const registration = await navigator.serviceWorker.register('/Guardias/service-worker.js');
+   console.log('ServiceWorker registrado en:', registration.scope);
    
-   // Forzar actualización del service worker
+   // Verificar actualizaciones
+   registration.addEventListener('updatefound', () => {
+    console.log('Nueva versión del Service Worker encontrada');
+   });
+   
+   // Forzar actualización cada vez que se carga
    registration.update();
   } catch (error) {
-   console.log('Error registrando ServiceWorker:', error);
+   console.error('Error registrando ServiceWorker:', error);
   }
  });
 }
 
-// Detectar modo standalone y prevenir bloqueo
+// Detectar modo standalone
 if (window.matchMedia('(display-mode: standalone)').matches) {
  document.body.classList.add('standalone-mode');
- console.log('Aplicación en modo standalone');
+ console.log('Ejecutando en modo PWA standalone');
  
- // Prevenir que el dispositivo se bloquee en PWA
- if ('wakeLock' in navigator) {
-  let wakeLock = null;
-  
-  const requestWakeLock = async () => {
-   try {
+ // Wake Lock para evitar bloqueo de pantalla
+ let wakeLock = null;
+ 
+ const requestWakeLock = async () => {
+  try {
+   if ('wakeLock' in navigator) {
     wakeLock = await navigator.wakeLock.request('screen');
-    console.log('Wake Lock activado para PWA');
-    
-    wakeLock.addEventListener('release', () => {
-     console.log('Wake Lock liberado');
-    });
-   } catch (err) {
-    console.log('Wake Lock no soportado:', err);
+    console.log('Wake Lock activado');
    }
-  };
-  
-  // Solicitar wake lock cuando la app esté visible
-  const handleVisibilityChange = () => {
-   if (wakeLock !== null && document.visibilityState === 'visible') {
-    requestWakeLock();
-   }
-  };
-  
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  requestWakeLock();
- }
+  } catch (err) {
+   console.log('Wake Lock no disponible:', err);
+  }
+ };
+ 
+ // Solicitar wake lock cuando la app esté visible
+ document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && 'wakeLock' in navigator) {
+   requestWakeLock();
+  }
+ });
+ 
+ // Solicitar inicialmente
+ requestWakeLock();
 }
 
-// Instalación PWA mejorada
+// Instalación PWA
 let deferredPrompt;
 let installButton = null;
 
@@ -505,9 +464,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
  e.preventDefault();
  deferredPrompt = e;
  
- // Mostrar botón de instalación después de 5 segundos
+ // Mostrar botón después de 5 segundos
  setTimeout(() => {
-  if (deferredPrompt && !installButton) {
+  if (deferredPrompt && !installButton && !window.matchMedia('(display-mode: standalone)').matches) {
    installButton = document.createElement('button');
    installButton.id = 'install-button';
    installButton.innerHTML = '📱 Instalar App';
@@ -536,10 +495,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
-     console.log('Usuario aceptó instalar');
-     installButton.style.display = 'none';
+     console.log('Usuario instaló la app');
     } else {
-     console.log('Usuario rechazó instalar');
+     console.log('Usuario canceló instalación');
     }
     
     deferredPrompt = null;
@@ -553,9 +511,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
  }, 5000);
 });
 
-// Eliminar botón si ya está instalado
+// Detectar cuando se instala
 window.addEventListener('appinstalled', () => {
- console.log('Aplicación instalada');
+ console.log('Aplicación instalada exitosamente');
  if (installButton && installButton.parentNode) {
   installButton.parentNode.removeChild(installButton);
  }
@@ -563,14 +521,14 @@ window.addEventListener('appinstalled', () => {
 });
 </script>
 
-<!-- ========== CÓDIGO PRINCIPAL CORREGIDO ========== -->
+<!-- ========== CÓDIGO PRINCIPAL ========== -->
 <script>
 // Toggle modo oscuro
 document.getElementById('night').onclick = () => {
  document.body.classList.toggle("dark");
  localStorage.dark = document.body.classList.contains("dark") ? "true" : "false";
  
- // Añadir feedback táctil
+ // Feedback táctil
  if (navigator.vibrate) {
   navigator.vibrate(50);
  }
@@ -585,7 +543,7 @@ let history = JSON.parse(localStorage.history || "[]");
 let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
 let offset = 0;
 let calendarMonth = new Date();
-let currentCardIndex = 1; // Índice de la tarjeta centrada (0, 1, 2)
+let currentCardIndex = 1;
 
 // ========== FUNCIONES BÁSICAS ==========
 const FECHA_BASE = new Date(2024, 0, 1);
@@ -645,7 +603,7 @@ function getEstadoTexto(estado) {
  return estadosMap[estado] || 'Activo';
 }
 
-// ========== RENDERIZAR CARRUSEL MEJORADO ==========
+// ========== RENDERIZAR CARRUSEL ==========
 function render() {
  const hoy = new Date();
  const numeroSemanaActual = calcularNumeroSemana(hoy);
@@ -661,7 +619,6 @@ function render() {
  
  let carouselHTML = '';
  
- // Crear 3 semanas: anterior, actual, siguiente
  for (let i = -1; i <= 1; i++) {
   const semanaOffset = offset + i;
   const numeroSemana = numeroSemanaActual + semanaOffset;
@@ -708,10 +665,8 @@ function render() {
  const carousel = document.getElementById('carousel');
  carousel.innerHTML = carouselHTML;
  
- // Actualizar indicadores
  updateIndicators();
  
- // Scroll a la tarjeta central
  setTimeout(() => {
   const cards = carousel.querySelectorAll('.card');
   if (cards.length > 1) {
@@ -735,7 +690,7 @@ function updateIndicators() {
  }
 }
 
-// ========== GESTIÓN TÁCTIL DEL CARRUSEL MEJORADA ==========
+// ========== GESTIÓN TÁCTIL MEJORADA ==========
 function setupCarouselTouch() {
  const carousel = document.getElementById('carousel');
  if (!carousel) return;
@@ -743,111 +698,68 @@ function setupCarouselTouch() {
  let startX = 0;
  let currentX = 0;
  let isDragging = false;
- let velocity = 0;
- let lastX = 0;
- let lastTime = 0;
- 
- const threshold = 50; // Umbral mínimo para cambiar de semana
- const minVelocity = 0.3; // Velocidad mínima para cambiar
  
  function handleTouchStart(e) {
   isDragging = true;
   startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-  lastX = startX;
-  lastTime = Date.now();
   carousel.style.scrollBehavior = 'auto';
-  e.preventDefault();
  }
  
  function handleTouchMove(e) {
   if (!isDragging) return;
-  
   currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-  const deltaX = currentX - lastX;
-  const currentTime = Date.now();
-  const deltaTime = currentTime - lastTime;
+  const deltaX = currentX - startX;
   
-  if (deltaTime > 0) {
-   velocity = deltaX / deltaTime;
+  // Permitir scroll horizontal
+  if (Math.abs(deltaX) > 5) {
+   e.preventDefault();
   }
-  
-  lastX = currentX;
-  lastTime = currentTime;
-  
-  // Permitir scroll natural
-  carousel.scrollLeft -= deltaX;
-  e.preventDefault();
  }
  
- function handleTouchEnd(e) {
+ function handleTouchEnd() {
   if (!isDragging) return;
-  
   isDragging = false;
   carousel.style.scrollBehavior = 'smooth';
   
   const deltaX = currentX - startX;
-  const currentTime = Date.now();
-  const deltaTime = currentTime - lastTime;
+  const threshold = 50;
   
-  // Calcular velocidad final
-  if (deltaTime > 0) {
-   velocity = (currentX - lastX) / deltaTime;
-  }
-  
-  // Decidir si cambiar de semana basado en velocidad o desplazamiento
-  const shouldChange = Math.abs(velocity) > minVelocity || Math.abs(deltaX) > threshold;
-  
-  if (shouldChange) {
-   if ((deltaX > 0 || velocity > minVelocity) && currentCardIndex > 0) {
+  if (Math.abs(deltaX) > threshold) {
+   if (deltaX > 0 && currentCardIndex > 0) {
     // Deslizó a la derecha -> semana anterior
     offset--;
     currentCardIndex--;
     render();
-    
-    // Feedback táctil
     if (navigator.vibrate) navigator.vibrate(30);
-   } else if ((deltaX < 0 || velocity < -minVelocity) && currentCardIndex < 2) {
+   } else if (deltaX < 0 && currentCardIndex < 2) {
     // Deslizó a la izquierda -> semana siguiente
     offset++;
     currentCardIndex++;
     render();
-    
-    // Feedback táctil
     if (navigator.vibrate) navigator.vibrate(30);
-   } else {
-    // Volver a la posición original
-    const cards = carousel.querySelectorAll('.card');
-    const cardWidth = cards[0].offsetWidth + 14;
-    carousel.scrollLeft = cardWidth * currentCardIndex;
    }
-  } else {
-   // Volver a la posición original si no superó el umbral
-   const cards = carousel.querySelectorAll('.card');
+  }
+  
+  // Volver a posición central
+  const cards = carousel.querySelectorAll('.card');
+  if (cards.length > 0) {
    const cardWidth = cards[0].offsetWidth + 14;
    carousel.scrollLeft = cardWidth * currentCardIndex;
   }
-  
-  // Resetear valores
-  velocity = 0;
-  startX = 0;
-  currentX = 0;
  }
  
  // Eventos táctiles
- carousel.addEventListener('touchstart', handleTouchStart, { passive: false });
+ carousel.addEventListener('touchstart', handleTouchStart, { passive: true });
  carousel.addEventListener('touchmove', handleTouchMove, { passive: false });
- carousel.addEventListener('touchend', handleTouchEnd, { passive: false });
+ carousel.addEventListener('touchend', handleTouchEnd, { passive: true });
  
- // Eventos de ratón para debugging
+ // Eventos de ratón
  carousel.addEventListener('mousedown', handleTouchStart);
  carousel.addEventListener('mousemove', (e) => {
   if (isDragging) handleTouchMove(e);
  });
  carousel.addEventListener('mouseup', handleTouchEnd);
  carousel.addEventListener('mouseleave', handleTouchEnd);
- 
- // Prevenir arrastre de imágenes
- carousel.addEventListener('dragstart', (e) => e.preventDefault());
 }
 
 // ========== CALENDARIO ==========
@@ -995,8 +907,6 @@ document.getElementById('prev').addEventListener('click', () => {
   offset--;
   currentCardIndex--;
   render();
-  
-  // Feedback táctil
   if (navigator.vibrate) navigator.vibrate(30);
  }
 });
@@ -1006,44 +916,33 @@ document.getElementById('next').addEventListener('click', () => {
   offset++;
   currentCardIndex++;
   render();
-  
-  // Feedback táctil
   if (navigator.vibrate) navigator.vibrate(30);
  }
 });
 
-// ========== INICIALIZACIÓN MEJORADA ==========
+// ========== INICIALIZACIÓN ==========
 function initApp() {
- // Renderizar todo
  renderCalendar();
  renderPersonasList();
  logCompletedWeek();
  render();
  
- // Configurar carrusel táctil
  setTimeout(setupCarouselTouch, 100);
  
- // Prevenir comportamientos no deseados en PWA
- if ('standalone' in window.navigator || window.matchMedia('(display-mode: standalone)').matches) {
-  // Prevenir que el teclado se abra innecesariamente
-  document.addEventListener('focusin', (e) => {
-   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-    setTimeout(() => {
-     e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
-   }
-  });
- }
+ // Prevenir pull-to-refresh en PWA
+ let touchStartY = 0;
+ window.addEventListener('touchstart', (e) => {
+  touchStartY = e.touches[0].clientY;
+ }, { passive: true });
  
- // Manejar tecla Escape para salir de modales (si los hubiera)
- document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-   // Aquí puedes añadir lógica para cerrar modales
+ window.addEventListener('touchmove', (e) => {
+  if (window.scrollY === 0 && e.touches[0].clientY > touchStartY && window.matchMedia('(display-mode: standalone)').matches) {
+   e.preventDefault();
   }
- });
+ }, { passive: false });
 }
 
-// Iniciar cuando el DOM esté listo
+// Iniciar la app
 if (document.readyState === 'loading') {
  document.addEventListener('DOMContentLoaded', initApp);
 } else {
@@ -1057,19 +956,6 @@ window.addEventListener('orientationchange', () => {
   renderCalendar();
  }, 300);
 });
-
-// Prevenir recarga accidental en PWA
-let touchStartY = 0;
-window.addEventListener('touchstart', (e) => {
- touchStartY = e.touches[0].clientY;
-});
-
-window.addEventListener('touchmove', (e) => {
- // Prevenir pull-to-refresh en la parte superior
- if (window.scrollY === 0 && e.touches[0].clientY > touchStartY) {
-  e.preventDefault();
- }
-}, { passive: false });
 </script>
 </body>
 </html>
