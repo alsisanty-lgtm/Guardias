@@ -18,6 +18,7 @@ body{
  background:var(--bg);
  color:var(--text);
  -webkit-tap-highlight-color: transparent;
+ overflow-x: hidden;
 }
 header{
  background:linear-gradient(135deg,#1e88e5,#1565c0);
@@ -38,55 +39,67 @@ button{
 .nav{display:flex;justify-content:space-between;padding:10px}
 .container{max-width:960px;margin:auto;padding:10px}
 
-/* ===== TARJETA ÚNICA CON SWIPE ===== */
-.card-container {
+/* ===== CARRUSEL QUE SÍ FUNCIONA ===== */
+.carousel-container {
  position: relative;
  width: 100%;
+ overflow: hidden;
  margin: 0 auto;
- perspective: 1000px;
+ touch-action: pan-y pinch-zoom;
 }
 
-.swipe-card {
- background:var(--card);
- border-radius:var(--radius);
- box-shadow:var(--shadow);
- padding:25px;
- margin:15px;
- position: relative;
- transition: transform 0.3s ease;
- touch-action: pan-y;
+.carousel-track {
+ display: flex;
+ transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+ will-change: transform;
+ padding: 10px 0;
+}
+
+.carousel-slide {
+ flex: 0 0 100%;
+ width: 100%;
+ padding: 0 10px;
+ box-sizing: border-box;
+}
+
+.card {
+ background: var(--card);
+ border-radius: var(--radius);
+ box-shadow: var(--shadow);
+ padding: 25px;
+ margin: 0;
  user-select: none;
 }
 
-.swipe-card.swiping {
- transition: none;
-}
-
-.swipe-indicator {
- text-align: center;
- margin: 15px 0;
- color: var(--muted);
- font-size: 0.9em;
+/* Indicadores */
+.carousel-indicators {
  display: flex;
- align-items: center;
  justify-content: center;
- gap: 10px;
+ gap: 8px;
+ margin: 20px 0 10px;
 }
 
-.arrow {
- font-size: 1.5em;
- opacity: 0.7;
- transition: transform 0.3s;
+.indicator {
+ width: 8px;
+ height: 8px;
+ border-radius: 50%;
+ background: var(--muted);
+ opacity: 0.5;
+ transition: all 0.3s;
+}
+
+.indicator.active {
+ opacity: 1;
+ background: var(--primary);
+ transform: scale(1.3);
 }
 
 .swipe-hint {
  text-align: center;
  color: var(--muted);
  font-size: 0.9em;
- margin: 10px 0;
- padding: 10px;
- background: rgba(30, 136, 229, 0.05);
- border-radius: 10px;
+ margin: 5px 0 15px;
+ padding: 8px;
 }
 
 .guardias{
@@ -192,6 +205,17 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  display:flex;
  justify-content:space-between;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+ .guardias {
+  flex-direction: column;
+ }
+ 
+ .guardia {
+  padding: 20px;
+ }
+}
 </style>
 </head>
 <body>
@@ -205,16 +229,10 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <button id="next">Siguiente ➡</button>
 </div>
 <div class="container">
-<div class="card-container">
- <div class="swipe-indicator">
-  <span class="arrow">◀</span>
-  <span>Semana actual</span>
-  <span class="arrow">▶</span>
- </div>
- <div class="swipe-card" id="swipeCard">
-  <!-- Aquí se renderiza la semana actual -->
- </div>
- <div class="swipe-hint">← Desliza en la tarjeta para cambiar de semana →</div>
+<div class="carousel-container">
+ <div class="carousel-track" id="carouselTrack"></div>
+ <div class="swipe-hint">← Desliza con el dedo para cambiar de semana →</div>
+ <div class="carousel-indicators" id="indicators"></div>
 </div>
 </div>
 
@@ -247,11 +265,15 @@ let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
 let offset = 0;
 let calendarMonth = new Date();
 
-// Variables para el swipe
-let startX = 0;
-let startY = 0;
-let isSwiping = false;
-let swipeCard = document.getElementById('swipeCard');
+// Variables del carrusel
+let currentSlide = 1; // 0: anterior, 1: actual, 2: siguiente
+let track = null;
+let isDragging = false;
+let startPos = 0;
+let currentTranslate = 0;
+let prevTranslate = 0;
+let animationId = null;
+let slideWidth = 0;
 
 // ========== FUNCIONES BÁSICAS ==========
 const FECHA_BASE = new Date(2024, 0, 1);
@@ -297,7 +319,18 @@ const guardia = (l, numeroSemana) => {
  return a[indice];
 };
 
-// ========== RENDERIZAR SEMANA ACTUAL ==========
+function getEstadoTexto(estado) {
+ switch(estado){
+  case 'activo': return 'Activo';
+  case 'vacaciones': return 'Vacaciones';
+  case 'viaje': return 'Viaje';
+  case 'baja': return 'Baja';
+  case 'inactivo': return 'Inactivo';
+  default: return 'Activo';
+ }
+}
+
+// ========== RENDERIZAR CARRUSEL ==========
 function render() {
  const hoy = new Date();
  const numeroSemanaActual = calcularNumeroSemana(hoy);
@@ -311,163 +344,170 @@ function render() {
  
  document.getElementById('subtitle').textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
  
- const numeroSemana = numeroSemanaActual + offset;
- const elecGuardia = guardia(electricos, numeroSemana);
- const mecGuardia = guardia(mecanicos, numeroSemana);
- const tieneOverride = manualOverrides[numeroSemana.toString()];
+ let carouselHTML = '';
  
- swipeCard.innerHTML = `
-  <h3>${fd(fechaInicio)} - ${fd(fechaFin)} ${tieneOverride ? '🔄' : ''}</h3>
-  <div class="guardias">
-   <div class="guardia">
-    <div class="icono">⚡</div>
-    <div class="nombre">${elecGuardia}</div>
-    <div class="days">L–V</div>
-    <div class="time">15:30 – 19:00</div>
-    <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-     ${estados[elecGuardia] ? getEstadoTexto(estados[elecGuardia]) : 'Activo'}
-    </small>
+ // Crear 3 slides
+ for (let i = -1; i <= 1; i++) {
+  const semanaOffset = offset + i;
+  const numeroSemana = numeroSemanaActual + semanaOffset;
+  
+  const semanaInicio = new Date(fechaBase);
+  semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
+  const semanaFin = new Date(semanaInicio);
+  semanaFin.setDate(semanaFin.getDate() + 4);
+  
+  const elecGuardia = guardia(electricos, numeroSemana);
+  const mecGuardia = guardia(mecanicos, numeroSemana);
+  const tieneOverride = manualOverrides[numeroSemana.toString()];
+  
+  carouselHTML += `
+   <div class="carousel-slide">
+    <div class="card">
+     <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
+     <div class="guardias">
+      <div class="guardia">
+       <div class="icono">⚡</div>
+       <div class="nombre">${elecGuardia}</div>
+       <div class="days">L–V</div>
+       <div class="time">15:30 – 19:00</div>
+       <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+        ${estados[elecGuardia] ? getEstadoTexto(estados[elecGuardia]) : 'Activo'}
+       </small>
+      </div>
+      <div class="guardia">
+       <div class="icono">🔧</div>
+       <div class="nombre">${mecGuardia}</div>
+       <div class="days">L–V</div>
+       <div class="time">15:30 – 19:00</div>
+       <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+        ${estados[mecGuardia] ? getEstadoTexto(estados[mecGuardia]) : 'Activo'}
+       </small>
+      </div>
+     </div>
+    </div>
    </div>
-   <div class="guardia">
-    <div class="icono">🔧</div>
-    <div class="nombre">${mecGuardia}</div>
-    <div class="days">L–V</div>
-    <div class="time">15:30 – 19:00</div>
-    <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-     ${estados[mecGuardia] ? getEstadoTexto(estados[mecGuardia]) : 'Activo'}
-    </small>
-   </div>
-  </div>
- `;
+  `;
+ }
+ 
+ track = document.getElementById('carouselTrack');
+ track.innerHTML = carouselHTML;
+ 
+ // Calcular ancho del slide
+ if (track.children.length > 0) {
+  slideWidth = track.children[0].offsetWidth;
+ }
+ 
+ // Posicionar en el slide central
+ setTrackPosition();
+ 
+ // Actualizar indicadores
+ updateIndicators();
  
  renderHistory();
 }
 
-function getEstadoTexto(estado) {
- switch(estado){
-  case 'activo': return 'Activo';
-  case 'vacaciones': return 'Vacaciones';
-  case 'viaje': return 'Viaje';
-  case 'baja': return 'Baja';
-  case 'inactivo': return 'Inactivo';
-  default: return 'Activo';
+function updateIndicators() {
+ const indicators = document.getElementById('indicators');
+ indicators.innerHTML = '';
+ 
+ for (let i = 0; i < 3; i++) {
+  const indicator = document.createElement('div');
+  indicator.className = `indicator ${i === 1 ? 'active' : ''}`;
+  indicators.appendChild(indicator);
  }
 }
 
-// ========== SWIPE DETECTION - ESTA SÍ FUNCIONA ==========
-function setupSwipe() {
- swipeCard = document.getElementById('swipeCard');
+function setTrackPosition() {
+ if (!track) return;
+ track.style.transform = `translateX(-${currentSlide * 100}%)`;
+}
+
+// ========== CARRUSEL TÁCTIL FLUIDO ==========
+function setupCarousel() {
+ track = document.getElementById('carouselTrack');
  
  // Touch events
- swipeCard.addEventListener('touchstart', function(e) {
-  isSwiping = true;
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-  swipeCard.classList.add('swiping');
-  e.preventDefault();
- });
+ track.addEventListener('touchstart', touchStart);
+ track.addEventListener('touchmove', touchMove);
+ track.addEventListener('touchend', touchEnd);
  
- swipeCard.addEventListener('touchmove', function(e) {
-  if (!isSwiping) return;
-  
-  const currentX = e.touches[0].clientX;
-  const currentY = e.touches[0].clientY;
-  const diffX = currentX - startX;
-  const diffY = currentY - startY;
-  
-  // Solo procesar si es un movimiento horizontal (no vertical)
-  if (Math.abs(diffX) > Math.abs(diffY)) {
-   e.preventDefault();
-   
-   // Mover la tarjeta mientras se desliza
-   const movePercent = (diffX / window.innerWidth) * 100;
-   swipeCard.style.transform = `translateX(${movePercent}px)`;
-  }
- });
+ // Mouse events (para pruebas en desktop)
+ track.addEventListener('mousedown', touchStart);
+ document.addEventListener('mousemove', touchMove);
+ document.addEventListener('mouseup', touchEnd);
  
- swipeCard.addEventListener('touchend', function(e) {
-  if (!isSwiping) return;
+ // Prevenir selección de texto
+ track.addEventListener('selectstart', e => e.preventDefault());
+ 
+ function touchStart(e) {
+  if (e.type === 'mousedown') e.preventDefault();
   
-  const endX = e.changedTouches[0].clientX;
-  const diffX = endX - startX;
+  isDragging = true;
+  startPos = getPositionX(e);
+  track.style.transition = 'none';
   
-  // Umbral mínimo para considerar un swipe
-  const threshold = 50;
+  // Iniciar animación
+  animationId = requestAnimationFrame(animation);
+ }
+ 
+ function touchMove(e) {
+  if (!isDragging) return;
   
-  if (Math.abs(diffX) > threshold) {
-   if (diffX > 0) {
-    // Swipe a la derecha -> semana anterior
-    offset--;
-    swipeCard.style.transform = 'translateX(100%)';
+  const currentPosition = getPositionX(e);
+  currentTranslate = prevTranslate + currentPosition - startPos;
+ }
+ 
+ function touchEnd() {
+  if (!isDragging) return;
+  
+  isDragging = false;
+  cancelAnimationFrame(animationId);
+  
+  const movedBy = currentTranslate;
+  
+  // Determinar si fue suficiente para cambiar de slide
+  const threshold = slideWidth * 0.15; // 15% del ancho
+  
+  if (Math.abs(movedBy) > threshold) {
+   if (movedBy > 0) {
+    // Mover a la izquierda -> slide anterior
+    if (currentSlide > 0) {
+     currentSlide--;
+     offset--;
+    }
    } else {
-    // Swipe a la izquierda -> semana siguiente
-    offset++;
-    swipeCard.style.transform = 'translateX(-100%)';
+    // Mover a la derecha -> slide siguiente
+    if (currentSlide < 2) {
+     currentSlide++;
+     offset++;
+    }
    }
-   
-   // Animación y cambio
+  }
+  
+  // Resetear y animar
+  prevTranslate = 0;
+  currentTranslate = 0;
+  track.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+  
+  // Si cambió la semana, re-renderizar
+  if (Math.abs(movedBy) > threshold) {
    setTimeout(() => {
     render();
-    swipeCard.style.transform = 'translateX(0)';
    }, 300);
   } else {
-   // Vuelve a su posición
-   swipeCard.style.transform = 'translateX(0)';
+   setTrackPosition();
   }
-  
-  swipeCard.classList.remove('swiping');
-  isSwiping = false;
- });
+ }
  
- // Mouse events para desarrollo
- swipeCard.addEventListener('mousedown', function(e) {
-  isSwiping = true;
-  startX = e.clientX;
-  startY = e.clientY;
-  swipeCard.classList.add('swiping');
- });
+ function getPositionX(e) {
+  return e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+ }
  
- document.addEventListener('mousemove', function(e) {
-  if (!isSwiping) return;
-  
-  const currentX = e.clientX;
-  const currentY = e.clientY;
-  const diffX = currentX - startX;
-  const diffY = currentY - startY;
-  
-  if (Math.abs(diffX) > Math.abs(diffY)) {
-   const movePercent = (diffX / window.innerWidth) * 100;
-   swipeCard.style.transform = `translateX(${movePercent}px)`;
-  }
- });
- 
- document.addEventListener('mouseup', function(e) {
-  if (!isSwiping) return;
-  
-  const endX = e.clientX;
-  const diffX = endX - startX;
-  const threshold = 50;
-  
-  if (Math.abs(diffX) > threshold) {
-   if (diffX > 0) {
-    offset--;
-    swipeCard.style.transform = 'translateX(100%)';
-   } else {
-    offset++;
-    swipeCard.style.transform = 'translateX(-100%)';
-   }
-   
-   setTimeout(() => {
-    render();
-    swipeCard.style.transform = 'translateX(0)';
-   }, 300);
-  } else {
-   swipeCard.style.transform = 'translateX(0)';
-  }
-  
-  swipeCard.classList.remove('swiping');
-  isSwiping = false;
- });
+ function animation() {
+  if (!isDragging) return;
+  track.style.transform = `translateX(calc(-${currentSlide * 100}% + ${currentTranslate}px))`;
+  requestAnimationFrame(animation);
+ }
 }
 
 // ========== CALENDARIO ==========
@@ -635,12 +675,22 @@ function init() {
  logCompletedWeek();
  render();
  
- // Configurar detección de swipe
- setupSwipe();
+ // Configurar carrusel después de que se renderice
+ setTimeout(() => {
+  setupCarousel();
+ }, 100);
 }
 
 // Iniciar
 init();
+
+// Recalcular al cambiar orientación
+window.addEventListener('orientationchange', () => {
+ setTimeout(() => {
+  render();
+  renderCalendar();
+ }, 300);
+});
 </script>
 </body>
 </html>
