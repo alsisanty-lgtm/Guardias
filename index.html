@@ -4,777 +4,743 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guardias Alsi</title>
+
+<!-- ========== META TAGS PWA ========== -->
+<meta name="theme-color" content="#1e88e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Guardias Alsi">
+<link rel="apple-touch-icon" href="icon-152.png">
+<meta name="msapplication-TileImage" content="icon-144.png">
+<meta name="msapplication-TileColor" content="#1e88e5">
+<meta name="msapplication-config" content="browserconfig.xml">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<!-- ========== FIN META TAGS PWA ========== -->
+
+<link rel="icon" href="icon-192.png">
 <style>
-/* RESET COMPLETO */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { height: 100%; overflow-x: hidden; }
+:root{
+ --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
+ --text:#1f2937;--muted:#6b7280;
+ --shadow:0 10px 25px rgba(0,0,0,.12);
+ --radius:18px;
+}
+body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--muted:#9ca3af}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
+header{
+ background:linear-gradient(135deg,#1e88e5,#1565c0);
+ color:#fff;padding:20px;text-align:center;
+ position:sticky;top:0;z-index:100
+}
+button{
+ background:var(--primary);color:#fff;border:none;
+ padding:10px 16px;border-radius:14px;font-weight:700;
+ cursor:pointer;
+ transition:opacity 0.3s;
+}
+button:hover{opacity:0.9}
+#night{position:fixed;top:12px;right:12px;z-index:200}
+.nav{display:flex;justify-content:space-between;padding:10px}
+.container{max-width:960px;margin:auto;padding:10px}
+.carousel{
+ display:flex;gap:14px;overflow-x:auto;
+ scroll-snap-type:x mandatory;
+ padding-bottom:10px;
+}
+.card{
+ min-width:320px;background:var(--card);
+ border-radius:var(--radius);
+ box-shadow:var(--shadow);
+ padding:20px;scroll-snap-align:center;
+}
+.guardias{display:flex;gap:14px;margin-top:14px}
+.guardia{
+ flex:1;text-align:center;
+ background:rgba(0,0,0,.05);
+ border-radius:14px;padding:14px;
+}
+body.dark .guardia{background:rgba(255,255,255,.06)}
+.icono{font-size:2.2em}
+.nombre{font-size:1.15em;font-weight:800}
+.days{font-size:.85em;color:var(--muted)}
+.time{font-weight:700;font-size:.9em}
+.status-active{color:#10b981}
+.status-vacaciones{color:#f59e0b}
+.status-viaje{color:#8b5cf6}
+.status-baja{color:#ef4444}
+.status-inactivo{color:#6b7280}
 
-:root {
-    --primary: #1e88e5;
-    --bg: #f2f4f8;
-    --card: #ffffff;
-    --text: #1f2937;
-    --muted: #6b7280;
-    --shadow: 0 10px 25px rgba(0,0,0,0.12);
-    --radius: 18px;
+/* ===== CALENDARIO ===== */
+#calendar{
+ margin:20px;background:var(--card);
+ border-radius:var(--radius);padding:16px
+}
+.calendar-head{
+ display:grid;
+ grid-template-columns:repeat(7,1fr);
+ font-size:.7rem;
+ font-weight:700;
+ color:var(--muted);
+ text-align:center;
+ margin-top:8px
+}
+.calendar-grid{
+ display:grid;
+ grid-template-columns:repeat(7,1fr);
+ gap:4px;
+ margin-top:10px
+}
+.calendar-day{
+ font-size:.7rem;text-align:center;
+ padding:6px;border-radius:8px;
+ background:rgba(0,0,0,.04);
+ min-height:70px;
+ display:flex;
+ flex-direction:column;
+ justify-content:flex-start;
+}
+.day-number{
+ font-weight:bold;
+ margin-bottom:3px;
+}
+.weekday{background:rgba(30,136,229,.08);cursor:pointer}
+.weekend{background:rgba(0,0,0,.02);color:var(--muted)}
+.today-week{outline:2px solid var(--primary)}
+body.dark .weekday{background:rgba(30,136,229,.18)}
+body.dark .weekend{background:rgba(255,255,255,.03)}
+.calendar-day.outside{
+ background:rgba(0,0,0,.02);color:var(--muted)
+}
+.guardia-info{
+ font-size:9px;
+ line-height:1.2;
+ margin-top:2px;
 }
 
-body.dark {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
+/* ===== INFO ===== */
+.info-section{
+ margin:20px;background:var(--card);
+ padding:16px;border-radius:var(--radius);
+}
+.info-section h3{margin-top:0}
+.personas-grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+ gap:10px;
+ margin-top:10px;
+}
+.persona-item{
+ padding:8px 12px;
+ border-radius:8px;
+ background:rgba(0,0,0,.03);
+ display:flex;
+ align-items:center;
+ gap:8px;
+}
+.persona-item .icon{font-size:1.2em}
+
+/* ===== HISTORIAL ===== */
+#history{
+ margin:20px;background:var(--card);
+ padding:16px;border-radius:var(--radius)
+}
+.history-item{
+ font-size:.9em;border-bottom:1px dashed rgba(0,0,0,.2);
+ padding:6px 0;
+ display:flex;
+ justify-content:space-between;
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
+@media(max-width:480px){
+ .calendar-day{font-size:.6rem;min-height:60px}
+ .personas-grid{grid-template-columns:1fr}
+ .guardia-info{font-size:8px}
+}
+
+/* ========== ESTILOS PWA ========== */
+/* Estilos para modo standalone (app instalada) */
+.standalone-mode header {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+.standalone-mode #night {
+  top: calc(env(safe-area-inset-top, 12px) + 12px);
+}
+
+/* Mejoras para pantallas táctiles en modo app */
+@media (display-mode: standalone) {
+  button, select, .calendar-day {
+    min-height: 44px; /* Tamaño mínimo para toques */
+  }
+  
+  .guardia {
+    padding: 20px;
+  }
+  
+  /* Mejorar visibilidad en modo app */
+  body {
     -webkit-tap-highlight-color: transparent;
+  }
 }
 
-/* HEADER */
-header {
-    background: linear-gradient(135deg, var(--primary), #1565c0);
-    color: white;
-    padding: 20px;
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+/* Animación para el botón de instalación */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
-#themeToggle {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    background: rgba(255,255,255,0.2);
-    border: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    color: white;
-    font-size: 1.2em;
-    cursor: pointer;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+#install-button {
+  animation: pulse 2s infinite;
 }
 
-/* NAVEGACIÓN */
-.nav-buttons {
-    display: flex;
-    padding: 15px;
-    gap: 10px;
-    background: var(--bg);
+#install-button:hover {
+  animation: none;
 }
-
-.nav-button {
-    flex: 1;
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 12px;
-    font-weight: bold;
-    font-size: 16px;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.nav-button:hover {
-    opacity: 0.9;
-}
-
-/* CARRUSEL SIMPLE QUE SÍ FUNCIONA */
-.carousel-container {
-    width: 100%;
-    overflow: hidden;
-    position: relative;
-    margin: 0 auto;
-}
-
-.carousel-track {
-    display: flex;
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    width: 300%;
-}
-
-.carousel-slide {
-    flex: 0 0 33.333%;
-    width: 33.333%;
-    padding: 10px;
-}
-
-.card {
-    background: var(--card);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 25px;
-    margin: 0;
-    user-select: none;
-}
-
-/* GUARDIAS */
-.guardias {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-@media (min-width: 768px) {
-    .guardias {
-        flex-direction: row;
-    }
-}
-
-.guardia {
-    flex: 1;
-    text-align: center;
-    background: rgba(0,0,0,0.05);
-    border-radius: 14px;
-    padding: 20px;
-}
-
-body.dark .guardia {
-    background: rgba(255,255,255,0.06);
-}
-
-.icono { font-size: 2.5em; margin-bottom: 10px; }
-.nombre { font-size: 1.2em; font-weight: 800; margin: 5px 0; }
-.dias { font-size: 0.9em; color: var(--muted); margin: 5px 0; }
-.horario { font-weight: bold; font-size: 0.95em; margin: 5px 0; }
-.estado { font-size: 0.8em; margin-top: 5px; }
-
-/* INDICADORES */
-.indicators {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin: 20px 0;
-    padding: 0 10px;
-}
-
-.indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--muted);
-    opacity: 0.5;
-    transition: all 0.3s;
-}
-
-.indicator.active {
-    opacity: 1;
-    background: var(--primary);
-    transform: scale(1.3);
-}
-
-.hint {
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.9em;
-    margin: 10px 0 30px;
-    padding: 10px;
-}
-
-/* SECCIONES */
-.section {
-    background: var(--card);
-    border-radius: var(--radius);
-    margin: 20px;
-    padding: 20px;
-    box-shadow: var(--shadow);
-}
-
-.section h3 {
-    margin-bottom: 15px;
-    color: var(--primary);
-}
-
-/* CALENDARIO */
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
-    margin-top: 10px;
-}
-
-.calendar-day {
-    font-size: 0.8em;
-    text-align: center;
-    padding: 8px 4px;
-    border-radius: 8px;
-    background: rgba(0,0,0,0.04);
-    min-height: 70px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-
-.day-number {
-    font-weight: bold;
-    margin-bottom: 3px;
-}
-
-.weekday { background: rgba(30,136,229,0.08); }
-.weekend { background: rgba(0,0,0,0.02); color: var(--muted); }
-body.dark .weekday { background: rgba(30,136,229,0.18); }
-body.dark .weekend { background: rgba(255,255,255,0.03); }
-
-.guardia-info {
-    font-size: 0.7em;
-    line-height: 1.2;
-    margin-top: 2px;
-}
-
-/* PERSONAS */
-.personas-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-@media (min-width: 480px) {
-    .personas-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-.persona {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
-    border-radius: 8px;
-    background: rgba(0,0,0,0.03);
-}
-
-/* HISTORIAL */
-.history-item {
-    padding: 8px 0;
-    border-bottom: 1px dashed rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9em;
-}
+/* ========== FIN ESTILOS PWA ========== */
 </style>
 </head>
 <body>
-<button id="themeToggle">🌙</button>
-
+<button id="night">🌙</button>
 <header>
-    <h1>Guardias Alsi</h1>
-    <div id="subtitle">Cargando...</div>
+<h1>Guardias Alsi</h1>
+<div id="subtitle"></div>
 </header>
-
-<div class="nav-buttons">
-    <button class="nav-button" id="prevBtn">⬅ Anterior</button>
-    <button class="nav-button" id="nextBtn">Siguiente ➡</button>
+<div class="nav">
+<button id="prev">⬅ Anterior</button>
+<button id="next">Siguiente ➡</button>
+</div>
+<div class="container">
+<div class="carousel" id="carousel"></div>
+</div>
+<div id="calendar">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<button onclick="changeMonth(-1)">◀</button>
+<h3 id="calendarTitle"></h3>
+<button onclick="changeMonth(1)">▶</button>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
 </div>
 
-<div class="carousel-container">
-    <div class="carousel-track" id="carouselTrack"></div>
-    <div class="indicators" id="indicators"></div>
-    <div class="hint">← Desliza con el dedo para cambiar de semana →</div>
+<div class="info-section">
+<h3>👥 Personal Actual</h3>
+<div class="personas-grid" id="personasList"></div>
 </div>
 
-<div class="section">
-    <div class="calendar-header">
-        <button class="nav-button" onclick="changeMonth(-1)" style="padding: 8px 12px;">◀</button>
-        <h3 id="monthTitle">Enero 2024</h3>
-        <button class="nav-button" onclick="changeMonth(1)" style="padding: 8px 12px;">▶</button>
-    </div>
-    <div class="calendar-grid" id="calendar"></div>
+<div id="history">
+<h3>📜 Historial de Guardias</h3>
+<div id="historyList"></div>
 </div>
 
-<div class="section">
-    <h3>👥 Personal Actual</h3>
-    <div class="personas-grid" id="personas"></div>
-</div>
-
-<div class="section">
-    <h3>📜 Historial</h3>
-    <div id="history"></div>
-</div>
-
+<!-- ========== SCRIPT PWA ========== -->
 <script>
-// ============================================
-// VARIABLES GLOBALES
-// ============================================
-let electricos = JSON.parse(localStorage.ordenElectricos || '["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"]');
-let mecanicos = JSON.parse(localStorage.ordenMecanicos || '["Ramon","Traian","Manu","Fran Alba","Cele","Santy"]');
-let estados = JSON.parse(localStorage.estados || "{}");
-let history = JSON.parse(localStorage.history || "[]");
-let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
+// ========== PWA INSTALLATION ==========
+let deferredPrompt;
+let installButton = null;
 
-let currentWeek = 0; // 0 = semana actual, -1 = anterior, +1 = siguiente
-let currentMonth = new Date();
-let currentSlide = 1; // 0:anterior, 1:actual, 2:siguiente
+// Crear botón de instalación dinámicamente
+function createInstallButton() {
+  if (installButton) return;
+  
+  installButton = document.createElement('button');
+  installButton.id = 'install-button';
+  installButton.innerHTML = '📱 Instalar App';
+  installButton.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    cursor: pointer;
+    display: none;
+    transition: all 0.3s;
+    font-size: 14px;
+  `;
+  
+  installButton.onclick = installPWA;
+  installButton.onmouseover = () => installButton.style.transform = 'translateY(-2px)';
+  installButton.onmouseout = () => installButton.style.transform = 'translateY(0)';
+  
+  document.body.appendChild(installButton);
+}
 
-// ============================================
-// FUNCIONES DE FECHAS
-// ============================================
+// Evento para detectar cuándo se puede instalar
+window.addEventListener('beforeinstallprompt', (e) => {
+  console.log('beforeinstallprompt fired');
+  e.preventDefault();
+  deferredPrompt = e;
+  createInstallButton();
+  
+  setTimeout(() => {
+    if (installButton && deferredPrompt) {
+      installButton.style.display = 'block';
+      setTimeout(() => {
+        if (installButton) installButton.style.display = 'none';
+      }, 10000);
+    }
+  }, 3000);
+});
+
+// Función para instalar la PWA
+function installPWA() {
+  if (!deferredPrompt) {
+    alert('La aplicación ya está instalada o no se puede instalar en este navegador.');
+    return;
+  }
+  
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((choiceResult) => {
+    if (choiceResult.outcome === 'accepted') {
+      console.log('Usuario aceptó la instalación');
+      if (installButton) {
+        installButton.style.display = 'none';
+        installButton.innerHTML = '✅ Instalada';
+        setTimeout(() => installButton.style.display = 'none', 2000);
+      }
+      document.dispatchEvent(new CustomEvent('appInstalled'));
+    } else {
+      console.log('Usuario rechazó la instalación');
+      if (installButton) {
+        installButton.style.display = 'none';
+        setTimeout(() => {
+          if (installButton && deferredPrompt) installButton.style.display = 'block';
+        }, 30000);
+      }
+    }
+    deferredPrompt = null;
+  });
+}
+
+// Detectar si la app ya está instalada
+window.addEventListener('appinstalled', (e) => {
+  console.log('App instalada exitosamente');
+  deferredPrompt = null;
+  if (installButton) installButton.style.display = 'none';
+  setTimeout(() => {
+    alert('¡App instalada exitosamente! 🎉\n\nAhora puedes acceder a Guardias Alsi desde tu pantalla de inicio.');
+  }, 1000);
+});
+
+// ========== SERVICE WORKER REGISTRATION ==========
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    console.log('Registrando Service Worker...');
+    navigator.serviceWorker.register('service-worker.js')
+      .then(function(registration) {
+        console.log('Service Worker registrado con éxito:', registration.scope);
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('Nueva versión del Service Worker encontrada:', newWorker);
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateNotification();
+            }
+          });
+        });
+      })
+      .catch(function(error) {
+        console.log('Error registrando Service Worker:', error);
+      });
+  });
+}
+
+// Mostrar notificación de actualización
+function showUpdateNotification() {
+  const updateDiv = document.createElement('div');
+  updateDiv.id = 'update-notification';
+  updateDiv.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1001;
+    text-align: center;
+    max-width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  `;
+  
+  updateDiv.innerHTML = `
+    <div style="font-weight: bold;">🔄 Nueva versión disponible</div>
+    <div style="font-size: 0.9em;">Hay una actualización de la app</div>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button id="update-now" style="background: white; color: #FF9800; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">
+        Actualizar ahora
+      </button>
+      <button id="update-later" style="background: transparent; color: white; border: 1px solid white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+        Más tarde
+      </button>
+    </div>
+  `;
+  
+  document.body.appendChild(updateDiv);
+  
+  document.getElementById('update-now').onclick = () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        window.location.reload();
+      });
+    }
+  };
+  
+  document.getElementById('update-later').onclick = () => updateDiv.style.display = 'none';
+  
+  setTimeout(() => {
+    if (updateDiv.parentNode) {
+      updateDiv.style.opacity = '0';
+      updateDiv.style.transition = 'opacity 1s';
+      setTimeout(() => updateDiv.parentNode && updateDiv.remove(), 1000);
+    }
+  }, 30000);
+}
+
+// Detectar modo standalone (app instalada)
+function detectStandaloneMode() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                      window.navigator.standalone === true;
+  if (isStandalone) {
+    console.log('App ejecutándose en modo standalone');
+    document.documentElement.classList.add('standalone-mode');
+    if (CSS.supports('padding-top: env(safe-area-inset-top)')) {
+      document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top)');
+      document.documentElement.style.setProperty('--safe-area-bottom', 'env(safe-area-inset-bottom)');
+    }
+  }
+  return isStandalone;
+}
+
+window.addEventListener('load', () => {
+  detectStandaloneMode();
+  window.matchMedia('(display-mode: standalone)').addListener(detectStandaloneMode);
+});
+
+// ========== OFFLINE DETECTION ==========
+function updateOnlineStatus() {
+  if (!navigator.onLine) showOfflineNotification();
+  else hideOfflineNotification();
+}
+
+function showOfflineNotification() {
+  if (document.getElementById('offline-notification')) return;
+  const offlineDiv = document.createElement('div');
+  offlineDiv.id = 'offline-notification';
+  offlineDiv.style.cssText = `
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f44336;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1002;
+    font-size: 0.9em;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  `;
+  offlineDiv.innerHTML = `<span>⚠️</span><span>Sin conexión - Modo offline</span>`;
+  document.body.appendChild(offlineDiv);
+}
+
+function hideOfflineNotification() {
+  const offlineDiv = document.getElementById('offline-notification');
+  if (offlineDiv) offlineDiv.remove();
+}
+
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+</script>
+<!-- ========== FIN SCRIPT PWA ========== -->
+
+<!-- ========== TU CÓDIGO ORIGINAL ========== -->
+<script>
+// Toggle modo oscuro
+night.onclick=()=>{
+ document.body.classList.toggle("dark");
+ localStorage.dark=document.body.classList.contains("dark");
+};
+if(localStorage.dark==="true") document.body.classList.add("dark");
+
+// Datos iniciales (se sincronizan desde la versión admin)
+let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
+let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
+let estados=JSON.parse(localStorage.estados||"{}");
+let history=JSON.parse(localStorage.history||"[]");
+let manualOverrides=JSON.parse(localStorage.manualOverrides||"{}");
+let offset=0;
+let calendarMonth=new Date();
+
+// ========== FUNCIONES CORREGIDAS ==========
+// FECHA BASE FIJA: Lunes 1 de Enero de 2024
+const FECHA_BASE = new Date(2024, 0, 1);
+const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
+
+// Función para obtener el lunes de cualquier semana
 function obtenerLunes(fecha) {
-    const d = new Date(fecha);
-    const dia = d.getDay();
-    const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
-    return new Date(d.setDate(diff));
+  const d = new Date(fecha);
+  const dia = d.getDay();
+  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
 }
 
+// Función para calcular número de semana desde fecha base
 function calcularNumeroSemana(fecha) {
-    const lunes = obtenerLunes(fecha);
-    const lunesBase = obtenerLunes(new Date(2024, 0, 1));
-    const diff = lunes - lunesBase;
-    return Math.floor(diff / (7 * 24 * 60 * 60 * 1000));
+  const fechaLunes = obtenerLunes(fecha);
+  fechaLunes.setHours(12, 0, 0, 0);
+  
+  const fechaBaseLunes = obtenerLunes(FECHA_BASE);
+  fechaBaseLunes.setHours(12, 0, 0, 0);
+  
+  const diferenciaMs = fechaLunes - fechaBaseLunes;
+  const numeroSemana = Math.floor(diferenciaMs / MS_POR_SEMANA);
+  
+  return numeroSemana;
 }
 
-function formatearFecha(fecha) {
-    return fecha.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit'
-    });
+// Función para formatear fecha
+const fd = d => {
+  const date = new Date(d);
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: '2-digit'
+  });
+};
+
+// Obtener lista de activos
+const activos = l => l.filter(p => !estados[p] || estados[p] === "activo");
+
+// Obtener guardia para una semana específica
+const guardia = (l, numeroSemana) => {
+  const a = activos(l);
+  if (a.length === 0) return "Nadie";
+  
+  // Verificar override manual primero
+  const semanaKey = numeroSemana.toString();
+  if (manualOverrides[semanaKey]) {
+    const tipo = l === electricos ? 'electrico' : 'mecanico';
+    if (manualOverrides[semanaKey][tipo]) {
+      return manualOverrides[semanaKey][tipo];
+    }
+  }
+  
+  // Rotación automática
+  const indice = ((numeroSemana % a.length) + a.length) % a.length;
+  return a[indice];
+};
+
+function getEstadoTexto(estado){
+ switch(estado){
+  case 'activo': return 'Activo';
+  case 'vacaciones': return 'Vacaciones';
+  case 'viaje': return 'Viaje';
+  case 'baja': return 'Baja';
+  case 'inactivo': return 'Inactivo';
+  default: return 'Activo';
+ }
 }
 
-function formatearFechaCompleta(fecha) {
-    return fecha.toLocaleDateString('es-ES', {
-        weekday: 'short',
-        day: '2-digit',
-        month: 'short'
-    });
+// Renderizar lista de personas
+function renderPersonasList() {
+ let html = '';
+ 
+ electricos.forEach(persona => {
+  const estado = estados[persona] || 'activo';
+  if (estado !== 'inactivo') {
+   html += `
+    <div class="persona-item">
+     <span class="icon">⚡</span>
+     <span>${persona}</span>
+     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
+      ${getEstadoTexto(estado)}
+     </span>
+    </div>`;
+  }
+ });
+ 
+ mecanicos.forEach(persona => {
+  const estado = estados[persona] || 'activo';
+  if (estado !== 'inactivo') {
+   html += `
+    <div class="persona-item">
+     <span class="icon">🔧</span>
+     <span>${persona}</span>
+     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
+      ${getEstadoTexto(estado)}
+     </span>
+    </div>`;
+  }
+ });
+ 
+ document.getElementById('personasList').innerHTML = html;
 }
 
-// ============================================
-// FUNCIONES DE GUARDIAS
-// ============================================
-function obtenerActivos(lista) {
-    return lista.filter(persona => !estados[persona] || estados[persona] === "activo");
-}
-
-function obtenerGuardia(lista, semana) {
-    const activos = obtenerActivos(lista);
-    if (activos.length === 0) return "Nadie";
+// ========== CALENDARIO CORREGIDO ==========
+function renderCalendar() {
+  calendarGrid.innerHTML = "";
+  const y = calendarMonth.getFullYear();
+  const m = calendarMonth.getMonth();
+  
+  calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
+  
+  const primerDia = new Date(y, m, 1);
+  const ultimoDia = new Date(y, m + 1, 0);
+  
+  const inicio = new Date(primerDia);
+  const diaSemana = inicio.getDay();
+  const diasAtras = diaSemana === 0 ? 6 : diaSemana - 1;
+  inicio.setDate(inicio.getDate() - diasAtras);
+  
+  const fin = new Date(ultimoDia);
+  const diaSemanaFin = fin.getDay();
+  const diasAdelante = diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin;
+  fin.setDate(fin.getDate() + diasAdelante);
+  
+  let fechaActual = new Date(inicio);
+  while (fechaActual <= fin) {
+    const esMesAnterior = fechaActual.getMonth() < m;
+    const esMesSiguiente = fechaActual.getMonth() > m;
+    const esFueraMes = esMesAnterior || esMesSiguiente;
+    const diaSemana = fechaActual.getDay();
+    const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
     
-    // Verificar override manual
-    const semanaKey = semana.toString();
-    if (manualOverrides[semanaKey]) {
-        const tipo = lista === electricos ? 'electrico' : 'mecanico';
-        if (manualOverrides[semanaKey][tipo]) {
-            return manualOverrides[semanaKey][tipo];
-        }
+    const numeroSemana = calcularNumeroSemana(fechaActual);
+    const elecGuardia = guardia(electricos, numeroSemana);
+    const mecGuardia = guardia(mecanicos, numeroSemana);
+    const tieneOverride = manualOverrides[numeroSemana.toString()];
+    
+    let contenidoHTML = `
+      <div class="day-number">${fechaActual.getDate()}</div>
+    `;
+    
+    if (esDiaLaboral && !esFueraMes) {
+      contenidoHTML += `
+        <div class="guardia-info">
+          <div class="${tieneOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</div>
+          <div class="${tieneOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</div>
+        </div>
+      `;
     }
     
-    // Rotación automática
-    const indice = ((semana % activos.length) + activos.length) % activos.length;
-    return activos[indice];
-}
-
-function obtenerEstadoTexto(estado) {
-    const estados = {
-        'activo': 'Activo',
-        'vacaciones': 'Vacaciones',
-        'viaje': 'Viaje',
-        'baja': 'Baja',
-        'inactivo': 'Inactivo'
-    };
-    return estados[estado] || 'Activo';
-}
-
-// ============================================
-// RENDERIZAR TODO
-// ============================================
-function renderizarTodo() {
-    renderizarCarousel();
-    renderizarCalendario();
-    renderizarPersonas();
-    renderizarHistorial();
-}
-
-// ============================================
-// CARRUSEL - SIMPLE Y FUNCIONAL
-// ============================================
-function renderizarCarousel() {
-    const hoy = new Date();
-    const semanaHoy = calcularNumeroSemana(hoy);
+    const clases = [
+      'calendar-day',
+      esFueraMes ? 'outside' : '',
+      esDiaLaboral ? 'weekday' : 'weekend'
+    ].filter(c => c).join(' ');
     
-    // Calcular fecha base (lunes de la semana actual + desplazamiento)
-    const fechaBase = obtenerLunes(hoy);
-    fechaBase.setDate(fechaBase.getDate() + (currentWeek * 7));
+    calendarGrid.innerHTML += `
+      <div class="${clases}">
+        ${contenidoHTML}
+      </div>
+    `;
     
-    let carouselHTML = '';
-    let indicatorsHTML = '';
-    
-    // Crear 3 slides: anterior, actual, siguiente
-    for (let i = -1; i <= 1; i++) {
-        const semanaDesplazada = currentWeek + i;
-        const numeroSemana = semanaHoy + semanaDesplazada;
-        
-        // Calcular fechas de esta slide
-        const inicio = new Date(fechaBase);
-        inicio.setDate(inicio.getDate() + (i * 7));
-        const fin = new Date(inicio);
-        fin.setDate(fin.getDate() + 4);
-        
-        // Obtener guardias
-        const electrico = obtenerGuardia(electricos, numeroSemana);
-        const mecanico = obtenerGuardia(mecanicos, numeroSemana);
-        const tieneOverride = manualOverrides[numeroSemana.toString()];
-        
-        // Estado visual
-        const estadoElec = estados[electrico] || 'activo';
-        const estadoMec = estados[mecanico] || 'activo';
-        const colorOverride = tieneOverride ? '#8b5cf6' : '';
-        const colorActivo = '#10b981';
-        const colorInactivo = '#6b7280';
-        
-        // HTML de la slide
-        carouselHTML += `
-            <div class="carousel-slide">
-                <div class="card">
-                    <h2 style="margin-bottom: 15px; color: var(--primary);">
-                        ${formatearFecha(inicio)} - ${formatearFecha(fin)}
-                        ${tieneOverride ? ' 🔄' : ''}
-                    </h2>
-                    <div class="guardias">
-                        <div class="guardia">
-                            <div class="icono">⚡</div>
-                            <div class="nombre">${electrico}</div>
-                            <div class="dias">Lunes a Viernes</div>
-                            <div class="horario">15:30 – 19:00</div>
-                            <div class="estado" style="color: ${colorOverride || (estadoElec === 'activo' ? colorActivo : colorInactivo)}">
-                                ${obtenerEstadoTexto(estadoElec)}
-                            </div>
-                        </div>
-                        <div class="guardia">
-                            <div class="icono">🔧</div>
-                            <div class="nombre">${mecanico}</div>
-                            <div class="dias">Lunes a Viernes</div>
-                            <div class="horario">15:30 – 19:00</div>
-                            <div class="estado" style="color: ${colorOverride || (estadoMec === 'activo' ? colorActivo : colorInactivo)}">
-                                ${obtenerEstadoTexto(estadoMec)}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Indicador
-        indicatorsHTML += `<div class="indicator ${i === 0 ? 'active' : ''}"></div>`;
-    }
-    
-    // Actualizar DOM
-    document.getElementById('carouselTrack').innerHTML = carouselHTML;
-    document.getElementById('indicators').innerHTML = indicatorsHTML;
-    
-    // Actualizar subtítulo con fecha actual
-    const inicioActual = new Date(fechaBase);
-    const finActual = new Date(inicioActual);
-    finActual.setDate(finActual.getDate() + 4);
-    document.getElementById('subtitle').textContent = 
-        `${formatearFecha(inicioActual)} - ${formatearFecha(finActual)}`;
-    
-    // Posicionar carrusel en slide central
-    const track = document.getElementById('carouselTrack');
-    setTimeout(() => {
-        track.style.transform = `translateX(-33.333%)`;
-        currentSlide = 1;
-    }, 50);
-}
-
-// ============================================
-// CARRUSEL TÁCTIL - ESTA VERSIÓN SÍ FUNCIONA
-// ============================================
-function configurarCarouselTactil() {
-    const track = document.getElementById('carouselTrack');
-    let isDragging = false;
-    let startX = 0;
-    let currentX = 0;
-    let translateX = 0;
-    
-    // Eventos táctiles
-    track.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        startX = e.touches[0].clientX;
-        track.style.transition = 'none';
-        e.preventDefault();
-    });
-    
-    track.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        
-        currentX = e.touches[0].clientX;
-        const diff = currentX - startX;
-        
-        // Mover el carrusel proporcionalmente
-        translateX = -33.333 + (diff / window.innerWidth * 100);
-        track.style.transform = `translateX(${translateX}%)`;
-        
-        e.preventDefault();
-    });
-    
-    track.addEventListener('touchend', () => {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const diff = currentX - startX;
-        const threshold = window.innerWidth * 0.15; // 15% del ancho
-        
-        // Determinar dirección
-        if (Math.abs(diff) > threshold) {
-            if (diff > 0) {
-                // Deslizó a la derecha -> semana anterior
-                if (currentSlide > 0) {
-                    currentWeek--;
-                    renderizarTodo();
-                    return;
-                }
-            } else {
-                // Deslizó a la izquierda -> semana siguiente
-                if (currentSlide < 2) {
-                    currentWeek++;
-                    renderizarTodo();
-                    return;
-                }
-            }
-        }
-        
-        // Si no cambió, volver a posición central
-        track.style.transition = 'transform 0.3s ease';
-        track.style.transform = `translateX(-33.333%)`;
-    });
-    
-    // Eventos de ratón para pruebas
-    track.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        track.style.transition = 'none';
-        e.preventDefault();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
-        currentX = e.clientX;
-        const diff = currentX - startX;
-        translateX = -33.333 + (diff / window.innerWidth * 100);
-        track.style.transform = `translateX(${translateX}%)`;
-    });
-    
-    document.addEventListener('mouseup', () => {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const diff = currentX - startX;
-        const threshold = window.innerWidth * 0.15;
-        
-        if (Math.abs(diff) > threshold) {
-            if (diff > 0) {
-                currentWeek--;
-            } else {
-                currentWeek++;
-            }
-            renderizarTodo();
-        } else {
-            track.style.transition = 'transform 0.3s ease';
-            track.style.transform = `translateX(-33.333%)`;
-        }
-    });
-}
-
-// ============================================
-// CALENDARIO
-// ============================================
-function renderizarCalendario() {
-    const año = currentMonth.getFullYear();
-    const mes = currentMonth.getMonth();
-    
-    // Actualizar título
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    document.getElementById('monthTitle').textContent = `${meses[mes]} ${año}`;
-    
-    // Calcular primer y último día
-    const primerDia = new Date(año, mes, 1);
-    const ultimoDia = new Date(año, mes + 1, 0);
-    
-    // Calcular inicio del calendario (domingo de la semana que contiene el primer día)
-    const inicio = new Date(primerDia);
-    const diaInicio = inicio.getDay();
-    const diasAtras = diaInicio === 0 ? 6 : diaInicio - 1;
-    inicio.setDate(inicio.getDate() - diasAtras);
-    
-    // Calcular fin del calendario (sábado de la semana que contiene el último día)
-    const fin = new Date(ultimoDia);
-    const diaFin = fin.getDay();
-    const diasAdelante = diaFin === 0 ? 0 : 7 - diaFin;
-    fin.setDate(fin.getDate() + diasAdelante);
-    
-    // Generar días
-    let htmlCalendario = '';
-    let fechaActual = new Date(inicio);
-    
-    while (fechaActual <= fin) {
-        const mesDia = fechaActual.getMonth();
-        const esMesActual = mesDia === mes;
-        const esFinSemana = fechaActual.getDay() === 0 || fechaActual.getDay() === 6;
-        const esDiaLaboral = fechaActual.getDay() >= 1 && fechaActual.getDay() <= 5;
-        
-        // Calcular semana y guardias
-        const semana = calcularNumeroSemana(fechaActual);
-        const electrico = obtenerGuardia(electricos, semana);
-        const mecanico = obtenerGuardia(mecanicos, semana);
-        const tieneOverride = manualOverrides[semana.toString()];
-        
-        let contenido = `<div class="day-number">${fechaActual.getDate()}</div>`;
-        
-        if (esDiaLaboral && esMesActual) {
-            contenido += `
-                <div class="guardia-info">
-                    <div style="color: ${tieneOverride ? '#8b5cf6' : '#10b981'}">⚡ ${electrico}</div>
-                    <div style="color: ${tieneOverride ? '#8b5cf6' : '#10b981'}">🔧 ${mecanico}</div>
-                </div>
-            `;
-        }
-        
-        const clases = [
-            'calendar-day',
-            esMesActual ? '' : 'outside',
-            esFinSemana ? 'weekend' : 'weekday'
-        ].filter(c => c).join(' ');
-        
-        htmlCalendario += `<div class="${clases}">${contenido}</div>`;
-        
-        fechaActual.setDate(fechaActual.getDate() + 1);
-    }
-    
-    document.getElementById('calendar').innerHTML = htmlCalendario;
+    fechaActual.setDate(fechaActual.getDate() + 1);
+  }
 }
 
 function changeMonth(delta) {
-    currentMonth.setMonth(currentMonth.getMonth() + delta);
-    renderizarCalendario();
+  calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+  renderCalendar();
 }
 
-// ============================================
-// PERSONAS
-// ============================================
-function renderizarPersonas() {
-    let html = '';
-    
-    // Eléctricos
-    electricos.forEach(persona => {
-        const estado = estados[persona] || 'activo';
-        if (estado !== 'inactivo') {
-            const color = estado === 'activo' ? '#10b981' :
-                         estado === 'vacaciones' ? '#f59e0b' :
-                         estado === 'viaje' ? '#8b5cf6' :
-                         estado === 'baja' ? '#ef4444' : '#6b7280';
-            
-            html += `
-                <div class="persona">
-                    <span style="font-size: 1.2em;">⚡</span>
-                    <span>${persona}</span>
-                    <span style="margin-left: auto; font-size: 0.8em; color: ${color}">
-                        ${obtenerEstadoTexto(estado)}
-                    </span>
-                </div>
-            `;
-        }
-    });
-    
-    // Mecánicos
-    mecanicos.forEach(persona => {
-        const estado = estados[persona] || 'activo';
-        if (estado !== 'inactivo') {
-            const color = estado === 'activo' ? '#10b981' :
-                         estado === 'vacaciones' ? '#f59e0b' :
-                         estado === 'viaje' ? '#8b5cf6' :
-                         estado === 'baja' ? '#ef4444' : '#6b7280';
-            
-            html += `
-                <div class="persona">
-                    <span style="font-size: 1.2em;">🔧</span>
-                    <span>${persona}</span>
-                    <span style="margin-left: auto; font-size: 0.8em; color: ${color}">
-                        ${obtenerEstadoTexto(estado)}
-                    </span>
-                </div>
-            `;
-        }
-    });
-    
-    document.getElementById('personas').innerHTML = html;
+// Renderizar semana
+function render(){
+ carousel.innerHTML="";
+ const base=lunes(new Date());
+ const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
+ const fin=new Date(ini);fin.setDate(fin.getDate()+4);
+ 
+ // Actualizar título principal
+ document.querySelector('header h1').textContent = `Guardias Alsi`;
+ subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
+ 
+ for(let i=-1;i<=1;i++){
+  const l=new Date(ini);l.setDate(l.getDate()+i*7);
+  const v=new Date(l);v.setDate(v.getDate()+4);
+  const elecGuardia = guardia(electricos,offset+i);
+  const mecGuardia = guardia(mecanicos,offset+i);
+  const weekKey = (offset+i).toString();
+  const hasOverride = manualOverrides[weekKey];
+  
+  carousel.innerHTML+=`
+  <div class="card">
+   <h3>${fd(l)} - ${fd(v)} ${hasOverride?'🔄':''}</h3>
+   <div class="guardias">
+    <div class="guardia">
+     <div class="icono">⚡</div>
+     <div class="nombre">${elecGuardia}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
+     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[elecGuardia])}</small>
+    </div>
+    <div class="guardia">
+     <div class="icono">🔧</div>
+     <div class="nombre">${mecGuardia}</div>
+     <div class="days">L–V</div>
+     <div class="time">15:30 – 19:00</div>
+     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[mecGuardia])}</small>
+    </div>
+   </div>
+  </div>`;
+ }
+ 
+ renderHistory();
+ // Centrar la semana actual
+ requestAnimationFrame(()=>{
+  if(carousel.children[1]){
+   carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
+  }
+ });
 }
 
-// ============================================
-// HISTORIAL
-// ============================================
-function renderizarHistorial() {
-    let html = '';
-    
-    history.slice(0, 10).forEach(item => {
-        const [fecha, ...guardias] = item.split(' ');
-        html += `
-            <div class="history-item">
-                <span>${fecha}</span>
-                <span>${guardias.join(' ')}</span>
-            </div>
-        `;
-    });
-    
-    document.getElementById('history').innerHTML = html;
+function logCompletedWeek(){
+ const now=new Date(),fri=lunes(now);fri.setDate(fri.getDate()+4);
+ if(now<fri)return;
+ const key=fd(lunes(now));
+ if(history.some(h=>h.startsWith(key)))return;
+ history.unshift(`${key} ⚡ ${guardia(electricos,0)} · 🔧 ${guardia(mecanicos,0)}`);
+ history=history.slice(0,30);
+ localStorage.history=JSON.stringify(history);
 }
 
-// ============================================
-// EVENT LISTENERS
-// ============================================
-document.getElementById('prevBtn').addEventListener('click', () => {
-    currentWeek--;
-    renderizarTodo();
-});
-
-document.getElementById('nextBtn').addEventListener('click', () => {
-    currentWeek++;
-    renderizarTodo();
-});
-
-document.getElementById('themeToggle').addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    localStorage.setItem('darkMode', document.body.classList.contains('dark'));
-});
-
-// ============================================
-// INICIALIZACIÓN
-// ============================================
-function inicializar() {
-    // Tema oscuro
-    if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark');
-    }
-    
-    // Renderizar todo
-    renderizarTodo();
-    
-    // Configurar carrusel táctil
-    setTimeout(configurarCarouselTactil, 100);
-    
-    console.log('Aplicación inicializada correctamente');
+function renderHistory(){
+ historyList.innerHTML="";
+ history.forEach(h=>{
+  const [fecha, ...resto] = h.split(' ');
+  const guardias = resto.join(' ');
+  historyList.innerHTML+=`
+   <div class="history-item">
+    <span>${fecha}</span>
+    <span>${guardias}</span>
+   </div>`;
+ });
 }
 
-// Iniciar
-document.addEventListener('DOMContentLoaded', inicializar);
+// Event listeners
+prev.onclick=()=>{offset--;render()};
+next.onclick=()=>{offset++;render()};
+
+// Inicialización
+renderCalendar();
+renderPersonasList();
+logCompletedWeek();
+render();
 </script>
 </body>
 </html>
