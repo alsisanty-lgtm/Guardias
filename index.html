@@ -383,6 +383,12 @@ function setTrackPosition() {
 // ========== CARRUSEL TÁCTIL QUE SÍ FUNCIONA ==========
 function setupCarousel() {
     track = document.getElementById('carouselTrack');
+    console.log('setupCarousel llamado, track:', track);
+    
+    if (!track) {
+        console.error('ERROR: No se encontró el elemento carouselTrack');
+        return;
+    }
     
     // Touch events
     track.addEventListener('touchstart', touchStart);
@@ -399,6 +405,7 @@ function setupCarousel() {
     }
     
     function touchStart(event) {
+        console.log('touchStart, tipo:', event.type);
         if (event.type === 'mousedown') event.preventDefault();
         isDragging = true;
         startPos = getPositionX(event);
@@ -413,6 +420,7 @@ function setupCarousel() {
     }
     
     function touchEnd() {
+        console.log('touchEnd, isDragging:', isDragging);
         if (!isDragging) return;
         isDragging = false;
         cancelAnimationFrame(animationId);
@@ -420,14 +428,18 @@ function setupCarousel() {
         const movedBy = currentTranslate;
         const threshold = window.innerWidth * 0.15; // 15% del ancho
         
+        console.log('Moved by:', movedBy, 'Threshold:', threshold);
+        
         // Si el movimiento fue suficiente, cambiar de slide
         if (Math.abs(movedBy) > threshold) {
             if (movedBy > 0 && currentSlide > 0) {
                 // Swipe a la derecha -> slide anterior
+                console.log('Swipe derecha -> semana anterior');
                 offset--;
                 currentSlide = 0;
             } else if (movedBy < 0 && currentSlide < 2) {
                 // Swipe a la izquierda -> slide siguiente
+                console.log('Swipe izquierda -> semana siguiente');
                 offset++;
                 currentSlide = 2;
             }
@@ -439,6 +451,7 @@ function setupCarousel() {
         setTrackPosition();
         
         if (Math.abs(movedBy) > threshold) {
+            console.log('Cambiando semana, offset nuevo:', offset);
             setTimeout(() => {
                 render();
                 renderCalendar();
@@ -597,13 +610,17 @@ function renderHistory() {
 
 // ========== BOTONES DE NAVEGACIÓN ==========
 document.getElementById('prev').addEventListener('click', () => {
+    console.log('Botón PREV clickeado. Offset antes:', offset);
     offset--;
+    console.log('Offset después:', offset);
     render();
     renderCalendar();
 });
 
 document.getElementById('next').addEventListener('click', () => {
+    console.log('Botón NEXT clickeado. Offset antes:', offset);
     offset++;
+    console.log('Offset después:', offset);
     render();
     renderCalendar();
 });
@@ -618,6 +635,7 @@ if (localStorage.dark === "true") document.body.classList.add("dark");
 
 // ========== INICIALIZACIÓN ==========
 function init() {
+    console.log('=== INICIANDO APLICACIÓN ===');
     renderCalendar();
     renderPersonasList();
     logCompletedWeek();
@@ -633,6 +651,24 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+// ========== DEBUG ==========
+console.log('=== DEBUG INICIAL ===');
+console.log('CarouselTrack encontrado:', document.getElementById('carouselTrack'));
+console.log('Current slide inicial:', currentSlide);
+console.log('Offset inicial:', offset);
+console.log('Ancho ventana:', window.innerWidth);
+console.log('Altura ventana:', window.innerHeight);
+
+// Monitor para eventos táctiles en el body
+document.body.addEventListener('touchstart', (e) => {
+    console.log('Touch en body - target:', e.target.className || e.target.tagName);
+}, true);
+
+// Debug para cuando se redimensiona la ventana
+window.addEventListener('resize', () => {
+    console.log('Ventana redimensionada:', window.innerWidth, 'x', window.innerHeight);
+});
 </script>
 </body>
 </html>
