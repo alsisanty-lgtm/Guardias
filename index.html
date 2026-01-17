@@ -4,21 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guardias Alsi</title>
-
-<!-- ========== META TAGS PWA ========== -->
-<meta name="theme-color" content="#1e88e5">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Guardias Alsi">
-<link rel="apple-touch-icon" href="icon-152.png">
-<meta name="msapplication-TileImage" content="icon-144.png">
-<meta name="msapplication-TileColor" content="#1e88e5">
-<meta name="msapplication-config" content="browserconfig.xml">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="manifest.json">
-<!-- ========== FIN META TAGS PWA ========== -->
-
-<link rel="icon" href="icon-192.png">
 <style>
 :root{
  --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
@@ -27,7 +12,7 @@
  --radius:18px;
 }
 body.dark{--bg:#0f172a;--card:#1e293b;--text:#e5e7eb;--muted:#9ca3af}
-body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text)}
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;}
 header{
  background:linear-gradient(135deg,#1e88e5,#1565c0);
  color:#fff;padding:20px;text-align:center;
@@ -35,66 +20,37 @@ header{
 }
 button{
  background:var(--primary);color:#fff;border:none;
- padding:10px 16px;border-radius:14px;font-weight:700;
- cursor:pointer;
- transition:opacity 0.3s;
+ padding:12px 18px;border-radius:14px;font-weight:700;
+ cursor:pointer;font-size:16px;
 }
-button:hover{opacity:0.9}
-#night{position:fixed;top:12px;right:12px;z-index:200}
-.nav{display:flex;justify-content:space-between;padding:10px}
-.container{max-width:960px;margin:auto;padding:10px}
+#night{position:fixed;top:12px;right:12px;z-index:200;padding:10px;min-height:44px;}
+.nav{display:flex;justify-content:space-between;padding:10px;gap:10px;}
+.container{max-width:960px;margin:auto;padding:10px;}
 
-/* ===== CARRUSEL CON SCROLL TÁCTIL MEJORADO ===== */
-.carousel{
- display:flex;gap:14px;overflow-x:auto;
- scroll-snap-type:x mandatory;
- padding-bottom:10px;
- -webkit-overflow-scrolling: touch;
- scroll-behavior: smooth;
- touch-action: pan-x;
- cursor: grab;
- position: relative;
-}
-.carousel:active {
- cursor: grabbing;
+/* ===== CARRUSEL SIMPLE QUE FUNCIONA ===== */
+.carousel-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
 }
 
-/* Ocultar scrollbar pero mantener funcionalidad */
-.carousel::-webkit-scrollbar {
- height: 6px;
-}
-.carousel::-webkit-scrollbar-track {
- background: rgba(0,0,0,0.05);
- border-radius: 3px;
-}
-.carousel::-webkit-scrollbar-thumb {
- background: var(--primary);
- border-radius: 3px;
- opacity: 0.6;
-}
-.carousel::-webkit-scrollbar-thumb:hover {
- opacity: 1;
+.carousel-track {
+    display: flex;
+    transition: transform 0.4s ease;
+    width: 300%; /* 3 slides */
 }
 
-/* Indicador visual para móviles */
-.carousel::after {
- content: '← Desliza →';
- position: absolute;
- bottom: -25px;
- left: 50%;
- transform: translateX(-50%);
- color: var(--muted);
- font-size: 0.8em;
- white-space: nowrap;
- display: none;
+.carousel-slide {
+    flex: 0 0 33.333%;
+    width: 33.333%;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .card{
- min-width:320px;background:var(--card);
- border-radius:var(--radius);
- box-shadow:var(--shadow);
- padding:20px;scroll-snap-align:center;
- flex-shrink: 0;
+ background:var(--card);border-radius:var(--radius);
+ box-shadow:var(--shadow);padding:20px;
+ min-width:320px;margin:0;
 }
 .guardias{display:flex;gap:14px;margin-top:14px}
 .guardia{
@@ -112,6 +68,37 @@ body.dark .guardia{background:rgba(255,255,255,.06)}
 .status-viaje{color:#8b5cf6}
 .status-baja{color:#ef4444}
 .status-inactivo{color:#6b7280}
+
+/* Indicadores */
+.carousel-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0 10px;
+}
+
+.carousel-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+.carousel-indicator.active {
+    opacity: 1;
+    background: var(--primary);
+    transform: scale(1.3);
+}
+
+.swipe-hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9em;
+    margin: 10px 0 20px;
+    padding: 10px;
+}
 
 /* ===== CALENDARIO ===== */
 #calendar{
@@ -193,80 +180,6 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  display:flex;
  justify-content:space-between;
 }
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:768px){
- .carousel::after {
-  display: block;
- }
- 
- .card {
-  min-width: 85vw;
-  margin: 0 5px;
- }
- 
- .container {
-  padding: 5px;
- }
-}
-
-@media(max-width:480px){
- .calendar-day{font-size:.6rem;min-height:60px}
- .personas-grid{grid-template-columns:1fr}
- .guardia-info{font-size:8px}
- 
- .nav button {
-  padding: 14px 12px;
-  font-size: 0.9em;
-  flex: 1;
-  margin: 0 5px;
-  min-height: 44px;
- }
- 
- .carousel::after {
-  content: '👉 Desliza con el dedo 👈';
-  bottom: -30px;
-  font-size: 0.75em;
- }
-}
-
-/* ========== ESTILOS PWA ========== */
-.standalone-mode header {
-  padding-top: env(safe-area-inset-top, 20px);
-}
-
-.standalone-mode #night {
-  top: calc(env(safe-area-inset-top, 12px) + 12px);
-}
-
-@media (display-mode: standalone) {
-  button, select, .calendar-day {
-    min-height: 44px;
-  }
-  
-  .guardia {
-    padding: 20px;
-  }
-  
-  body {
-    -webkit-tap-highlight-color: transparent;
-  }
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-#install-button {
-  animation: pulse 2s infinite;
-}
-
-#install-button:hover {
-  animation: none;
-}
-/* ========== FIN ESTILOS PWA ========== */
 </style>
 </head>
 <body>
@@ -280,8 +193,13 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <button id="next">Siguiente ➡</button>
 </div>
 <div class="container">
-<div class="carousel" id="carousel"></div>
+<div class="carousel-container">
+    <div class="carousel-track" id="carouselTrack"></div>
+    <div class="swipe-hint">← Desliza con el dedo →</div>
+    <div class="carousel-indicators" id="indicators"></div>
 </div>
+</div>
+
 <div id="calendar">
 <div style="display:flex;justify-content:space-between;align-items:center">
 <button onclick="changeMonth(-1)">◀</button>
@@ -301,648 +219,420 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <div id="historyList"></div>
 </div>
 
-<!-- ========== SCRIPT PWA ========== -->
 <script>
-// ========== PWA INSTALLATION ==========
-let deferredPrompt;
-let installButton = null;
+// ========== CONFIGURACIÓN ==========
+let electricos = JSON.parse(localStorage.ordenElectricos || '["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"]');
+let mecanicos = JSON.parse(localStorage.ordenMecanicos || '["Ramon","Traian","Manu","Fran Alba","Cele","Santy"]');
+let estados = JSON.parse(localStorage.estados || "{}");
+let history = JSON.parse(localStorage.history || "[]");
+let manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
+let offset = 0;
+let calendarMonth = new Date();
 
-// Crear botón de instalación dinámicamente
-function createInstallButton() {
-  if (installButton) return;
-  
-  installButton = document.createElement('button');
-  installButton.id = 'install-button';
-  installButton.innerHTML = '📱 Instalar App';
-  installButton.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 1000;
-    cursor: pointer;
-    display: none;
-    transition: all 0.3s;
-    font-size: 14px;
-  `;
-  
-  installButton.onclick = installPWA;
-  installButton.onmouseover = () => installButton.style.transform = 'translateY(-2px)';
-  installButton.onmouseout = () => installButton.style.transform = 'translateY(0)';
-  
-  document.body.appendChild(installButton);
-}
+// Variables del carrusel
+let currentSlide = 1; // 0:anterior, 1:actual, 2:siguiente
+let track = null;
+let isDragging = false;
+let startPos = 0;
+let currentTranslate = 0;
+let prevTranslate = 0;
+let animationId = null;
 
-// Evento para detectar cuándo se puede instalar
-window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('beforeinstallprompt fired');
-  e.preventDefault();
-  deferredPrompt = e;
-  createInstallButton();
-  
-  setTimeout(() => {
-    if (installButton && deferredPrompt) {
-      installButton.style.display = 'block';
-      setTimeout(() => {
-        if (installButton) installButton.style.display = 'none';
-      }, 10000);
-    }
-  }, 3000);
-});
-
-// Función para instalar la PWA
-function installPWA() {
-  if (!deferredPrompt) {
-    alert('La aplicación ya está instalada o no se puede instalar en este navegador.');
-    return;
-  }
-  
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then((choiceResult) => {
-    if (choiceResult.outcome === 'accepted') {
-      console.log('Usuario aceptó la instalación');
-      if (installButton) {
-        installButton.style.display = 'none';
-        installButton.innerHTML = '✅ Instalada';
-        setTimeout(() => installButton.style.display = 'none', 2000);
-      }
-      document.dispatchEvent(new CustomEvent('appInstalled'));
-    } else {
-      console.log('Usuario rechazó la instalación');
-      if (installButton) {
-        installButton.style.display = 'none';
-        setTimeout(() => {
-          if (installButton && deferredPrompt) installButton.style.display = 'block';
-        }, 30000);
-      }
-    }
-    deferredPrompt = null;
-  });
-}
-
-// Detectar si la app ya está instalada
-window.addEventListener('appinstalled', (e) => {
-  console.log('App instalada exitosamente');
-  deferredPrompt = null;
-  if (installButton) installButton.style.display = 'none';
-  setTimeout(() => {
-    alert('¡App instalada exitosamente! 🎉\n\nAhora puedes acceder a Guardias Alsi desde tu pantalla de inicio.');
-  }, 1000);
-});
-
-// ========== SERVICE WORKER REGISTRATION ==========
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    console.log('Registrando Service Worker...');
-    navigator.serviceWorker.register('service-worker.js')
-      .then(function(registration) {
-        console.log('Service Worker registrado con éxito:', registration.scope);
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          console.log('Nueva versión del Service Worker encontrada:', newWorker);
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateNotification();
-            }
-          });
-        });
-      })
-      .catch(function(error) {
-        console.log('Error registrando Service Worker:', error);
-      });
-  });
-}
-
-// Mostrar notificación de actualización
-function showUpdateNotification() {
-  const updateDiv = document.createElement('div');
-  updateDiv.id = 'update-notification';
-  updateDiv.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #FF9800, #F57C00);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    z-index: 1001;
-    text-align: center;
-    max-width: 90%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  `;
-  
-  updateDiv.innerHTML = `
-    <div style="font-weight: bold;">🔄 Nueva versión disponible</div>
-    <div style="font-size: 0.9em;">Hay una actualización de la app</div>
-    <div style="display: flex; gap: 10px; justify-content: center;">
-      <button id="update-now" style="background: white; color: #FF9800; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">
-        Actualizar ahora
-      </button>
-      <button id="update-later" style="background: transparent; color: white; border: 1px solid white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
-        Más tarde
-      </button>
-    </div>
-  `;
-  
-  document.body.appendChild(updateDiv);
-  
-  document.getElementById('update-now').onclick = () => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        window.location.reload();
-      });
-    }
-  };
-  
-  document.getElementById('update-later').onclick = () => updateDiv.style.display = 'none';
-  
-  setTimeout(() => {
-    if (updateDiv.parentNode) {
-      updateDiv.style.opacity = '0';
-      updateDiv.style.transition = 'opacity 1s';
-      setTimeout(() => updateDiv.parentNode && updateDiv.remove(), 1000);
-    }
-  }, 30000);
-}
-
-// Detectar modo standalone (app instalada)
-function detectStandaloneMode() {
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                      window.navigator.standalone === true;
-  if (isStandalone) {
-    console.log('App ejecutándose en modo standalone');
-    document.documentElement.classList.add('standalone-mode');
-    if (CSS.supports('padding-top: env(safe-area-inset-top)')) {
-      document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top)');
-      document.documentElement.style.setProperty('--safe-area-bottom', 'env(safe-area-inset-bottom)');
-    }
-  }
-  return isStandalone;
-}
-
-window.addEventListener('load', () => {
-  detectStandaloneMode();
-  window.matchMedia('(display-mode: standalone)').addListener(detectStandaloneMode);
-});
-
-// ========== OFFLINE DETECTION ==========
-function updateOnlineStatus() {
-  if (!navigator.onLine) showOfflineNotification();
-  else hideOfflineNotification();
-}
-
-function showOfflineNotification() {
-  if (document.getElementById('offline-notification')) return;
-  const offlineDiv = document.createElement('div');
-  offlineDiv.id = 'offline-notification';
-  offlineDiv.style.cssText = `
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #f44336;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    z-index: 1002;
-    font-size: 0.9em;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  `;
-  offlineDiv.innerHTML = `<span>⚠️</span><span>Sin conexión - Modo offline</span>`;
-  document.body.appendChild(offlineDiv);
-}
-
-function hideOfflineNotification() {
-  const offlineDiv = document.getElementById('offline-notification');
-  if (offlineDiv) offlineDiv.remove();
-}
-
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-updateOnlineStatus();
-</script>
-<!-- ========== FIN SCRIPT PWA ========== -->
-
-<!-- ========== CÓDIGO PRINCIPAL DE LA APLICACIÓN ========== -->
-<script>
-// Toggle modo oscuro
-night.onclick=()=>{
- document.body.classList.toggle("dark");
- localStorage.dark=document.body.classList.contains("dark");
-};
-if(localStorage.dark==="true") document.body.classList.add("dark");
-
-// Datos iniciales (se sincronizan desde la versión admin)
-let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
-let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
-let estados=JSON.parse(localStorage.estados||"{}");
-let history=JSON.parse(localStorage.history||"[]");
-let manualOverrides=JSON.parse(localStorage.manualOverrides||"{}");
-let offset=0;
-let calendarMonth=new Date();
-
-// ========== FUNCIONES CORREGIDAS ==========
-// FECHA BASE FIJA: Lunes 1 de Enero de 2024
+// ========== FUNCIONES BÁSICAS ==========
 const FECHA_BASE = new Date(2024, 0, 1);
 const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
 
-// Función para obtener el lunes de cualquier semana
 function obtenerLunes(fecha) {
-  const d = new Date(fecha);
-  const dia = d.getDay();
-  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
+    const d = new Date(fecha);
+    const dia = d.getDay();
+    const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
 }
 
-// Función para calcular número de semana desde fecha base
 function calcularNumeroSemana(fecha) {
-  const fechaLunes = obtenerLunes(fecha);
-  fechaLunes.setHours(12, 0, 0, 0);
-  
-  const fechaBaseLunes = obtenerLunes(FECHA_BASE);
-  fechaBaseLunes.setHours(12, 0, 0, 0);
-  
-  const diferenciaMs = fechaLunes - fechaBaseLunes;
-  const numeroSemana = Math.floor(diferenciaMs / MS_POR_SEMANA);
-  
-  return numeroSemana;
+    const fechaLunes = obtenerLunes(fecha);
+    const fechaBaseLunes = obtenerLunes(FECHA_BASE);
+    const diferenciaMs = fechaLunes - fechaBaseLunes;
+    return Math.floor(diferenciaMs / MS_POR_SEMANA);
 }
 
-// Función para formatear fecha
 const fd = d => {
-  const date = new Date(d);
-  return date.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: '2-digit'
-  });
+    const date = new Date(d);
+    return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit'
+    });
 };
 
-// Obtener lista de activos
 const activos = l => l.filter(p => !estados[p] || estados[p] === "activo");
 
-// Obtener guardia para una semana específica
 const guardia = (l, numeroSemana) => {
-  const a = activos(l);
-  if (a.length === 0) return "Nadie";
-  
-  // Verificar override manual primero
-  const semanaKey = numeroSemana.toString();
-  if (manualOverrides[semanaKey]) {
-    const tipo = l === electricos ? 'electrico' : 'mecanico';
-    if (manualOverrides[semanaKey][tipo]) {
-      return manualOverrides[semanaKey][tipo];
+    const a = activos(l);
+    if (a.length === 0) return "Nadie";
+    
+    const semanaKey = numeroSemana.toString();
+    if (manualOverrides[semanaKey]) {
+        const tipo = l === electricos ? 'electrico' : 'mecanico';
+        if (manualOverrides[semanaKey][tipo]) {
+            return manualOverrides[semanaKey][tipo];
+        }
     }
-  }
-  
-  // Rotación automática
-  const indice = ((numeroSemana % a.length) + a.length) % a.length;
-  return a[indice];
+    
+    const indice = ((numeroSemana % a.length) + a.length) % a.length;
+    return a[indice];
 };
 
-function getEstadoTexto(estado){
- switch(estado){
-  case 'activo': return 'Activo';
-  case 'vacaciones': return 'Vacaciones';
-  case 'viaje': return 'Viaje';
-  case 'baja': return 'Baja';
-  case 'inactivo': return 'Inactivo';
-  default: return 'Activo';
- }
+function getEstadoTexto(estado) {
+    switch(estado) {
+        case 'activo': return 'Activo';
+        case 'vacaciones': return 'Vacaciones';
+        case 'viaje': return 'Viaje';
+        case 'baja': return 'Baja';
+        case 'inactivo': return 'Inactivo';
+        default: return 'Activo';
+    }
 }
 
-// Renderizar lista de personas
-function renderPersonasList() {
- let html = '';
- 
- electricos.forEach(persona => {
-  const estado = estados[persona] || 'activo';
-  if (estado !== 'inactivo') {
-   html += `
-    <div class="persona-item">
-     <span class="icon">⚡</span>
-     <span>${persona}</span>
-     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
-      ${getEstadoTexto(estado)}
-     </span>
-    </div>`;
-  }
- });
- 
- mecanicos.forEach(persona => {
-  const estado = estados[persona] || 'activo';
-  if (estado !== 'inactivo') {
-   html += `
-    <div class="persona-item">
-     <span class="icon">🔧</span>
-     <span>${persona}</span>
-     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
-      ${getEstadoTexto(estado)}
-     </span>
-    </div>`;
-  }
- });
- 
- document.getElementById('personasList').innerHTML = html;
-}
-
-// ========== CALENDARIO CORREGIDO ==========
-function renderCalendar() {
-  calendarGrid.innerHTML = "";
-  const y = calendarMonth.getFullYear();
-  const m = calendarMonth.getMonth();
-  
-  calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
-  
-  const primerDia = new Date(y, m, 1);
-  const ultimoDia = new Date(y, m + 1, 0);
-  
-  const inicio = new Date(primerDia);
-  const diaSemana = inicio.getDay();
-  const diasAtras = diaSemana === 0 ? 6 : diaSemana - 1;
-  inicio.setDate(inicio.getDate() - diasAtras);
-  
-  const fin = new Date(ultimoDia);
-  const diaSemanaFin = fin.getDay();
-  const diasAdelante = diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin;
-  fin.setDate(fin.getDate() + diasAdelante);
-  
-  let fechaActual = new Date(inicio);
-  while (fechaActual <= fin) {
-    const esMesAnterior = fechaActual.getMonth() < m;
-    const esMesSiguiente = fechaActual.getMonth() > m;
-    const esFueraMes = esMesAnterior || esMesSiguiente;
-    const diaSemana = fechaActual.getDay();
-    const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
+// ========== RENDERIZAR CARRUSEL ==========
+function render() {
+    const hoy = new Date();
+    const numeroSemanaActual = calcularNumeroSemana(hoy);
     
-    const numeroSemana = calcularNumeroSemana(fechaActual);
-    const elecGuardia = guardia(electricos, numeroSemana);
-    const mecGuardia = guardia(mecanicos, numeroSemana);
-    const tieneOverride = manualOverrides[numeroSemana.toString()];
+    const fechaBase = obtenerLunes(hoy);
+    fechaBase.setDate(fechaBase.getDate() + (offset * 7));
     
-    let contenidoHTML = `
-      <div class="day-number">${fechaActual.getDate()}</div>
-    `;
+    const fechaInicio = new Date(fechaBase);
+    const fechaFin = new Date(fechaInicio);
+    fechaFin.setDate(fechaFin.getDate() + 4);
     
-    if (esDiaLaboral && !esFueraMes) {
-      contenidoHTML += `
-        <div class="guardia-info">
-          <div class="${tieneOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</div>
-          <div class="${tieneOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</div>
-        </div>
-      `;
+    document.getElementById('subtitle').textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
+    
+    let carouselHTML = '';
+    
+    // Crear 3 slides: anterior, actual, siguiente
+    for (let i = -1; i <= 1; i++) {
+        const semanaOffset = offset + i;
+        const numeroSemana = numeroSemanaActual + semanaOffset;
+        
+        const semanaInicio = new Date(fechaBase);
+        semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
+        const semanaFin = new Date(semanaInicio);
+        semanaFin.setDate(semanaFin.getDate() + 4);
+        
+        const elecGuardia = guardia(electricos, numeroSemana);
+        const mecGuardia = guardia(mecanicos, numeroSemana);
+        const tieneOverride = manualOverrides[numeroSemana.toString()];
+        
+        carouselHTML += `
+            <div class="carousel-slide">
+                <div class="card">
+                    <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
+                    <div class="guardias">
+                        <div class="guardia">
+                            <div class="icono">⚡</div>
+                            <div class="nombre">${elecGuardia}</div>
+                            <div class="days">L–V</div>
+                            <div class="time">15:30 – 19:00</div>
+                            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+                                ${getEstadoTexto(estados[elecGuardia] || 'activo')}
+                            </small>
+                        </div>
+                        <div class="guardia">
+                            <div class="icono">🔧</div>
+                            <div class="nombre">${mecGuardia}</div>
+                            <div class="days">L–V</div>
+                            <div class="time">15:30 – 19:00</div>
+                            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+                                ${getEstadoTexto(estados[mecGuardia] || 'activo')}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
     
-    const clases = [
-      'calendar-day',
-      esFueraMes ? 'outside' : '',
-      esDiaLaboral ? 'weekday' : 'weekend'
-    ].filter(c => c).join(' ');
+    track = document.getElementById('carouselTrack');
+    track.innerHTML = carouselHTML;
     
-    calendarGrid.innerHTML += `
-      <div class="${clases}">
-        ${contenidoHTML}
-      </div>
-    `;
+    // Posicionar en slide central
+    setTrackPosition();
     
-    fechaActual.setDate(fechaActual.getDate() + 1);
-  }
+    // Actualizar indicadores
+    updateIndicators();
+    
+    renderHistory();
+}
+
+function updateIndicators() {
+    const indicators = document.getElementById('indicators');
+    indicators.innerHTML = '';
+    
+    for (let i = 0; i < 3; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = `carousel-indicator ${i === 1 ? 'active' : ''}`;
+        indicators.appendChild(indicator);
+    }
+}
+
+function setTrackPosition() {
+    if (!track) return;
+    track.style.transform = `translateX(-${currentSlide * 33.333}%)`;
+}
+
+// ========== CARRUSEL TÁCTIL QUE SÍ FUNCIONA ==========
+function setupCarousel() {
+    track = document.getElementById('carouselTrack');
+    
+    // Touch events
+    track.addEventListener('touchstart', touchStart);
+    track.addEventListener('touchmove', touchMove);
+    track.addEventListener('touchend', touchEnd);
+    
+    // Mouse events
+    track.addEventListener('mousedown', touchStart);
+    document.addEventListener('mousemove', touchMove);
+    document.addEventListener('mouseup', touchEnd);
+    
+    function getPositionX(event) {
+        return event.type.includes('mouse') ? event.pageX : event.touches[0].clientX;
+    }
+    
+    function touchStart(event) {
+        if (event.type === 'mousedown') event.preventDefault();
+        isDragging = true;
+        startPos = getPositionX(event);
+        track.style.transition = 'none';
+        animationId = requestAnimationFrame(animation);
+    }
+    
+    function touchMove(event) {
+        if (!isDragging) return;
+        const currentPosition = getPositionX(event);
+        currentTranslate = prevTranslate + currentPosition - startPos;
+    }
+    
+    function touchEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        cancelAnimationFrame(animationId);
+        
+        const movedBy = currentTranslate;
+        const threshold = window.innerWidth * 0.15; // 15% del ancho
+        
+        // Si el movimiento fue suficiente, cambiar de slide
+        if (Math.abs(movedBy) > threshold) {
+            if (movedBy > 0 && currentSlide > 0) {
+                // Swipe a la derecha -> slide anterior
+                offset--;
+                currentSlide = 0;
+            } else if (movedBy < 0 && currentSlide < 2) {
+                // Swipe a la izquierda -> slide siguiente
+                offset++;
+                currentSlide = 2;
+            }
+        }
+        
+        // Volver a posición central y renderizar si cambió
+        currentSlide = 1;
+        track.style.transition = 'transform 0.4s ease';
+        setTrackPosition();
+        
+        if (Math.abs(movedBy) > threshold) {
+            setTimeout(() => {
+                render();
+                renderCalendar();
+            }, 400);
+        }
+        
+        prevTranslate = 0;
+        currentTranslate = 0;
+    }
+    
+    function animation() {
+        if (!isDragging) return;
+        track.style.transform = `translateX(calc(-${currentSlide * 33.333}% + ${currentTranslate}px))`;
+        requestAnimationFrame(animation);
+    }
+}
+
+// ========== CALENDARIO ==========
+function renderCalendar() {
+    document.getElementById('calendarGrid').innerHTML = "";
+    const y = calendarMonth.getFullYear();
+    const m = calendarMonth.getMonth();
+    
+    document.getElementById('calendarTitle').textContent = 
+        `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
+    
+    const primerDia = new Date(y, m, 1);
+    const ultimoDia = new Date(y, m + 1, 0);
+    
+    const inicio = new Date(primerDia);
+    const diaSemana = inicio.getDay();
+    const diasAtras = diaSemana === 0 ? 6 : diaSemana - 1;
+    inicio.setDate(inicio.getDate() - diasAtras);
+    
+    const fin = new Date(ultimoDia);
+    const diaSemanaFin = fin.getDay();
+    const diasAdelante = diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin;
+    fin.setDate(fin.getDate() + diasAdelante);
+    
+    let fechaActual = new Date(inicio);
+    while (fechaActual <= fin) {
+        const esMesAnterior = fechaActual.getMonth() < m;
+        const esMesSiguiente = fechaActual.getMonth() > m;
+        const esFueraMes = esMesAnterior || esMesSiguiente;
+        const diaSemana = fechaActual.getDay();
+        const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
+        
+        const numeroSemana = calcularNumeroSemana(fechaActual);
+        const elecGuardia = guardia(electricos, numeroSemana);
+        const mecGuardia = guardia(mecanicos, numeroSemana);
+        const tieneOverride = manualOverrides[numeroSemana.toString()];
+        
+        let contenidoHTML = `<div class="day-number">${fechaActual.getDate()}</div>`;
+        
+        if (esDiaLaboral && !esFueraMes) {
+            contenidoHTML += `
+                <div class="guardia-info">
+                    <div class="${tieneOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</div>
+                    <div class="${tieneOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</div>
+                </div>
+            `;
+        }
+        
+        const clases = [
+            'calendar-day',
+            esFueraMes ? 'outside' : '',
+            esDiaLaboral ? 'weekday' : 'weekend'
+        ].filter(c => c).join(' ');
+        
+        document.getElementById('calendarGrid').innerHTML += `
+            <div class="${clases}">
+                ${contenidoHTML}
+            </div>
+        `;
+        
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
 }
 
 function changeMonth(delta) {
-  calendarMonth.setMonth(calendarMonth.getMonth() + delta);
-  renderCalendar();
+    calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+    renderCalendar();
 }
 
-// ========== RENDERIZAR SEMANAS CON SCROLL TÁCTIL MEJORADO ==========
-function render() {
-  carousel.innerHTML = "";
-  const hoy = new Date();
-  const numeroSemanaActual = calcularNumeroSemana(hoy);
-  
-  const fechaBase = obtenerLunes(hoy);
-  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
-  
-  const fechaInicio = new Date(fechaBase);
-  const fechaFin = new Date(fechaInicio);
-  fechaFin.setDate(fechaFin.getDate() + 4);
-  
-  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
-  
-  // Crear 3 semanas: anterior, actual, siguiente
-  for (let i = -1; i <= 1; i++) {
-    const semanaOffset = offset + i;
-    const numeroSemana = numeroSemanaActual + semanaOffset;
+// ========== PERSONAS ==========
+function renderPersonasList() {
+    let html = '';
     
-    const semanaInicio = new Date(fechaBase);
-    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
-    const semanaFin = new Date(semanaInicio);
-    semanaFin.setDate(semanaFin.getDate() + 4);
-    
-    const elecGuardia = guardia(electricos, numeroSemana);
-    const mecGuardia = guardia(mecanicos, numeroSemana);
-    const tieneOverride = manualOverrides[numeroSemana.toString()];
-    
-    carousel.innerHTML += `
-      <div class="card">
-        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
-        <div class="guardias">
-          <div class="guardia">
-            <div class="icono">⚡</div>
-            <div class="nombre">${elecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[elecGuardia])}
-            </small>
-          </div>
-          <div class="guardia">
-            <div class="icono">🔧</div>
-            <div class="nombre">${mecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[mecGuardia])}
-            </small>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  
-  renderHistory();
-  
-  // Centrar automáticamente la tarjeta del medio
-  setTimeout(() => {
-    if (carousel.children[1]) {
-      const cardWidth = carousel.children[0].offsetWidth;
-      const gap = 14;
-      carousel.scrollLeft = (cardWidth + gap) * 1;
-      
-      // Inicializar scroll táctil después de renderizar
-      initTouchScroll();
-    }
-  }, 100);
-}
-
-// ========== SCROLL TÁCTIL MEJORADO ==========
-function initTouchScroll() {
-  const carousel = document.getElementById('carousel');
-  if (!carousel) return;
-  
-  let isDown = false;
-  let startX;
-  let scrollLeft;
-  
-  // Para ratón (PC)
-  carousel.addEventListener('mousedown', (e) => {
-    isDown = true;
-    carousel.classList.add('active');
-    startX = e.pageX - carousel.offsetLeft;
-    scrollLeft = carousel.scrollLeft;
-  });
-  
-  carousel.addEventListener('mouseleave', () => {
-    isDown = false;
-    carousel.classList.remove('active');
-  });
-  
-  carousel.addEventListener('mouseup', () => {
-    isDown = false;
-    carousel.classList.remove('active');
-    snapToNearestCard();
-  });
-  
-  carousel.addEventListener('mousemove', (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const x = e.pageX - carousel.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    carousel.scrollLeft = scrollLeft - walk;
-  });
-  
-  // Para touch (móviles)
-  carousel.addEventListener('touchstart', (e) => {
-    isDown = true;
-    startX = e.touches[0].pageX - carousel.offsetLeft;
-    scrollLeft = carousel.scrollLeft;
-    carousel.style.cursor = 'grabbing';
-  });
-  
-  carousel.addEventListener('touchend', () => {
-    isDown = false;
-    carousel.style.cursor = 'grab';
-    snapToNearestCard();
-  });
-  
-  carousel.addEventListener('touchmove', (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const x = e.touches[0].pageX - carousel.offsetLeft;
-    const walk = (x - startX) * 1.2;
-    carousel.scrollLeft = scrollLeft - walk;
-  });
-  
-  // Snap a la tarjeta más cercana
-  function snapToNearestCard() {
-    const cards = carousel.querySelectorAll('.card');
-    if (cards.length === 0) return;
-    
-    const cardWidth = cards[0].offsetWidth;
-    const gap = 14;
-    const scrollPos = carousel.scrollLeft;
-    const cardIndex = Math.round(scrollPos / (cardWidth + gap));
-    
-    carousel.scrollTo({
-      left: cardIndex * (cardWidth + gap),
-      behavior: 'smooth'
+    electricos.forEach(persona => {
+        const estado = estados[persona] || 'activo';
+        if (estado !== 'inactivo') {
+            html += `
+                <div class="persona-item">
+                    <span class="icon">⚡</span>
+                    <span>${persona}</span>
+                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
+                        ${getEstadoTexto(estado)}
+                    </span>
+                </div>`;
+        }
     });
     
-    // Actualizar offset basado en la tarjeta centrada
-    if (cardIndex === 0) offset--;
-    else if (cardIndex === 2) offset++;
-    
-    // Re-renderizar si cambió el offset
-    if (cardIndex !== 1) {
-      setTimeout(() => {
-        const newCardIndex = Math.round(carousel.scrollLeft / (cardWidth + gap));
-        if (newCardIndex === 0 || newCardIndex === 2) {
-          render();
+    mecanicos.forEach(persona => {
+        const estado = estados[persona] || 'activo';
+        if (estado !== 'inactivo') {
+            html += `
+                <div class="persona-item">
+                    <span class="icon">🔧</span>
+                    <span>${persona}</span>
+                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
+                        ${getEstadoTexto(estado)}
+                    </span>
+                </div>`;
         }
-      }, 300);
-    }
-  }
-  
-  // Botones de navegación
-  document.getElementById('prev').addEventListener('click', () => {
-    offset--;
-    render();
-  });
-  
-  document.getElementById('next').addEventListener('click', () => {
-    offset++;
-    render();
-  });
+    });
+    
+    document.getElementById('personasList').innerHTML = html;
 }
 
 // ========== HISTORIAL ==========
-function logCompletedWeek(){
-  const hoy=new Date();
-  const viernes=obtenerLunes(hoy);
-  viernes.setDate(viernes.getDate()+4);
-  
-  if(hoy<viernes)return;
-  
-  const numeroSemana=calcularNumeroSemana(hoy);
-  const clave=fd(obtenerLunes(hoy));
-  
-  if(history.some(h=>h.startsWith(clave)))return;
-  
-  const elecGuardia=guardia(electricos,numeroSemana);
-  const mecGuardia=guardia(mecanicos,numeroSemana);
-  
-  history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
-  history=history.slice(0,30);
-  localStorage.history=JSON.stringify(history);
+function logCompletedWeek() {
+    const hoy = new Date();
+    const viernes = obtenerLunes(hoy);
+    viernes.setDate(viernes.getDate() + 4);
+    
+    if (hoy < viernes) return;
+    
+    const numeroSemana = calcularNumeroSemana(hoy);
+    const clave = fd(obtenerLunes(hoy));
+    
+    if (history.some(h => h.startsWith(clave))) return;
+    
+    const elecGuardia = guardia(electricos, numeroSemana);
+    const mecGuardia = guardia(mecanicos, numeroSemana);
+    
+    history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
+    history = history.slice(0, 30);
+    localStorage.history = JSON.stringify(history);
 }
 
-function renderHistory(){
-  historyList.innerHTML="";
-  history.forEach(h=>{
-    const [fecha, ...resto] = h.split(' ');
-    const guardias = resto.join(' ');
-    historyList.innerHTML+=`
-      <div class="history-item">
-        <span>${fecha}</span>
-        <span>${guardias}</span>
-      </div>
-    `;
-  });
+function renderHistory() {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = "";
+    
+    history.forEach(h => {
+        const [fecha, ...resto] = h.split(' ');
+        const guardias = resto.join(' ');
+        historyList.innerHTML += `
+            <div class="history-item">
+                <span>${fecha}</span>
+                <span>${guardias}</span>
+            </div>
+        `;
+    });
 }
+
+// ========== BOTONES DE NAVEGACIÓN ==========
+document.getElementById('prev').addEventListener('click', () => {
+    offset--;
+    render();
+    renderCalendar();
+});
+
+document.getElementById('next').addEventListener('click', () => {
+    offset++;
+    render();
+    renderCalendar();
+});
+
+// ========== MODO OSCURO ==========
+document.getElementById('night').addEventListener('click', () => {
+    document.body.classList.toggle("dark");
+    localStorage.dark = document.body.classList.contains("dark") ? "true" : "false";
+});
+
+if (localStorage.dark === "true") document.body.classList.add("dark");
 
 // ========== INICIALIZACIÓN ==========
-renderCalendar();
-renderPersonasList();
-logCompletedWeek();
-render();
+function init() {
+    renderCalendar();
+    renderPersonasList();
+    logCompletedWeek();
+    render();
+    
+    // Configurar carrusel después de renderizar
+    setTimeout(setupCarousel, 100);
+}
 
-// Inicializar scroll táctil después de cargar
-window.addEventListener('load', () => {
-  setTimeout(initTouchScroll, 500);
-});
+// Iniciar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 </script>
 </body>
 </html>
