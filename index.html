@@ -159,7 +159,6 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 }
 
 /* ========== ESTILOS PWA ========== */
-/* Estilos para modo standalone (app instalada) */
 .standalone-mode header {
   padding-top: env(safe-area-inset-top, 20px);
 }
@@ -168,23 +167,20 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
   top: calc(env(safe-area-inset-top, 12px) + 12px);
 }
 
-/* Mejoras para pantallas táctiles en modo app */
 @media (display-mode: standalone) {
   button, select, .calendar-day {
-    min-height: 44px; /* Tamaño mínimo para toques */
+    min-height: 44px;
   }
   
   .guardia {
     padding: 20px;
   }
   
-  /* Mejorar visibilidad en modo app */
   body {
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Animación para el botón de instalación */
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
@@ -239,7 +235,6 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 let deferredPrompt;
 let installButton = null;
 
-// Crear botón de instalación dinámicamente
 function createInstallButton() {
   if (installButton) return;
   
@@ -271,7 +266,6 @@ function createInstallButton() {
   document.body.appendChild(installButton);
 }
 
-// Evento para detectar cuándo se puede instalar
 window.addEventListener('beforeinstallprompt', (e) => {
   console.log('beforeinstallprompt fired');
   e.preventDefault();
@@ -288,7 +282,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   }, 3000);
 });
 
-// Función para instalar la PWA
 function installPWA() {
   if (!deferredPrompt) {
     alert('La aplicación ya está instalada o no se puede instalar en este navegador.');
@@ -318,7 +311,6 @@ function installPWA() {
   });
 }
 
-// Detectar si la app ya está instalada
 window.addEventListener('appinstalled', (e) => {
   console.log('App instalada exitosamente');
   deferredPrompt = null;
@@ -351,7 +343,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Mostrar notificación de actualización
 function showUpdateNotification() {
   const updateDiv = document.createElement('div');
   updateDiv.id = 'update-notification';
@@ -408,7 +399,6 @@ function showUpdateNotification() {
   }, 30000);
 }
 
-// Detectar modo standalone (app instalada)
 function detectStandaloneMode() {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                       window.navigator.standalone === true;
@@ -428,7 +418,6 @@ window.addEventListener('load', () => {
   window.matchMedia('(display-mode: standalone)').addListener(detectStandaloneMode);
 });
 
-// ========== OFFLINE DETECTION ==========
 function updateOnlineStatus() {
   if (!navigator.onLine) showOfflineNotification();
   else hideOfflineNotification();
@@ -469,7 +458,7 @@ updateOnlineStatus();
 </script>
 <!-- ========== FIN SCRIPT PWA ========== -->
 
-<!-- ========== TU CÓDIGO ORIGINAL ========== -->
+<!-- ========== CÓDIGO PRINCIPAL CORREGIDO ========== -->
 <script>
 // Toggle modo oscuro
 night.onclick=()=>{
@@ -478,7 +467,7 @@ night.onclick=()=>{
 };
 if(localStorage.dark==="true") document.body.classList.add("dark");
 
-// Datos iniciales (se sincronizan desde la versión admin)
+// ========== DATOS COMPATIBLES CON ADMIN ==========
 let electricos=["Fran Ruiz","Hicham","Jose","Abde","Dani","Fran"];
 let mecanicos=["Ramon","Traian","Manu","Fran Alba","Cele","Santy"];
 let estados=JSON.parse(localStorage.estados||"{}");
@@ -487,12 +476,10 @@ let manualOverrides=JSON.parse(localStorage.manualOverrides||"{}");
 let offset=0;
 let calendarMonth=new Date();
 
-// ========== FUNCIONES CORREGIDAS ==========
-// FECHA BASE FIJA: Lunes 1 de Enero de 2024
+// ========== FUNCIONES IDÉNTICAS AL ADMIN ==========
 const FECHA_BASE = new Date(2024, 0, 1);
 const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
 
-// Función para obtener el lunes de cualquier semana
 function obtenerLunes(fecha) {
   const d = new Date(fecha);
   const dia = d.getDay();
@@ -500,7 +487,6 @@ function obtenerLunes(fecha) {
   return new Date(d.setDate(diff));
 }
 
-// Función para calcular número de semana desde fecha base
 function calcularNumeroSemana(fecha) {
   const fechaLunes = obtenerLunes(fecha);
   fechaLunes.setHours(12, 0, 0, 0);
@@ -514,7 +500,6 @@ function calcularNumeroSemana(fecha) {
   return numeroSemana;
 }
 
-// Función para formatear fecha
 const fd = d => {
   const date = new Date(d);
   return date.toLocaleDateString('es-ES', {
@@ -523,15 +508,19 @@ const fd = d => {
   });
 };
 
-// Obtener lista de activos
-const activos = l => l.filter(p => !estados[p] || estados[p] === "activo");
+const activos = l => {
+  const ordenPersonalizado = l === electricos ? 
+    JSON.parse(localStorage.ordenElectricos || "null") : 
+    JSON.parse(localStorage.ordenMecanicos || "null");
+  
+  const lista = ordenPersonalizado || l;
+  return lista.filter(p => !estados[p] || estados[p] === "activo");
+};
 
-// Obtener guardia para una semana específica
 const guardia = (l, numeroSemana) => {
   const a = activos(l);
   if (a.length === 0) return "Nadie";
   
-  // Verificar override manual primero
   const semanaKey = numeroSemana.toString();
   if (manualOverrides[semanaKey]) {
     const tipo = l === electricos ? 'electrico' : 'mecanico';
@@ -540,7 +529,6 @@ const guardia = (l, numeroSemana) => {
     }
   }
   
-  // Rotación automática
   const indice = ((numeroSemana % a.length) + a.length) % a.length;
   return a[indice];
 };
@@ -556,11 +544,14 @@ function getEstadoTexto(estado){
  }
 }
 
-// Renderizar lista de personas
+// ========== RENDERIZAR LISTA DE PERSONAS ==========
 function renderPersonasList() {
  let html = '';
  
- electricos.forEach(persona => {
+ const ordenElec = JSON.parse(localStorage.ordenElectricos || "null") || electricos;
+ const ordenMec = JSON.parse(localStorage.ordenMecanicos || "null") || mecanicos;
+ 
+ ordenElec.forEach(persona => {
   const estado = estados[persona] || 'activo';
   if (estado !== 'inactivo') {
    html += `
@@ -574,7 +565,7 @@ function renderPersonasList() {
   }
  });
  
- mecanicos.forEach(persona => {
+ ordenMec.forEach(persona => {
   const estado = estados[persona] || 'activo';
   if (estado !== 'inactivo') {
    html += `
@@ -591,7 +582,7 @@ function renderPersonasList() {
  document.getElementById('personasList').innerHTML = html;
 }
 
-// ========== CALENDARIO CORREGIDO ==========
+// ========== CALENDARIO IDÉNTICO AL ADMIN ==========
 function renderCalendar() {
   calendarGrid.innerHTML = "";
   const y = calendarMonth.getFullYear();
@@ -632,8 +623,8 @@ function renderCalendar() {
     if (esDiaLaboral && !esFueraMes) {
       contenidoHTML += `
         <div class="guardia-info">
-          <div class="${tieneOverride?'status-viaje':'status-active'}">⚡ ${elecGuardia}</div>
-          <div class="${tieneOverride?'status-viaje':'status-active'}">🔧 ${mecGuardia}</div>
+          <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">⚡ ${elecGuardia}</div>
+          <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">🔧 ${mecGuardia}</div>
         </div>
       `;
     }
@@ -644,8 +635,11 @@ function renderCalendar() {
       esDiaLaboral ? 'weekday' : 'weekend'
     ].filter(c => c).join(' ');
     
+    const onClick = esDiaLaboral && !esFueraMes ? 
+      `onclick="offset=${numeroSemana - calcularNumeroSemana(new Date())};render()"` : '';
+    
     calendarGrid.innerHTML += `
-      <div class="${clases}">
+      <div class="${clases}" ${onClick}>
         ${contenidoHTML}
       </div>
     `;
@@ -659,88 +653,125 @@ function changeMonth(delta) {
   renderCalendar();
 }
 
-// Renderizar semana
-function render(){
- carousel.innerHTML="";
- const base=lunes(new Date());
- const ini=new Date(base);ini.setDate(ini.getDate()+offset*7);
- const fin=new Date(ini);fin.setDate(fin.getDate()+4);
- 
- // Actualizar título principal
- document.querySelector('header h1').textContent = `Guardias Alsi`;
- subtitle.textContent=`${fd(ini)} - ${fd(fin)}`;
- 
- for(let i=-1;i<=1;i++){
-  const l=new Date(ini);l.setDate(l.getDate()+i*7);
-  const v=new Date(l);v.setDate(v.getDate()+4);
-  const elecGuardia = guardia(electricos,offset+i);
-  const mecGuardia = guardia(mecanicos,offset+i);
-  const weekKey = (offset+i).toString();
-  const hasOverride = manualOverrides[weekKey];
+// ========== RENDERIZAR SEMANAS CORREGIDO ==========
+function render() {
+  carousel.innerHTML = "";
+  const hoy = new Date();
+  const numeroSemanaActual = calcularNumeroSemana(hoy);
   
-  carousel.innerHTML+=`
-  <div class="card">
-   <h3>${fd(l)} - ${fd(v)} ${hasOverride?'🔄':''}</h3>
-   <div class="guardias">
-    <div class="guardia">
-     <div class="icono">⚡</div>
-     <div class="nombre">${elecGuardia}</div>
-     <div class="days">L–V</div>
-     <div class="time">15:30 – 19:00</div>
-     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[elecGuardia])}</small>
-    </div>
-    <div class="guardia">
-     <div class="icono">🔧</div>
-     <div class="nombre">${mecGuardia}</div>
-     <div class="days">L–V</div>
-     <div class="time">15:30 – 19:00</div>
-     <small class="${hasOverride?'status-viaje':'status-active'}">${getEstadoTexto(estados[mecGuardia])}</small>
-    </div>
-   </div>
-  </div>`;
- }
- 
- renderHistory();
- // Centrar la semana actual
- requestAnimationFrame(()=>{
-  if(carousel.children[1]){
-   carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
+  const fechaBase = obtenerLunes(hoy);
+  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
+  
+  const fechaInicio = new Date(fechaBase);
+  const fechaFin = new Date(fechaInicio);
+  fechaFin.setDate(fechaFin.getDate() + 4);
+  
+  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
+  
+  for (let i = -1; i <= 1; i++) {
+    const semanaOffset = offset + i;
+    const numeroSemana = numeroSemanaActual + semanaOffset;
+    
+    const semanaInicio = new Date(fechaBase);
+    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
+    const semanaFin = new Date(semanaInicio);
+    semanaFin.setDate(semanaFin.getDate() + 4);
+    
+    const elecGuardia = guardia(electricos, numeroSemana);
+    const mecGuardia = guardia(mecanicos, numeroSemana);
+    const tieneOverride = manualOverrides[numeroSemana.toString()];
+    
+    carousel.innerHTML += `
+      <div class="card">
+        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
+        <div class="guardias">
+          <div class="guardia">
+            <div class="icono">⚡</div>
+            <div class="nombre">${elecGuardia}</div>
+            <div class="days">L–V</div>
+            <div class="time">15:30 – 19:00</div>
+            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+              ${getEstadoTexto(estados[elecGuardia])}
+            </small>
+          </div>
+          <div class="guardia">
+            <div class="icono">🔧</div>
+            <div class="nombre">${mecGuardia}</div>
+            <div class="days">L–V</div>
+            <div class="time">15:30 – 19:00</div>
+            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
+              ${getEstadoTexto(estados[mecGuardia])}
+            </small>
+          </div>
+        </div>
+      </div>
+    `;
   }
- });
+  
+  renderHistory();
+  
+  requestAnimationFrame(() => {
+    if (carousel.children[1]) {
+      carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
+    }
+  });
 }
 
 function logCompletedWeek(){
- const now=new Date(),fri=lunes(now);fri.setDate(fri.getDate()+4);
- if(now<fri)return;
- const key=fd(lunes(now));
- if(history.some(h=>h.startsWith(key)))return;
- history.unshift(`${key} ⚡ ${guardia(electricos,0)} · 🔧 ${guardia(mecanicos,0)}`);
- history=history.slice(0,30);
- localStorage.history=JSON.stringify(history);
+  const hoy=new Date();
+  const viernes=obtenerLunes(hoy);
+  viernes.setDate(viernes.getDate()+4);
+  
+  if(hoy<viernes)return;
+  
+  const numeroSemana=calcularNumeroSemana(hoy);
+  const clave=fd(obtenerLunes(hoy));
+  
+  if(history.some(h=>h.startsWith(clave)))return;
+  
+  const elecGuardia=guardia(electricos,numeroSemana);
+  const mecGuardia=guardia(mecanicos,numeroSemana);
+  
+  history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
+  history=history.slice(0,30);
+  localStorage.history=JSON.stringify(history);
 }
 
 function renderHistory(){
- historyList.innerHTML="";
- history.forEach(h=>{
-  const [fecha, ...resto] = h.split(' ');
-  const guardias = resto.join(' ');
-  historyList.innerHTML+=`
-   <div class="history-item">
-    <span>${fecha}</span>
-    <span>${guardias}</span>
-   </div>`;
- });
+  historyList.innerHTML="";
+  history.forEach(h=>{
+    const [fecha, ...resto] = h.split(' ');
+    const guardias = resto.join(' ');
+    historyList.innerHTML+=`
+     <div class="history-item">
+      <span>${fecha}</span>
+      <span>${guardias}</span>
+     </div>`;
+  });
 }
 
-// Event listeners
+// ========== EVENT LISTENERS ==========
 prev.onclick=()=>{offset--;render()};
 next.onclick=()=>{offset++;render()};
 
-// Inicialización
+// ========== INICIALIZACIÓN ==========
 renderCalendar();
 renderPersonasList();
 logCompletedWeek();
 render();
+
+// Sincronizar con cambios en localStorage del admin
+window.addEventListener('storage', function(e) {
+  if (e.key === 'estados' || e.key === 'ordenElectricos' || e.key === 'ordenMecanicos' || e.key === 'manualOverrides') {
+    estados = JSON.parse(localStorage.estados || "{}");
+    manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
+    renderCalendar();
+    renderPersonasList();
+    render();
+  }
+});
+
+console.log("Aplicación de usuario sincronizada con admin");
 </script>
 </body>
 </html>
