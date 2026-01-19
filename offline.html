@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sin conexión - Guardias Alsi</title>
+    <style>
+        body {
+            font-family: system-ui;
+            text-align: center;
+            padding: 50px;
+            background: #f2f4f8;
+            color: #1f2937;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,.12);
+        }
+        h1 { color: #ef4444; }
+        button {
+            background: #1e88e5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ Sin conexión</h1>
+        <p>No hay conexión a Internet disponible.</p>
+        <p>Los datos mostrados son de la última vez que hubo conexión.</p>
+        <button onclick="location.reload()">Reintentar conexión</button>
+    </div>
+</body>
+</html>
