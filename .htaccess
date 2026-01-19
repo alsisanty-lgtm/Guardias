@@ -1,0 +1,21 @@
+RewriteEngine On
+
+# Redirigir a HTTPS si no está
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# Redirigir /Guardias/index.html a /Guardias/
+RewriteRule ^index\.html$ /Guardias/ [R=301,L]
+
+# Cache para recursos estáticos (1 día)
+<FilesMatch "\.(html|css|js|json|png|jpg|jpeg|gif|ico|svg|xml)$">
+    Header set Cache-Control "public, max-age=86400"
+</FilesMatch>
+
+# Compresión Gzip
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json
+</IfModule>
+
+# MIME Types
+AddType application/manifest+json .webmanifest
