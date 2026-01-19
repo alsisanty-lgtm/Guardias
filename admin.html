@@ -297,7 +297,6 @@ select{
 }
 
 /* ========== ESTILOS PWA ========== */
-/* Estilos para modo standalone (app instalada) */
 .standalone-mode header {
   padding-top: env(safe-area-inset-top, 20px);
 }
@@ -306,23 +305,20 @@ select{
   top: calc(env(safe-area-inset-top, 12px) + 12px);
 }
 
-/* Mejoras para pantallas táctiles en modo app */
 @media (display-mode: standalone) {
   button, select, .calendar-day {
-    min-height: 44px; /* Tamaño mínimo para toques */
+    min-height: 44px;
   }
   
   .guardia {
     padding: 20px;
   }
   
-  /* Mejorar visibilidad en modo app */
   body {
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Animación para el botón de instalación */
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
@@ -436,6 +432,60 @@ select{
  <button onclick="resetToDefault()" class="secondary" style="margin-left:10px;">🔄 Reiniciar a Rotación Automática</button>
  <button onclick="exportConfig()" class="secondary" style="margin-left:10px;">📤 Exportar Configuración</button>
  <button onclick="importConfig()" class="secondary" style="margin-left:10px;">📥 Importar Configuración</button>
+ 
+ <!-- ========== NUEVA SECCIÓN: INSTALACIÓN MÓVIL ========== -->
+ <div class="admin-section">
+  <h3>📱 Instalación Móvil</h3>
+  <p>Enlaces directos para instalar la app:</p>
+  
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0;">
+   <a href="index.html" target="_blank" style="text-decoration: none;">
+    <div style="background: var(--primary); color: white; padding: 15px; border-radius: 10px; text-align: center;">
+     <div style="font-size: 2em;">👥</div>
+     <strong>Versión Usuarios</strong>
+     <p style="font-size: 0.9em; opacity: 0.9;">Para ver guardias</p>
+    </div>
+   </a>
+   
+   <a href="admin.html" target="_blank" style="text-decoration: none;">
+    <div style="background: #8b5cf6; color: white; padding: 15px; border-radius: 10px; text-align: center;">
+     <div style="font-size: 2em;">⚙️</div>
+     <strong>Versión Admin</strong>
+     <p style="font-size: 0.9em; opacity: 0.9;">Para administrar</p>
+    </div>
+   </a>
+  </div>
+  
+  <div style="background: rgba(30, 136, 229, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+   <h4>📋 Códigos QR para instalación rápida:</h4>
+   <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-top: 15px;">
+    <div style="text-align: center;">
+     <div id="qr-usuario" style="width: 150px; height: 150px; margin: 0 auto 10px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+      <span style="color: #666;">QR Usuario</span>
+     </div>
+     <small>Escanear para usuarios</small>
+    </div>
+    <div style="text-align: center;">
+     <div id="qr-admin" style="width: 150px; height: 150px; margin: 0 auto 10px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+      <span style="color: #666;">QR Admin</span>
+     </div>
+     <small>Escanear para admin</small>
+    </div>
+   </div>
+   
+   <div style="margin-top: 15px; font-size: 0.9em;">
+    <p><strong>Instrucciones:</strong></p>
+    <ol style="text-align: left; padding-left: 20px;">
+     <li>Abre la cámara de tu móvil</li>
+     <li>Enfoca el código QR correspondiente</li>
+     <li>Toca el enlace que aparece</li>
+     <li>Sigue las instrucciones para instalar</li>
+    </ol>
+   </div>
+  </div>
+ </div>
+ <!-- ========== FIN SECCIÓN INSTALACIÓN MÓVIL ========== -->
+ 
 </div>
 </details>
 
@@ -1509,6 +1559,25 @@ save.onclick=()=>{
   alert("✅ Todo guardado");
 };
 
+// ========== GENERAR CÓDIGOS QR ==========
+function generateQRCode(elementId, url) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  
+  // Usar un servicio gratuito de QR
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+  
+  element.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="width: 100%; height: 100%; border-radius: 5px;">`;
+}
+
+// Generar QR cuando cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+  const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', '');
+  
+  generateQRCode('qr-usuario', baseUrl + 'index.html');
+  generateQRCode('qr-admin', baseUrl + 'admin.html');
+});
+
 // ========== INICIALIZACIÓN ==========
 renderCalendar();
 logCompletedWeek();
@@ -1524,6 +1593,7 @@ console.log("Admin con gestión de rotaciones cargado");
 </script>
 </body>
 </html>
+
 
 
 
