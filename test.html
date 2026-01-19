@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test PWA</title></head>
+<body>
+    <h1>Test de PWA Guardias Alsi</h1>
+    <p><a href="index.html">Ir a App Usuario</a></p>
+    <p><a href="admin.html">Ir a Admin (contraseña: alsi2026)</a></p>
+    <script>
+        // Test Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log('✅ Service Worker registrado'))
+                .catch(e => console.log('❌ Error SW:', e));
+        }
+        
+        // Test HTTPS
+        console.log('HTTPS:', window.location.protocol === 'https:');
+        
+        // Test localStorage sync
+        localStorage.setItem('test', '123');
+        console.log('LocalStorage test:', localStorage.getItem('test'));
+    </script>
+</body>
+</html>
