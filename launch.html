@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardias Alsi - Lanzador</title>
+    
+    <!-- Manifest para lanzador -->
+    <link rel="manifest" href="manifest-launcher.json">
+    <meta name="theme-color" content="#1e88e5">
+    
+    <style>
+        body {
+            font-family: system-ui;
+            text-align: center;
+            padding: 20px;
+            background: #f2f4f8;
+            color: #1f2937;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+        
+        .version-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 300px;
+            width: 100%;
+        }
+        
+        .version-btn {
+            padding: 20px;
+            border-radius: 15px;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, opacity 0.3s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        
+        .version-btn:hover {
+            transform: translateY(-3px);
+            opacity: 0.9;
+        }
+        
+        .user-btn {
+            background: linear-gradient(135deg, #1e88e5, #1565c0);
+        }
+        
+        .admin-btn {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+        
+        .install-note {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(30, 136, 229, 0.1);
+            border-radius: 10px;
+            max-width: 300px;
+        }
+        
+        .remember {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">📱</div>
+    <h1>Guardias Alsi</h1>
+    <p>Selecciona la versión que necesitas:</p>
+    
+    <div class="version-buttons">
+        <a href="index.html" class="version-btn user-btn" id="user-btn">
+            👥 Versión Usuarios
+        </a>
+        
+        <a href="admin.html" class="version-btn admin-btn" id="admin-btn">
+            ⚙️ Versión Administración
+        </a>
+    </div>
+    
+    <div class="install-note">
+        <strong>💡 Instalar como App:</strong><br>
+        Después de abrir la versión, busca "Añadir a pantalla de inicio" o el botón de instalación.
+    </div>
+    
+    <div class="remember">
+        <input type="checkbox" id="remember-choice">
+        <label for="remember-choice">Recordar mi elección</label>
+    </div>
+
+    <script>
+        // Guardar preferencia
+        const rememberCheckbox = document.getElementById('remember-choice');
+        
+        // Verificar si hay preferencia guardada
+        const savedVersion = localStorage.getItem('preferred_version');
+        const shouldRemember = localStorage.getItem('remember_choice') === 'true';
+        
+        if (shouldRemember) {
+            rememberCheckbox.checked = true;
+        }
+        
+        // Si hay versión guardada y se debe recordar, marcar el botón
+        if (savedVersion && shouldRemember) {
+            const btn = document.getElementById(savedVersion + '-btn');
+            if (btn) {
+                btn.style.boxShadow = '0 0 0 3px #4CAF50';
+                btn.innerHTML += ' <span style="font-size:0.8em;">(💾 guardada)</span>';
+            }
+        }
+        
+        // Guardar elección
+        document.getElementById('user-btn').addEventListener('click', () => {
+            if (rememberCheckbox.checked) {
+                localStorage.setItem('preferred_version', 'user');
+                localStorage.setItem('remember_choice', 'true');
+            }
+        });
+        
+        document.getElementById('admin-btn').addEventListener('click', () => {
+            if (rememberCheckbox.checked) {
+                localStorage.setItem('preferred_version', 'admin');
+                localStorage.setItem('remember_choice', 'true');
+            }
+        });
+        
+        // Redirección automática si hay preferencia
+        if (savedVersion && shouldRemember && !sessionStorage.getItem('already_redirected')) {
+            sessionStorage.setItem('already_redirected', 'true');
+            setTimeout(() => {
+                window.location.href = savedVersion === 'admin' ? 'admin.html' : 'index.html';
+            }, 1000);
+        }
+        
+        // Detectar si es la primera visita hoy
+        const lastVisit = localStorage.getItem('last_visit');
+        const today = new Date().toDateString();
+        
+        if (lastVisit !== today) {
+            localStorage.setItem('last_visit', today);
+            // Podrías mostrar un mensaje de bienvenida aquí
+        }
+    </script>
+</body>
+</html>
