@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+    <msapplication>
+        <tile>
+            <square70x70logo src="/Guardias/icon-72-admin.png"/>
+            <square150x150logo src="/Guardias/icon-152-admin.png"/>
+            <square310x310logo src="/Guardias/icon-310-admin.png"/>
+            <TileColor>#8b5cf6</TileColor>
+        </tile>
+    </msapplication>
+</browserconfig>
