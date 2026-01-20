@@ -395,7 +395,7 @@ select{
   
   <div style="margin-top:20px; padding:15px; background:rgba(30,136,229,.08); border-radius:10px;">
    <h4>📊 Vista Previa de Rotaciones</h4>
-   <p>Próximas 4 semanas según el orden actual:</p>
+   <p>Próximas 8 semanas según el orden actual:</p>
    <div id="rotation-preview"></div>
   </div>
  </div>
@@ -409,6 +409,9 @@ select{
    <button onclick="changeAdminWeek(1)">Semana siguiente ▶</button>
   </div>
   <div id="admin-guardias"></div>
+  <div style="margin-top: 10px; padding: 10px; background: rgba(139, 92, 246, 0.1); border-radius: 8px; font-size: 0.9em;">
+   <strong>⚠️ Importante:</strong> Al cambiar una guardia manualmente, el sistema reordenará automáticamente las rotaciones siguientes para mantener el orden correcto y evitar repeticiones prematuras.
+  </div>
   <button onclick="saveManualChanges()" style="margin-top:15px">💾 Guardar cambios manuales</button>
  </div>
  
@@ -743,7 +746,7 @@ updateOnlineStatus();
 </script>
 <!-- ========== FIN SCRIPT PWA ========== -->
 
-<!-- ========== TU CÓDIGO ADMIN ORIGINAL ========== -->
+<!-- ========== CÓDIGO ADMIN MEJORADO ========== -->
 <script>
 // ========== CÓDIGO CORREGIDO PARA EL CALENDARIO ==========
 // Toggle modo oscuro
@@ -815,7 +818,7 @@ const activos = l => {
   return lista.filter(p => !estados[p] || estados[p] === "activo");
 };
 
-// FUNCIÓN MODIFICADA: Usa el orden personalizado para rotación
+// ========== FUNCIÓN MEJORADA PARA GUARDIA ==========
 const guardia = (l, numeroSemana) => {
   const a = activos(l);
   if (a.length === 0) return "Nadie";
@@ -843,6 +846,7 @@ function renderRotationLists() {
   ordenElectricos.forEach((persona, index) => {
     const estado = estados[persona] || 'activo';
     const isActive = estado === 'activo';
+    const posicionEnActivos = activos(electricos).indexOf(persona);
     
     rotationElec.innerHTML += `
       <div class="rotation-item" data-persona="${persona}" data-type="electricos" draggable="true">
@@ -853,6 +857,11 @@ function renderRotationLists() {
           ${getEstadoTexto(estado)}
         </span>
         ${!isActive ? '<span style="color:#ef4444;margin-left:10px;">(no rota)</span>' : ''}
+        ${isActive && posicionEnActivos !== -1 ? 
+          `<span style="color:var(--primary);margin-left:10px;font-size:0.8em;">
+            #${posicionEnActivos + 1} en activos
+          </span>` : ''
+        }
       </div>
     `;
   });
@@ -864,6 +873,7 @@ function renderRotationLists() {
   ordenMecanicos.forEach((persona, index) => {
     const estado = estados[persona] || 'activo';
     const isActive = estado === 'activo';
+    const posicionEnActivos = activos(mecanicos).indexOf(persona);
     
     rotationMec.innerHTML += `
       <div class="rotation-item" data-persona="${persona}" data-type="mecanicos" draggable="true">
@@ -874,6 +884,11 @@ function renderRotationLists() {
           ${getEstadoTexto(estado)}
         </span>
         ${!isActive ? '<span style="color:#ef4444;margin-left:10px;">(no rota)</span>' : ''}
+        ${isActive && posicionEnActivos !== -1 ? 
+          `<span style="color:var(--primary);margin-left:10px;font-size:0.8em;">
+            #${posicionEnActivos + 1} en activos
+          </span>` : ''
+        }
       </div>
     `;
   });
@@ -1011,18 +1026,30 @@ function reverseRotationOrder(type) {
   alert(`✅ Orden de ${type === 'electricos' ? 'eléctricos' : 'mecánicos'} invertido`);
 }
 
+// ========== VISTA PREVIA MEJORADA ==========
 function updateRotationPreview() {
   const preview = document.getElementById('rotation-preview');
   const hoy = new Date();
   const semanaActual = calcularNumeroSemana(hoy);
   
-  let html = '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px;">';
+  let html = `
+    <div style="margin-bottom: 10px;">
+      <button onclick="mostrarOrdenActual()" class="small" style="margin-right: 10px;">
+        📊 Ver orden en consola
+      </button>
+      <button onclick="testRotacionCompleta()" class="small secondary">
+        🔄 Test rotación completa
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px;">
+  `;
   
-  // Mostrar próximas 4 semanas
-  for (let i = 0; i < 4; i++) {
+  // Mostrar próximas 8 semanas (para ver mejor la rotación)
+  for (let i = 0; i < 8; i++) {
     const semana = semanaActual + i;
     const elecGuardia = guardia(electricos, semana);
     const mecGuardia = guardia(mecanicos, semana);
+    const tieneOverride = manualOverrides[semana.toString()];
     
     // Calcular fechas de la semana
     const fechaInicio = obtenerLunes(hoy);
@@ -1031,9 +1058,9 @@ function updateRotationPreview() {
     fechaFin.setDate(fechaFin.getDate() + 4);
     
     html += `
-      <div style="padding:10px;background:rgba(0,0,0,.03);border-radius:8px;">
-        <div style="font-size:0.9em;font-weight:bold;color:var(--primary);">
-          Semana ${i + 1}
+      <div style="padding:10px;background:${tieneOverride ? 'rgba(139, 92, 246, 0.1)' : 'rgba(0,0,0,.03)'};border-radius:8px;border-left:4px solid ${tieneOverride ? '#8b5cf6' : 'var(--primary)'}">
+        <div style="font-size:0.9em;font-weight:bold;color:${tieneOverride ? '#8b5cf6' : 'var(--primary)'};">
+          Semana ${i + 1} ${tieneOverride ? '🔄' : ''}
         </div>
         <div style="font-size:0.8em;color:var(--muted);">
           ${fd(fechaInicio)} - ${fd(fechaFin)}
@@ -1042,6 +1069,12 @@ function updateRotationPreview() {
           <div>⚡ ${elecGuardia}</div>
           <div>🔧 ${mecGuardia}</div>
         </div>
+        ${tieneOverride ? 
+          `<div style="font-size:0.7em;color:#8b5cf6;margin-top:3px;">
+            ${tieneOverride.electrico ? '⚡ Manual' : ''} 
+            ${tieneOverride.mecanico ? '🔧 Manual' : ''}
+          </div>` : ''
+        }
       </div>
     `;
   }
@@ -1338,7 +1371,7 @@ function render() {
   });
 }
 
-// ========== ADMIN: GESTIÓN DE GUARDIAS ==========
+// ========== ADMIN: GESTIÓN MEJORADA DE GUARDIAS ==========
 function renderAdminGuardias() {
   const hoy = new Date();
   const numeroSemanaActual = calcularNumeroSemana(hoy);
@@ -1354,23 +1387,25 @@ function renderAdminGuardias() {
   
   const semanaKey = semanaAdmin.toString();
   const override = manualOverrides[semanaKey] || {};
+  const elecOriginal = guardia(electricos, semanaAdmin);
+  const mecOriginal = guardia(mecanicos, semanaAdmin);
   
   let html = `
     <div class="week-guard">
      <strong>⚡ Guardia eléctrica:</strong>
      <select id="admin-elec-${semanaAdmin}" style="margin-left:10px;">
-      <option value="">-- Rotación automática --</option>
+      <option value="">-- Rotación automática (${elecOriginal}) --</option>
       ${activos(electricos).map(p => 
-       `<option value="${p}" ${override.electrico===p?'selected':''}>${p}</option>`
+       `<option value="${p}" ${override.electrico===p?'selected':''}>${p} ${p === elecOriginal ? '(actual)' : ''}</option>`
       ).join('')}
      </select>
     </div>
     <div class="week-guard">
      <strong>🔧 Guardia mecánica:</strong>
      <select id="admin-mec-${semanaAdmin}" style="margin-left:10px;">
-      <option value="">-- Rotación automática --</option>
+      <option value="">-- Rotación automática (${mecOriginal}) --</option>
       ${activos(mecanicos).map(p => 
-       `<option value="${p}" ${override.mecanico===p?'selected':''}>${p}</option>`
+       `<option value="${p}" ${override.mecanico===p?'selected':''}>${p} ${p === mecOriginal ? '(actual)' : ''}</option>`
       ).join('')}
      </select>
     </div>
@@ -1384,6 +1419,7 @@ function changeAdminWeek(delta) {
   renderAdminGuardias();
 }
 
+// ========== GUARDAR CAMBIOS MANUALES CON REORDENAMIENTO ==========
 function saveManualChanges() {
   const hoy = new Date();
   const numeroSemanaActual = calcularNumeroSemana(hoy);
@@ -1396,25 +1432,118 @@ function saveManualChanges() {
   const elecValue = elecSelect.value;
   const mecValue = mecSelect.value;
   
+  // Si no hay cambios, eliminar override si existe
   if (!elecValue && !mecValue) {
     if (manualOverrides[semanaKey]) {
       delete manualOverrides[semanaKey];
+      localStorage.manualOverrides = JSON.stringify(manualOverrides);
+    }
+    render();
+    renderCalendar();
+    alert("✅ Cambios eliminados - Rotación automática restaurada");
+    return;
+  }
+  
+  // Crear o actualizar override para esta semana
+  if (!manualOverrides[semanaKey]) {
+    manualOverrides[semanaKey] = {};
+  }
+  
+  // Guardar cambios manuales
+  let cambiosRealizados = false;
+  
+  if (elecValue) {
+    const guardiaOriginal = guardia(electricos, semanaAdmin);
+    if (elecValue !== guardiaOriginal) {
+      manualOverrides[semanaKey].electrico = elecValue;
+      cambiosRealizados = true;
+      
+      // Reordenar la lista de eléctricos para las semanas siguientes
+      reordenarListaParaSiguientesSemanas('electricos', elecValue, semanaAdmin);
     }
   } else {
-    if (!manualOverrides[semanaKey]) {
-      manualOverrides[semanaKey] = {};
+    delete manualOverrides[semanaKey].electrico;
+  }
+  
+  if (mecValue) {
+    const guardiaOriginal = guardia(mecanicos, semanaAdmin);
+    if (mecValue !== guardiaOriginal) {
+      manualOverrides[semanaKey].mecanico = mecValue;
+      cambiosRealizados = true;
+      
+      // Reordenar la lista de mecánicos para las semanas siguientes
+      reordenarListaParaSiguientesSemanas('mecanicos', mecValue, semanaAdmin);
     }
-    if (elecValue) manualOverrides[semanaKey].electrico = elecValue;
-    else delete manualOverrides[semanaKey].electrico;
-    
-    if (mecValue) manualOverrides[semanaKey].mecanico = mecValue;
-    else delete manualOverrides[semanaKey].mecanico;
+  } else {
+    delete manualOverrides[semanaKey].mecanico;
+  }
+  
+  // Si no hay cambios en esta semana, eliminar el override
+  if (!manualOverrides[semanaKey].electrico && !manualOverrides[semanaKey].mecanico) {
+    delete manualOverrides[semanaKey];
   }
   
   localStorage.manualOverrides = JSON.stringify(manualOverrides);
-  render();
-  renderCalendar();
-  alert("✅ Cambios guardados");
+  
+  if (cambiosRealizados) {
+    // Actualizar vista previa de rotaciones
+    updateRotationPreview();
+    
+    // Re-renderizar todo
+    renderRotationLists();
+    render();
+    renderCalendar();
+    renderAdminGuardias();
+    
+    alert("✅ Cambios guardados y rotación reordenada para semanas siguientes");
+  } else {
+    alert("⚠️ No se realizaron cambios (misma persona seleccionada)");
+  }
+}
+
+// ========== FUNCIÓN PARA REORDENAR LISTAS ==========
+function reordenarListaParaSiguientesSemanas(tipo, personaSeleccionada, semanaActual) {
+  const lista = tipo === 'electricos' ? ordenElectricos : ordenMecanicos;
+  const listaActivos = tipo === 'electricos' ? activos(electricos) : activos(mecanicos);
+  
+  // Encontrar la posición de la persona en la lista de activos
+  const indexEnActivos = listaActivos.indexOf(personaSeleccionada);
+  
+  if (indexEnActivos === -1) return; // Persona no encontrada
+  
+  // Calcular qué posición debería tener según la semana actual
+  // La persona seleccionada debería estar en la posición (semanaActual % listaActivos.length)
+  const posicionDeseada = ((semanaActual % listaActivos.length) + listaActivos.length) % listaActivos.length;
+  
+  // Si ya está en la posición correcta, no hay que reordenar
+  if (indexEnActivos === posicionDeseada) return;
+  
+  // Reordenar la lista para que la persona seleccionada esté en la posición deseada
+  const nuevaLista = [];
+  
+  // Tomar la lista de activos y reordenarla empezando por la persona seleccionada
+  for (let i = 0; i < listaActivos.length; i++) {
+    const index = (posicionDeseada + i) % listaActivos.length;
+    nuevaLista.push(listaActivos[index]);
+  }
+  
+  // Mantener el orden original para las personas inactivas
+  const personasInactivas = lista.filter(p => !listaActivos.includes(p));
+  
+  // Combinar activos reordenados con inactivos (estos al final)
+  const listaCompletaReordenada = [...nuevaLista, ...personasInactivas];
+  
+  // Actualizar la lista correspondiente
+  if (tipo === 'electricos') {
+    ordenElectricos = listaCompletaReordenada;
+    localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
+  } else {
+    ordenMecanicos = listaCompletaReordenada;
+    localStorage.ordenMecanicos = JSON.stringify(ordenMecanicos);
+  }
+  
+  console.log(`✅ Lista de ${tipo} reordenada. Nueva rotación:`);
+  console.log(listaCompletaReordenada);
 }
 
 // ========== INTERCAMBIO DE PERSONAS ==========
@@ -1530,6 +1659,75 @@ function renderHistory(){
   history.forEach(h=>historyList.innerHTML+=`<div class="history-item">${h}</div>`);
 }
 
+// ========== FUNCIONES DE DIAGNÓSTICO ==========
+function mostrarOrdenActual() {
+  console.log("=== ORDEN ACTUAL DE ROTACIÓN ===");
+  console.log("Eléctricos activos:", activos(electricos));
+  console.log("Mecánicos activos:", activos(mecanicos));
+  console.log("Orden completo eléctricos:", ordenElectricos);
+  console.log("Orden completo mecánicos:", ordenMecanicos);
+  
+  // Mostrar próximas 12 semanas
+  const hoy = new Date();
+  const semanaActual = calcularNumeroSemana(hoy);
+  
+  console.log("\n=== PRÓXIMAS 12 SEMANAS ===");
+  for (let i = 0; i < 12; i++) {
+    const semana = semanaActual + i;
+    const elecGuardia = guardia(electricos, semana);
+    const mecGuardia = guardia(mecanicos, semana);
+    const tieneOverride = manualOverrides[semana.toString()] ? ' (MANUAL)' : '';
+    
+    console.log(`Semana ${semana}: ⚡ ${elecGuardia} | 🔧 ${mecGuardia}${tieneOverride}`);
+  }
+}
+
+function testRotacionCompleta() {
+  const hoy = new Date();
+  const semanaActual = calcularNumeroSemana(hoy);
+  const electricosActivos = activos(electricos);
+  const mecanicosActivos = activos(mecanicos);
+  
+  console.log("=== TEST DE ROTACIÓN COMPLETA ===");
+  console.log(`Eléctricos activos: ${electricosActivos.length} personas`);
+  console.log(`Mecánicos activos: ${mecanicosActivos.length} personas`);
+  
+  // Verificar que no se repitan antes de completar un ciclo
+  const semanasParaCiclo = Math.max(electricosActivos.length, mecanicosActivos.length);
+  
+  let problemas = [];
+  
+  for (let i = 0; i < semanasParaCiclo * 2; i++) {
+    const semana = semanaActual + i;
+    const elecGuardia = guardia(electricos, semana);
+    const mecGuardia = guardia(mecanicos, semana);
+    
+    // Verificar repeticiones en las próximas semanas
+    for (let j = i + 1; j < Math.min(semanaActual + 20, semanaActual + semanasParaCiclo * 2); j++) {
+      const semanaSiguiente = semanaActual + j;
+      const elecSiguiente = guardia(electricos, semanaSiguiente);
+      const mecSiguiente = guardia(mecanicos, semanaSiguiente);
+      
+      if (elecGuardia === elecSiguiente && j - i < electricosActivos.length) {
+        problemas.push(`⚡ ${elecGuardia} se repite en semana ${i+1} y ${j+1} (debería esperar ${electricosActivos.length} semanas)`);
+      }
+      
+      if (mecGuardia === mecSiguiente && j - i < mecanicosActivos.length) {
+        problemas.push(`🔧 ${mecGuardia} se repite en semana ${i+1} y ${j+1} (debería esperar ${mecanicosActivos.length} semanas)`);
+      }
+    }
+  }
+  
+  if (problemas.length === 0) {
+    console.log("✅ Rotación correcta: No hay repeticiones prematuras");
+    alert("✅ Test pasado: Rotación correcta sin repeticiones prematuras");
+  } else {
+    console.log("❌ Problemas encontrados:");
+    problemas.forEach(p => console.log(p));
+    alert("⚠️ Se encontraron problemas. Ver consola para detalles.");
+  }
+}
+
 // ========== EVENT LISTENERS ==========
 prev.onclick=()=>{offset--;render()};
 next.onclick=()=>{offset++;render()};
@@ -1556,7 +1754,11 @@ save.onclick=()=>{
   renderCalendar();
   renderAdmin();
   renderAdminGuardias();
-  alert("✅ Todo guardado");
+  
+  // Mostrar orden actual en consola
+  mostrarOrdenActual();
+  
+  alert("✅ Todo guardado. Ver consola para ver orden de rotación.");
 };
 
 // ========== GENERAR CÓDIGOS QR ==========
@@ -1589,10 +1791,12 @@ renderRotationLists();
 renderAdminGuardias();
 populateSwapSelects();
 
-console.log("Admin con gestión de rotaciones cargado");
+console.log("Admin con gestión de rotaciones mejorada cargado");
+console.log("Usa 'mostrarOrdenActual()' en la consola para ver el orden de rotación");
 </script>
 </body>
 </html>
+
 
 
 
