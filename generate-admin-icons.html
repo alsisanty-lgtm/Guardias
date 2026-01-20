@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generar Iconos Admin</title>
+    <style>
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .icon-container { display: flex; flex-wrap: wrap; gap: 20px; }
+        .icon-box { text-align: center; }
+    </style>
+</head>
+<body>
+    <h2>Generar Iconos para Versión Admin</h2>
+    <div class="icon-container" id="icons"></div>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 310, 384, 512];
+        
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Fondo morado (#8b5cf6)
+            ctx.fillStyle = '#8b5cf6';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Texto blanco "GA"
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `bold ${size * 0.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('GA', size/2, size/2);
+            
+            // Pequeña "A" en esquina para indicar Admin
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `bold ${size * 0.15}px Arial`;
+            ctx.fillText('A', size * 0.8, size * 0.2);
+            
+            // Borde blanco
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = size * 0.05;
+            ctx.strokeRect(size*0.1, size*0.1, size*0.8, size*0.8);
+            
+            const box = document.createElement('div');
+            box.className = 'icon-box';
+            box.innerHTML = `
+                <div><strong>${size}x${size}</strong></div>
+                ${canvas.outerHTML}
+                <br>
+                <button onclick="downloadIcon(${size})">Descargar icon-${size}-admin.png</button>
+            `;
+            
+            document.getElementById('icons').appendChild(box);
+            
+            // Guardar referencia
+            canvas.dataset.size = size;
+        });
+        
+        function downloadIcon(size) {
+            const canvas = document.querySelector(`canvas[data-size="${size}"]`);
+            const link = document.createElement('a');
+            link.download = `icon-${size}-admin.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Descargar todos
+        setTimeout(() => {
+            if (confirm('¿Descargar todos los iconos de admin?')) {
+                sizes.forEach(size => {
+                    const canvas = document.querySelector(`canvas[data-size="${size}"]`);
+                    const link = document.createElement('a');
+                    link.download = `icon-${size}-admin.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                });
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
