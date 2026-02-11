@@ -233,7 +233,7 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 </div>
 
 <script>
-// ========== CONFIGURACIÓN DE GITHUB - ¡YA CONFIGURADO! ==========
+// ========== CONFIGURACIÓN DE GITHUB - SIN TOKENS ==========
 const GITHUB_CONFIG = {
     repoOwner: 'TU_USUARIO', // ⚠️ CAMBIA ESTO POR TU USUARIO DE GITHUB
     repoName: 'guardias-alsi-data',
@@ -324,7 +324,13 @@ function mostrarNotificacion(mensaje) {
         <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;margin-left:10px;">×</button>
     `;
     document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 5000);
+    setTimeout(() => {
+        if (notif.parentNode) {
+            notif.style.opacity = '0';
+            notif.style.transition = 'opacity 0.5s';
+            setTimeout(() => notif.remove(), 500);
+        }
+    }, 5000);
 }
 
 // ========== SINCRONIZACIÓN CON GITHUB ==========
@@ -665,8 +671,17 @@ if ('serviceWorker' in navigator) {
 
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', async () => {
-    // Configurar GitHub con tu usuario (¡CAMBIA ESTO!)
-    GITHUB_CONFIG.repoOwner = prompt("¿Cuál es tu usuario de GitHub?", "TU_USUARIO") || GITHUB_CONFIG.repoOwner;
+    // Preguntar usuario de GitHub si no está configurado
+    if (GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
+        const usuario = prompt(
+            "🔧 Configuración de GitHub\n\n" +
+            "Introduce tu nombre de usuario de GitHub:",
+            ""
+        );
+        if (usuario) {
+            GITHUB_CONFIG.repoOwner = usuario;
+        }
+    }
     
     // Cargar datos iniciales
     const config = await leerDeGitHub();
@@ -687,12 +702,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Verificar al ganar foco
     window.addEventListener('focus', verificarCambios);
     
-    console.log('👥 Usuario sincronizado con GitHub');
+    console.log('👥 Usuario sincronizado con GitHub (sin tokens en el código)');
 });
-</script>
-</body>
-</html>
-console.log("Aplicación de usuario sincronizada con admin");
 </script>
 </body>
 </html>
