@@ -233,9 +233,9 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 </div>
 
 <script>
-// ========== CONFIGURACIÓN DE GITHUB - SIN TOKENS ==========
+// ========== CONFIGURACIÓN DE GITHUB - CORREGIDA ==========
 const GITHUB_CONFIG = {
-    repoOwner: 'alsisanty-lgtm', // ⚠️ CAMBIA ESTO POR TU USUARIO DE GITHUB
+    repoOwner: 'alsisanty-lgtm',
     repoName: 'guardias-alsi-data',
     branch: 'main'
 };
@@ -252,6 +252,9 @@ let mecanicos = ["Fran Alba", "Manu", "Cele", "Santy", "Ramon", "Traian"];
 let estados = JSON.parse(localStorage.getItem('estados') || '{}');
 let manualOverrides = JSON.parse(localStorage.getItem('manualOverrides') || '{}');
 let history = JSON.parse(localStorage.getItem('history') || '[]');
+
+// ========== VARIABLE DE VERSIÓN ==========
+let ultimaVersion = localStorage.getItem('version') || '0';
 
 // ========== FUNCIONES DE FECHA ==========
 const FECHA_BASE = new Date(2024, 0, 1);
@@ -333,25 +336,23 @@ function mostrarNotificacion(mensaje) {
     }, 5000);
 }
 
-// ========== SINCRONIZACIÓN CON GITHUB ==========
+// ========== SINCRONIZACIÓN CON GITHUB - VERSIÓN FORZADA ==========
 async function leerDeGitHub() {
     try {
         const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.repoOwner}/${GITHUB_CONFIG.repoName}/${GITHUB_CONFIG.branch}/config.json?t=${Date.now()}`;
         
-        const response = await fetch(url, {
-            cache: 'no-cache',
-            headers: {
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
-        });
+        const response = await fetch(url);
         
-        if (!response.ok) throw new Error('No se pudo leer');
+        if (!response.ok) {
+            console.log('📌 No se pudo leer de GitHub, usando datos locales');
+            return null;
+        }
         
         const config = await response.json();
+        console.log('📥 Configuración recibida de GitHub, versión:', config.version);
         return config;
     } catch (error) {
-        console.log('Usando datos locales');
+        console.log('❌ Error leyendo de GitHub:', error);
         return null;
     }
 }
@@ -359,12 +360,12 @@ async function leerDeGitHub() {
 function aplicarConfiguracion(config) {
     if (!config) return false;
     
-    const versionLocal = localStorage.getItem('version') || '0';
     const versionGitHub = config.version || '0';
     
-    if (parseInt(versionGitHub) > parseInt(versionLocal)) {
-        console.log(`📥 Nueva versión: ${versionGitHub}`);
+    if (versionGitHub !== ultimaVersion) {
+        console.log(`🔄 Actualizando de versión ${ultimaVersion} → ${versionGitHub}`);
         
+        // GUARDAR EN LOCALSTORAGE
         if (config.ordenElectricos) {
             localStorage.setItem('ordenElectricos', JSON.stringify(config.ordenElectricos));
         }
@@ -384,27 +385,26 @@ function aplicarConfiguracion(config) {
             localStorage.setItem('history', JSON.stringify(config.history));
         }
         
-        localStorage.setItem('version', config.version);
+        // ACTUALIZAR VERSIÓN
+        ultimaVersion = versionGitHub;
+        localStorage.setItem('version', versionGitHub);
         
+        // FORZAR RENDERIZADO COMPLETO
         renderCalendar();
         renderPersonasList();
         render();
         renderHistory();
         
-        mostrarNotificacion('Guardias actualizadas');
+        // NOTIFICACIÓN
+        mostrarNotificacion('✅ Guardias actualizadas');
+        
         return true;
     }
     return false;
 }
 
-// ========== VERIFICAR CAMBIOS ==========
-let ultimaVerificacion = 0;
-
+// ========== VERIFICAR CAMBIOS CADA 3 SEGUNDOS ==========
 async function verificarCambios() {
-    const ahora = Date.now();
-    if (ahora - ultimaVerificacion < 5000) return;
-    ultimaVerificacion = ahora;
-    
     const config = await leerDeGitHub();
     if (config) {
         aplicarConfiguracion(config);
@@ -671,19 +671,11 @@ if ('serviceWorker' in navigator) {
 
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', async () => {
-    // Preguntar usuario de GitHub si no está configurado
-    if (GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
-        const usuario = prompt(
-            "🔧 Configuración de GitHub\n\n" +
-            "Introduce tu nombre de usuario de GitHub:",
-            ""
-        );
-        if (usuario) {
-            GITHUB_CONFIG.repoOwner = usuario;
-        }
-    }
+    // Usuario ya configurado: alsisanty-lgtm
+    console.log('👤 Usuario GitHub:', GITHUB_CONFIG.repoOwner);
     
     // Cargar datos iniciales
+    console.log('📡 Cargando datos desde GitHub...');
     const config = await leerDeGitHub();
     if (config) {
         aplicarConfiguracion(config);
@@ -696,13 +688,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     render();
     renderHistory();
     
-    // Verificar cambios cada 10 segundos
-    setInterval(verificarCambios, 10000);
+    // Verificar cambios CADA 3 SEGUNDOS (más rápido)
+    setInterval(verificarCambios, 3000);
     
     // Verificar al ganar foco
     window.addEventListener('focus', verificarCambios);
     
-    console.log('👥 Usuario sincronizado con GitHub (sin tokens en el código)');
+    console.log('✅ Index sincronizado con GitHub - Versión actual:', ultimaVersion);
 });
 </script>
 </body>
