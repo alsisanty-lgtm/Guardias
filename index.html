@@ -16,9 +16,8 @@
 <meta name="msapplication-config" content="browserconfig.xml">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<!-- ========== FIN META TAGS PWA ========== -->
-
 <link rel="icon" href="icon-192.png">
+
 <style>
 :root{
  --primary:#1e88e5;--bg:#f2f4f8;--card:#fff;
@@ -162,39 +161,43 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 .standalone-mode header {
   padding-top: env(safe-area-inset-top, 20px);
 }
-
 .standalone-mode #night {
   top: calc(env(safe-area-inset-top, 12px) + 12px);
 }
-
 @media (display-mode: standalone) {
-  button, select, .calendar-day {
-    min-height: 44px;
-  }
-  
-  .guardia {
-    padding: 20px;
-  }
-  
-  body {
-    -webkit-tap-highlight-color: transparent;
-  }
+  button, select, .calendar-day { min-height: 44px; }
+  .guardia { padding: 20px; }
+  body { -webkit-tap-highlight-color: transparent; }
 }
-
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
+#install-button { animation: pulse 2s infinite; }
+#install-button:hover { animation: none; }
 
-#install-button {
-  animation: pulse 2s infinite;
+/* ===== NOTIFICACIONES ===== */
+.notificacion-github {
+  position: fixed;
+  top: 70px;
+  right: 10px;
+  background: #1e88e5;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  z-index: 10000;
+  font-size: 14px;
+  animation: slideIn 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
-#install-button:hover {
-  animation: none;
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
-/* ========== FIN ESTILOS PWA ========== */
 </style>
 </head>
 <body>
@@ -229,548 +232,466 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <div id="historyList"></div>
 </div>
 
-<!-- ========== SCRIPT PWA ========== -->
 <script>
+// ========== CONFIGURACIÓN DE GITHUB - ¡YA CONFIGURADO! ==========
+const GITHUB_CONFIG = {
+    repoOwner: 'TU_USUARIO', // ⚠️ CAMBIA ESTO POR TU USUARIO DE GITHUB
+    repoName: 'guardias-alsi-data',
+    branch: 'main'
+};
+
+// ========== VARIABLES GLOBALES ==========
+let offset = 0;
+let calendarMonth = new Date();
+
+// ========== DATOS DE PERSONAL ==========
+let electricos = ["Jose", "Dani", "Abde", "Fran", "Fran Ruiz", "Hicham"];
+let mecanicos = ["Fran Alba", "Manu", "Cele", "Santy", "Ramon", "Traian"];
+
+// ========== CARGAR DATOS GUARDADOS ==========
+let estados = JSON.parse(localStorage.getItem('estados') || '{}');
+let manualOverrides = JSON.parse(localStorage.getItem('manualOverrides') || '{}');
+let history = JSON.parse(localStorage.getItem('history') || '[]');
+
+// ========== FUNCIONES DE FECHA ==========
+const FECHA_BASE = new Date(2024, 0, 1);
+const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
+
+function obtenerLunes(fecha) {
+    const d = new Date(fecha);
+    const dia = d.getDay();
+    const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+}
+
+function calcularNumeroSemana(fecha) {
+    const fechaLunes = obtenerLunes(fecha);
+    fechaLunes.setHours(12, 0, 0, 0);
+    const fechaBaseLunes = obtenerLunes(FECHA_BASE);
+    fechaBaseLunes.setHours(12, 0, 0, 0);
+    const diferenciaMs = fechaLunes - fechaBaseLunes;
+    return Math.floor(diferenciaMs / MS_POR_SEMANA);
+}
+
+const fd = d => {
+    const date = new Date(d);
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+};
+
+// ========== FUNCIONES DE ROTACIÓN ==========
+const activos = l => {
+    const ordenPersonalizado = l === electricos ? 
+        JSON.parse(localStorage.getItem('ordenElectricos') || 'null') : 
+        JSON.parse(localStorage.getItem('ordenMecanicos') || 'null');
+    const lista = ordenPersonalizado || l;
+    return lista.filter(p => !estados[p] || estados[p] === "activo");
+};
+
+const guardia = (l, numeroSemana) => {
+    const a = activos(l);
+    if (a.length === 0) return "Nadie";
+    
+    const semanaKey = numeroSemana.toString();
+    if (manualOverrides[semanaKey]) {
+        const tipo = l === electricos ? 'electrico' : 'mecanico';
+        if (manualOverrides[semanaKey][tipo]) {
+            return manualOverrides[semanaKey][tipo];
+        }
+    }
+    
+    const indice = ((numeroSemana % a.length) + a.length) % a.length;
+    return a[indice];
+};
+
+function getEstadoTexto(estado) {
+    switch(estado) {
+        case 'activo': return 'Activo';
+        case 'vacaciones': return 'Vacaciones';
+        case 'viaje': return 'Viaje';
+        case 'baja': return 'Baja';
+        case 'inactivo': return 'Inactivo';
+        default: return 'Activo';
+    }
+}
+
+// ========== NOTIFICACIONES ==========
+function mostrarNotificacion(mensaje) {
+    const notif = document.createElement('div');
+    notif.className = 'notificacion-github';
+    notif.innerHTML = `
+        <span>🔄</span>
+        <span>${mensaje}</span>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;margin-left:10px;">×</button>
+    `;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 5000);
+}
+
+// ========== SINCRONIZACIÓN CON GITHUB ==========
+async function leerDeGitHub() {
+    try {
+        const url = `https://raw.githubusercontent.com/${GITHUB_CONFIG.repoOwner}/${GITHUB_CONFIG.repoName}/${GITHUB_CONFIG.branch}/config.json?t=${Date.now()}`;
+        
+        const response = await fetch(url, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        
+        if (!response.ok) throw new Error('No se pudo leer');
+        
+        const config = await response.json();
+        return config;
+    } catch (error) {
+        console.log('Usando datos locales');
+        return null;
+    }
+}
+
+function aplicarConfiguracion(config) {
+    if (!config) return false;
+    
+    const versionLocal = localStorage.getItem('version') || '0';
+    const versionGitHub = config.version || '0';
+    
+    if (parseInt(versionGitHub) > parseInt(versionLocal)) {
+        console.log(`📥 Nueva versión: ${versionGitHub}`);
+        
+        if (config.ordenElectricos) {
+            localStorage.setItem('ordenElectricos', JSON.stringify(config.ordenElectricos));
+        }
+        if (config.ordenMecanicos) {
+            localStorage.setItem('ordenMecanicos', JSON.stringify(config.ordenMecanicos));
+        }
+        if (config.estados) {
+            estados = config.estados;
+            localStorage.setItem('estados', JSON.stringify(config.estados));
+        }
+        if (config.manualOverrides) {
+            manualOverrides = config.manualOverrides;
+            localStorage.setItem('manualOverrides', JSON.stringify(config.manualOverrides));
+        }
+        if (config.history) {
+            history = config.history;
+            localStorage.setItem('history', JSON.stringify(config.history));
+        }
+        
+        localStorage.setItem('version', config.version);
+        
+        renderCalendar();
+        renderPersonasList();
+        render();
+        renderHistory();
+        
+        mostrarNotificacion('Guardias actualizadas');
+        return true;
+    }
+    return false;
+}
+
+// ========== VERIFICAR CAMBIOS ==========
+let ultimaVerificacion = 0;
+
+async function verificarCambios() {
+    const ahora = Date.now();
+    if (ahora - ultimaVerificacion < 5000) return;
+    ultimaVerificacion = ahora;
+    
+    const config = await leerDeGitHub();
+    if (config) {
+        aplicarConfiguracion(config);
+    }
+}
+
+// ========== RENDERIZAR LISTA DE PERSONAS ==========
+function renderPersonasList() {
+    const personasList = document.getElementById('personasList');
+    if (!personasList) return;
+    
+    let html = '';
+    
+    const ordenElec = JSON.parse(localStorage.getItem('ordenElectricos') || 'null') || electricos;
+    const ordenMec = JSON.parse(localStorage.getItem('ordenMecanicos') || 'null') || mecanicos;
+    
+    ordenElec.forEach(persona => {
+        const estado = estados[persona] || 'activo';
+        if (estado !== 'inactivo') {
+            html += `
+                <div class="persona-item">
+                    <span class="icon">⚡</span>
+                    <span>${persona}</span>
+                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
+                </div>
+            `;
+        }
+    });
+    
+    ordenMec.forEach(persona => {
+        const estado = estados[persona] || 'activo';
+        if (estado !== 'inactivo') {
+            html += `
+                <div class="persona-item">
+                    <span class="icon">🔧</span>
+                    <span>${persona}</span>
+                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
+                </div>
+            `;
+        }
+    });
+    
+    personasList.innerHTML = html;
+}
+
+// ========== RENDERIZAR CALENDARIO ==========
+function renderCalendar() {
+    const calendarGrid = document.getElementById('calendarGrid');
+    if (!calendarGrid) return;
+    
+    calendarGrid.innerHTML = "";
+    const y = calendarMonth.getFullYear();
+    const m = calendarMonth.getMonth();
+    
+    document.getElementById('calendarTitle').textContent = `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
+    
+    const primerDia = new Date(y, m, 1);
+    const ultimoDia = new Date(y, m + 1, 0);
+    
+    const inicio = new Date(primerDia);
+    const diaSemana = inicio.getDay();
+    inicio.setDate(inicio.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
+    
+    const fin = new Date(ultimoDia);
+    const diaSemanaFin = fin.getDay();
+    fin.setDate(fin.getDate() + (diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin));
+    
+    let fechaActual = new Date(inicio);
+    while (fechaActual <= fin) {
+        const esFueraMes = fechaActual.getMonth() !== m;
+        const diaSemana = fechaActual.getDay();
+        const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
+        const numeroSemana = calcularNumeroSemana(fechaActual);
+        const elecGuardia = guardia(electricos, numeroSemana);
+        const mecGuardia = guardia(mecanicos, numeroSemana);
+        const tieneOverride = manualOverrides[numeroSemana.toString()];
+        
+        let contenidoHTML = `<div class="day-number">${fechaActual.getDate()}</div>`;
+        if (esDiaLaboral && !esFueraMes) {
+            contenidoHTML += `
+                <div class="guardia-info">
+                    <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">⚡ ${elecGuardia}</div>
+                    <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">🔧 ${mecGuardia}</div>
+                </div>
+            `;
+        }
+        
+        const clases = ['calendar-day'];
+        if (esFueraMes) clases.push('outside');
+        if (esDiaLaboral) clases.push('weekday');
+        else clases.push('weekend');
+        
+        calendarGrid.innerHTML += `<div class="${clases.join(' ')}">${contenidoHTML}</div>`;
+        fechaActual.setDate(fechaActual.getDate() + 1);
+    }
+}
+
+function changeMonth(delta) {
+    calendarMonth.setMonth(calendarMonth.getMonth() + delta);
+    renderCalendar();
+}
+
+// ========== RENDERIZAR SEMANAS ==========
+function render() {
+    const carousel = document.getElementById('carousel');
+    if (!carousel) return;
+    
+    carousel.innerHTML = "";
+    const hoy = new Date();
+    const numeroSemanaActual = calcularNumeroSemana(hoy);
+    
+    const fechaBase = obtenerLunes(hoy);
+    fechaBase.setDate(fechaBase.getDate() + (offset * 7));
+    
+    const fechaInicio = new Date(fechaBase);
+    const fechaFin = new Date(fechaInicio);
+    fechaFin.setDate(fechaFin.getDate() + 4);
+    
+    document.getElementById('subtitle').textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
+    
+    for (let i = -1; i <= 1; i++) {
+        const semanaOffset = offset + i;
+        const numeroSemana = numeroSemanaActual + semanaOffset;
+        
+        const semanaInicio = new Date(fechaBase);
+        semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
+        const semanaFin = new Date(semanaInicio);
+        semanaFin.setDate(semanaFin.getDate() + 4);
+        
+        const elecGuardia = guardia(electricos, numeroSemana);
+        const mecGuardia = guardia(mecanicos, numeroSemana);
+        const tieneOverride = manualOverrides[numeroSemana.toString()];
+        
+        carousel.innerHTML += `
+            <div class="card">
+                <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
+                <div class="guardias">
+                    <div class="guardia">
+                        <div class="icono">⚡</div>
+                        <div class="nombre">${elecGuardia}</div>
+                        <div class="days">L–V</div>
+                        <div class="time">15:30 – 19:00</div>
+                        <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">${getEstadoTexto(estados[elecGuardia])}</small>
+                    </div>
+                    <div class="guardia">
+                        <div class="icono">🔧</div>
+                        <div class="nombre">${mecGuardia}</div>
+                        <div class="days">L–V</div>
+                        <div class="time">15:30 – 19:00</div>
+                        <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">${getEstadoTexto(estados[mecGuardia])}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// ========== HISTORIAL ==========
+function logCompletedWeek() {
+    const hoy = new Date();
+    const viernes = obtenerLunes(hoy);
+    viernes.setDate(viernes.getDate() + 4);
+    
+    if (hoy < viernes) return;
+    
+    const numeroSemana = calcularNumeroSemana(hoy);
+    const clave = fd(obtenerLunes(hoy));
+    
+    if (history.some(h => h.startsWith(clave))) return;
+    
+    const elecGuardia = guardia(electricos, numeroSemana);
+    const mecGuardia = guardia(mecanicos, numeroSemana);
+    
+    history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
+    history = history.slice(0, 30);
+    localStorage.setItem('history', JSON.stringify(history));
+}
+
+function renderHistory() {
+    const historyList = document.getElementById('historyList');
+    if (!historyList) return;
+    
+    historyList.innerHTML = "";
+    history.forEach(h => {
+        const [fecha, ...resto] = h.split(' ');
+        const guardias = resto.join(' ');
+        historyList.innerHTML += `
+            <div class="history-item">
+                <span>${fecha}</span>
+                <span>${guardias}</span>
+            </div>
+        `;
+    });
+}
+
+// ========== MODO OSCURO ==========
+document.getElementById('night').onclick = () => {
+    document.body.classList.toggle('dark');
+    localStorage.dark = document.body.classList.contains('dark');
+};
+if (localStorage.dark === 'true') document.body.classList.add('dark');
+
+// ========== EVENT LISTENERS ==========
+document.getElementById('prev').onclick = () => { offset--; render(); };
+document.getElementById('next').onclick = () => { offset++; render(); };
+
 // ========== PWA INSTALLATION ==========
 let deferredPrompt;
 let installButton = null;
 
 function createInstallButton() {
-  if (installButton) return;
-  
-  installButton = document.createElement('button');
-  installButton.id = 'install-button';
-  installButton.innerHTML = '📱 Instalar App';
-  installButton.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #4CAF50, #2E7D32);
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 1000;
-    cursor: pointer;
-    display: none;
-    transition: all 0.3s;
-    font-size: 14px;
-  `;
-  
-  installButton.onclick = installPWA;
-  installButton.onmouseover = () => installButton.style.transform = 'translateY(-2px)';
-  installButton.onmouseout = () => installButton.style.transform = 'translateY(0)';
-  
-  document.body.appendChild(installButton);
+    if (installButton) return;
+    installButton = document.createElement('button');
+    installButton.id = 'install-button';
+    installButton.innerHTML = '📱 Instalar App';
+    installButton.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 1000;
+        cursor: pointer;
+        display: none;
+        font-size: 14px;
+    `;
+    installButton.onclick = installPWA;
+    document.body.appendChild(installButton);
 }
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('beforeinstallprompt fired');
-  e.preventDefault();
-  deferredPrompt = e;
-  createInstallButton();
-  
-  setTimeout(() => {
-    if (installButton && deferredPrompt) {
-      installButton.style.display = 'block';
-      setTimeout(() => {
-        if (installButton) installButton.style.display = 'none';
-      }, 10000);
-    }
-  }, 3000);
+    e.preventDefault();
+    deferredPrompt = e;
+    createInstallButton();
+    setTimeout(() => {
+        if (installButton && deferredPrompt) {
+            installButton.style.display = 'block';
+        }
+    }, 3000);
 });
 
 function installPWA() {
-  if (!deferredPrompt) {
-    alert('La aplicación ya está instalada o no se puede instalar en este navegador.');
-    return;
-  }
-  
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then((choiceResult) => {
-    if (choiceResult.outcome === 'accepted') {
-      console.log('Usuario aceptó la instalación');
-      if (installButton) {
-        installButton.style.display = 'none';
-        installButton.innerHTML = '✅ Instalada';
-        setTimeout(() => installButton.style.display = 'none', 2000);
-      }
-      document.dispatchEvent(new CustomEvent('appInstalled'));
-    } else {
-      console.log('Usuario rechazó la instalación');
-      if (installButton) {
-        installButton.style.display = 'none';
-        setTimeout(() => {
-          if (installButton && deferredPrompt) installButton.style.display = 'block';
-        }, 30000);
-      }
+    if (!deferredPrompt) {
+        alert('La aplicación ya está instalada');
+        return;
     }
-    deferredPrompt = null;
-  });
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        if (installButton) installButton.style.display = 'none';
+    });
 }
 
-window.addEventListener('appinstalled', (e) => {
-  console.log('App instalada exitosamente');
-  deferredPrompt = null;
-  if (installButton) installButton.style.display = 'none';
-  setTimeout(() => {
-    alert('¡App instalada exitosamente! 🎉\n\nAhora puedes acceder a Guardias Alsi desde tu pantalla de inicio.');
-  }, 1000);
-});
-
-// ========== SERVICE WORKER REGISTRATION ==========
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    console.log('Registrando Service Worker...');
-    navigator.serviceWorker.register('service-worker.js')
-      .then(function(registration) {
-        console.log('Service Worker registrado con éxito:', registration.scope);
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          console.log('Nueva versión del Service Worker encontrada:', newWorker);
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateNotification();
-            }
-          });
-        });
-      })
-      .catch(function(error) {
-        console.log('Error registrando Service Worker:', error);
-      });
-  });
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(console.log);
+    });
 }
-
-function showUpdateNotification() {
-  const updateDiv = document.createElement('div');
-  updateDiv.id = 'update-notification';
-  updateDiv.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #FF9800, #F57C00);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    z-index: 1001;
-    text-align: center;
-    max-width: 90%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  `;
-  
-  updateDiv.innerHTML = `
-    <div style="font-weight: bold;">🔄 Nueva versión disponible</div>
-    <div style="font-size: 0.9em;">Hay una actualización de la app</div>
-    <div style="display: flex; gap: 10px; justify-content: center;">
-      <button id="update-now" style="background: white; color: #FF9800; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer;">
-        Actualizar ahora
-      </button>
-      <button id="update-later" style="background: transparent; color: white; border: 1px solid white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
-        Más tarde
-      </button>
-    </div>
-  `;
-  
-  document.body.appendChild(updateDiv);
-  
-  document.getElementById('update-now').onclick = () => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        window.location.reload();
-      });
-    }
-  };
-  
-  document.getElementById('update-later').onclick = () => updateDiv.style.display = 'none';
-  
-  setTimeout(() => {
-    if (updateDiv.parentNode) {
-      updateDiv.style.opacity = '0';
-      updateDiv.style.transition = 'opacity 1s';
-      setTimeout(() => updateDiv.parentNode && updateDiv.remove(), 1000);
-    }
-  }, 30000);
-}
-
-function detectStandaloneMode() {
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                      window.navigator.standalone === true;
-  if (isStandalone) {
-    console.log('App ejecutándose en modo standalone');
-    document.documentElement.classList.add('standalone-mode');
-    if (CSS.supports('padding-top: env(safe-area-inset-top)')) {
-      document.documentElement.style.setProperty('--safe-area-top', 'env(safe-area-inset-top)');
-      document.documentElement.style.setProperty('--safe-area-bottom', 'env(safe-area-inset-bottom)');
-    }
-  }
-  return isStandalone;
-}
-
-window.addEventListener('load', () => {
-  detectStandaloneMode();
-  window.matchMedia('(display-mode: standalone)').addListener(detectStandaloneMode);
-});
-
-function updateOnlineStatus() {
-  if (!navigator.onLine) showOfflineNotification();
-  else hideOfflineNotification();
-}
-
-function showOfflineNotification() {
-  if (document.getElementById('offline-notification')) return;
-  const offlineDiv = document.createElement('div');
-  offlineDiv.id = 'offline-notification';
-  offlineDiv.style.cssText = `
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #f44336;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    z-index: 1002;
-    font-size: 0.9em;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  `;
-  offlineDiv.innerHTML = `<span>⚠️</span><span>Sin conexión - Modo offline</span>`;
-  document.body.appendChild(offlineDiv);
-}
-
-function hideOfflineNotification() {
-  const offlineDiv = document.getElementById('offline-notification');
-  if (offlineDiv) offlineDiv.remove();
-}
-
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-updateOnlineStatus();
-</script>
-<!-- ========== FIN SCRIPT PWA ========== -->
-
-<!-- ========== CÓDIGO PRINCIPAL CORREGIDO ========== -->
-<script>
-// Toggle modo oscuro
-night.onclick=()=>{
- document.body.classList.toggle("dark");
- localStorage.dark=document.body.classList.contains("dark");
-};
-if(localStorage.dark==="true") document.body.classList.add("dark");
-
-// ========== DATOS COMPATIBLES CON ADMIN ==========
-let electricos=["Jose","Dani","Abde","Fran","Fran Ruiz","Hicham"];
-let mecanicos=["Fran Alba","Manu","Cele","Santy","Ramon","Traian"];
-let estados=JSON.parse(localStorage.estados||"{}");
-let history=JSON.parse(localStorage.history||"[]");
-let manualOverrides=JSON.parse(localStorage.manualOverrides||"{}");
-let offset=0;
-let calendarMonth=new Date();
-
-// ========== FUNCIONES IDÉNTICAS AL ADMIN ==========
-const FECHA_BASE = new Date(2024, 0, 1);
-const MS_POR_SEMANA = 7 * 24 * 60 * 60 * 1000;
-
-function obtenerLunes(fecha) {
-  const d = new Date(fecha);
-  const dia = d.getDay();
-  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
-}
-
-function calcularNumeroSemana(fecha) {
-  const fechaLunes = obtenerLunes(fecha);
-  fechaLunes.setHours(12, 0, 0, 0);
-  
-  const fechaBaseLunes = obtenerLunes(FECHA_BASE);
-  fechaBaseLunes.setHours(12, 0, 0, 0);
-  
-  const diferenciaMs = fechaLunes - fechaBaseLunes;
-  const numeroSemana = Math.floor(diferenciaMs / MS_POR_SEMANA);
-  
-  return numeroSemana;
-}
-
-const fd = d => {
-  const date = new Date(d);
-  return date.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: '2-digit'
-  });
-};
-
-const activos = l => {
-  const ordenPersonalizado = l === electricos ? 
-    JSON.parse(localStorage.ordenElectricos || "null") : 
-    JSON.parse(localStorage.ordenMecanicos || "null");
-  
-  const lista = ordenPersonalizado || l;
-  return lista.filter(p => !estados[p] || estados[p] === "activo");
-};
-
-const guardia = (l, numeroSemana) => {
-  const a = activos(l);
-  if (a.length === 0) return "Nadie";
-  
-  const semanaKey = numeroSemana.toString();
-  if (manualOverrides[semanaKey]) {
-    const tipo = l === electricos ? 'electrico' : 'mecanico';
-    if (manualOverrides[semanaKey][tipo]) {
-      return manualOverrides[semanaKey][tipo];
-    }
-  }
-  
-  const indice = ((numeroSemana % a.length) + a.length) % a.length;
-  return a[indice];
-};
-
-function getEstadoTexto(estado){
- switch(estado){
-  case 'activo': return 'Activo';
-  case 'vacaciones': return 'Vacaciones';
-  case 'viaje': return 'Viaje';
-  case 'baja': return 'Baja';
-  case 'inactivo': return 'Inactivo';
-  default: return 'Activo';
- }
-}
-
-// ========== RENDERIZAR LISTA DE PERSONAS ==========
-function renderPersonasList() {
- let html = '';
- 
- const ordenElec = JSON.parse(localStorage.ordenElectricos || "null") || electricos;
- const ordenMec = JSON.parse(localStorage.ordenMecanicos || "null") || mecanicos;
- 
- ordenElec.forEach(persona => {
-  const estado = estados[persona] || 'activo';
-  if (estado !== 'inactivo') {
-   html += `
-    <div class="persona-item">
-     <span class="icon">⚡</span>
-     <span>${persona}</span>
-     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
-      ${getEstadoTexto(estado)}
-     </span>
-    </div>`;
-  }
- });
- 
- ordenMec.forEach(persona => {
-  const estado = estados[persona] || 'activo';
-  if (estado !== 'inactivo') {
-   html += `
-    <div class="persona-item">
-     <span class="icon">🔧</span>
-     <span>${persona}</span>
-     <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">
-      ${getEstadoTexto(estado)}
-     </span>
-    </div>`;
-  }
- });
- 
- document.getElementById('personasList').innerHTML = html;
-}
-
-// ========== CALENDARIO IDÉNTICO AL ADMIN ==========
-function renderCalendar() {
-  calendarGrid.innerHTML = "";
-  const y = calendarMonth.getFullYear();
-  const m = calendarMonth.getMonth();
-  
-  calendarTitle.textContent = `📆 ${calendarMonth.toLocaleString("es", { month: "long" })}, ${y}`;
-  
-  const primerDia = new Date(y, m, 1);
-  const ultimoDia = new Date(y, m + 1, 0);
-  
-  const inicio = new Date(primerDia);
-  const diaSemana = inicio.getDay();
-  const diasAtras = diaSemana === 0 ? 6 : diaSemana - 1;
-  inicio.setDate(inicio.getDate() - diasAtras);
-  
-  const fin = new Date(ultimoDia);
-  const diaSemanaFin = fin.getDay();
-  const diasAdelante = diaSemanaFin === 0 ? 0 : 7 - diaSemanaFin;
-  fin.setDate(fin.getDate() + diasAdelante);
-  
-  let fechaActual = new Date(inicio);
-  while (fechaActual <= fin) {
-    const esMesAnterior = fechaActual.getMonth() < m;
-    const esMesSiguiente = fechaActual.getMonth() > m;
-    const esFueraMes = esMesAnterior || esMesSiguiente;
-    const diaSemana = fechaActual.getDay();
-    const esDiaLaboral = diaSemana >= 1 && diaSemana <= 5;
-    
-    const numeroSemana = calcularNumeroSemana(fechaActual);
-    const elecGuardia = guardia(electricos, numeroSemana);
-    const mecGuardia = guardia(mecanicos, numeroSemana);
-    const tieneOverride = manualOverrides[numeroSemana.toString()];
-    
-    let contenidoHTML = `
-      <div class="day-number">${fechaActual.getDate()}</div>
-    `;
-    
-    if (esDiaLaboral && !esFueraMes) {
-      contenidoHTML += `
-        <div class="guardia-info">
-          <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">⚡ ${elecGuardia}</div>
-          <div class="${tieneOverride ? 'status-viaje' : 'status-active'}">🔧 ${mecGuardia}</div>
-        </div>
-      `;
-    }
-    
-    const clases = [
-      'calendar-day',
-      esFueraMes ? 'outside' : '',
-      esDiaLaboral ? 'weekday' : 'weekend'
-    ].filter(c => c).join(' ');
-    
-    const onClick = esDiaLaboral && !esFueraMes ? 
-      `onclick="offset=${numeroSemana - calcularNumeroSemana(new Date())};render()"` : '';
-    
-    calendarGrid.innerHTML += `
-      <div class="${clases}" ${onClick}>
-        ${contenidoHTML}
-      </div>
-    `;
-    
-    fechaActual.setDate(fechaActual.getDate() + 1);
-  }
-}
-
-function changeMonth(delta) {
-  calendarMonth.setMonth(calendarMonth.getMonth() + delta);
-  renderCalendar();
-}
-
-// ========== RENDERIZAR SEMANAS CORREGIDO ==========
-function render() {
-  carousel.innerHTML = "";
-  const hoy = new Date();
-  const numeroSemanaActual = calcularNumeroSemana(hoy);
-  
-  const fechaBase = obtenerLunes(hoy);
-  fechaBase.setDate(fechaBase.getDate() + (offset * 7));
-  
-  const fechaInicio = new Date(fechaBase);
-  const fechaFin = new Date(fechaInicio);
-  fechaFin.setDate(fechaFin.getDate() + 4);
-  
-  subtitle.textContent = `${fd(fechaInicio)} - ${fd(fechaFin)}`;
-  
-  for (let i = -1; i <= 1; i++) {
-    const semanaOffset = offset + i;
-    const numeroSemana = numeroSemanaActual + semanaOffset;
-    
-    const semanaInicio = new Date(fechaBase);
-    semanaInicio.setDate(semanaInicio.getDate() + (i * 7));
-    const semanaFin = new Date(semanaInicio);
-    semanaFin.setDate(semanaFin.getDate() + 4);
-    
-    const elecGuardia = guardia(electricos, numeroSemana);
-    const mecGuardia = guardia(mecanicos, numeroSemana);
-    const tieneOverride = manualOverrides[numeroSemana.toString()];
-    
-    carousel.innerHTML += `
-      <div class="card">
-        <h3>${fd(semanaInicio)} - ${fd(semanaFin)} ${tieneOverride ? '🔄' : ''}</h3>
-        <div class="guardias">
-          <div class="guardia">
-            <div class="icono">⚡</div>
-            <div class="nombre">${elecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[elecGuardia])}
-            </small>
-          </div>
-          <div class="guardia">
-            <div class="icono">🔧</div>
-            <div class="nombre">${mecGuardia}</div>
-            <div class="days">L–V</div>
-            <div class="time">15:30 – 19:00</div>
-            <small class="${tieneOverride ? 'status-viaje' : 'status-active'}">
-              ${getEstadoTexto(estados[mecGuardia])}
-            </small>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  
-  renderHistory();
-  
-  requestAnimationFrame(() => {
-    if (carousel.children[1]) {
-      carousel.scrollLeft = carousel.children[1].offsetLeft - 14;
-    }
-  });
-}
-
-function logCompletedWeek(){
-  const hoy=new Date();
-  const viernes=obtenerLunes(hoy);
-  viernes.setDate(viernes.getDate()+4);
-  
-  if(hoy<viernes)return;
-  
-  const numeroSemana=calcularNumeroSemana(hoy);
-  const clave=fd(obtenerLunes(hoy));
-  
-  if(history.some(h=>h.startsWith(clave)))return;
-  
-  const elecGuardia=guardia(electricos,numeroSemana);
-  const mecGuardia=guardia(mecanicos,numeroSemana);
-  
-  history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
-  history=history.slice(0,30);
-  localStorage.history=JSON.stringify(history);
-}
-
-function renderHistory(){
-  historyList.innerHTML="";
-  history.forEach(h=>{
-    const [fecha, ...resto] = h.split(' ');
-    const guardias = resto.join(' ');
-    historyList.innerHTML+=`
-     <div class="history-item">
-      <span>${fecha}</span>
-      <span>${guardias}</span>
-     </div>`;
-  });
-}
-
-// ========== EVENT LISTENERS ==========
-prev.onclick=()=>{offset--;render()};
-next.onclick=()=>{offset++;render()};
 
 // ========== INICIALIZACIÓN ==========
-renderCalendar();
-renderPersonasList();
-logCompletedWeek();
-render();
-
-// Sincronizar con cambios en localStorage del admin
-window.addEventListener('storage', function(e) {
-  if (e.key === 'estados' || e.key === 'ordenElectricos' || e.key === 'ordenMecanicos' || e.key === 'manualOverrides') {
-    estados = JSON.parse(localStorage.estados || "{}");
-    manualOverrides = JSON.parse(localStorage.manualOverrides || "{}");
+document.addEventListener('DOMContentLoaded', async () => {
+    // Configurar GitHub con tu usuario (¡CAMBIA ESTO!)
+    GITHUB_CONFIG.repoOwner = prompt("¿Cuál es tu usuario de GitHub?", "TU_USUARIO") || GITHUB_CONFIG.repoOwner;
+    
+    // Cargar datos iniciales
+    const config = await leerDeGitHub();
+    if (config) {
+        aplicarConfiguracion(config);
+    }
+    
+    // Renderizar todo
     renderCalendar();
     renderPersonasList();
+    logCompletedWeek();
     render();
-  }
+    renderHistory();
+    
+    // Verificar cambios cada 10 segundos
+    setInterval(verificarCambios, 10000);
+    
+    // Verificar al ganar foco
+    window.addEventListener('focus', verificarCambios);
+    
+    console.log('👥 Usuario sincronizado con GitHub');
 });
-
+</script>
+</body>
+</html>
 console.log("Aplicación de usuario sincronizada con admin");
 </script>
 </body>
