@@ -606,11 +606,12 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
 }
 
 // ========== GUARDAR EN GITHUB - VERSIÓN DEFINITIVA ==========
-// ✅ VERSIÓN CORREGIDA:
-if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
-    alert('❌ El usuario de GitHub no está configurado.\n\nVe a GITHUB_CONFIG.repoOwner y pon tu usuario.');
-    return false;
-}
+async function guardarEnGitHub() {
+    // Verificar usuario
+    if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
+        alert('❌ El usuario de GitHub no está configurado.\n\nVe a GITHUB_CONFIG.repoOwner y pon tu usuario.');
+        return false;
+    }
 
     // Pedir token
     const token = prompt(
