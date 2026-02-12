@@ -605,33 +605,33 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
     }, 5000);
 }
 
-// ========== GUARDAR EN GITHUB - VERSIÓN ESTABLE ==========
+// ========== GUARDAR EN GITHUB - VERSIÓN DEFINITIVA ==========
 async function guardarEnGitHub() {
     // Verificar usuario
     if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
-        alert('❌ El usuario de GitHub no está configurado.');
+        alert('❌ El usuario de GitHub no está configurado.\n\nVe a GITHUB_CONFIG.repoOwner y pon tu usuario.');
         return false;
     }
 
-    // Token desde sessionStorage o prompt
-    let token = sessionStorage.getItem('github_token');
+    // Pedir token
+    const token = prompt(
+        "🔐 TOKEN DE GITHUB:\n\n" +
+        "1. Ve a: https://github.com/settings/tokens\n" +
+        "2. Crea token con SOLO 'public_repo'\n" +
+        "3. Pega el token AQUÍ:\n",
+        sessionStorage.getItem('github_token') || ''
+    );
+    
     if (!token) {
-        token = prompt(
-            "🔐 TOKEN DE GITHUB (public_repo):\n\n" +
-            "Pega tu token (No expiration, solo public_repo):",
-            ""
-        );
-        if (!token) {
-            mostrarNotificacion('❌ Publicación cancelada', 'error');
-            return false;
-        }
-        sessionStorage.setItem('github_token', token);
+        mostrarNotificacion('❌ Publicación cancelada', 'error');
+        return false;
     }
 
+    sessionStorage.setItem('github_token', token);
+    
     try {
-        mostrarNotificacion('🔄 Publicando...', 'info');
+        mostrarNotificacion('🔄 Publicando cambios...', 'info');
         
-        // Preparar configuración
         const config = {
             version: Date.now().toString(),
             timestamp: Date.now(),
@@ -644,7 +644,7 @@ async function guardarEnGitHub() {
 
         const fileUrl = `https://api.github.com/repos/${GITHUB_CONFIG.repoOwner}/${GITHUB_CONFIG.repoName}/contents/config.json`;
         
-        // Obtener SHA actual
+        // Obtener SHA
         let sha = '';
         try {
             const getResponse = await fetch(fileUrl, {
@@ -657,17 +657,14 @@ async function guardarEnGitHub() {
                 const fileData = await getResponse.json();
                 sha = fileData.sha;
             }
-        } catch (e) {
-            console.log('Archivo nuevo, se creará');
-        }
+        } catch (e) {}
 
-        // Preparar contenido
+        // Preparar y guardar
         const contenidoJSON = JSON.stringify(config, null, 2);
         const contenidoBase64 = btoa(unescape(encodeURIComponent(contenidoJSON)));
 
-        // Guardar en GitHub
         const commitData = {
-            message: `Guardias - ${new Date().toLocaleString('es-ES')}`,
+            message: `Actualización guardias - ${new Date().toLocaleString('es-ES')}`,
             content: contenidoBase64,
             branch: GITHUB_CONFIG.branch
         };
@@ -685,48 +682,30 @@ async function guardarEnGitHub() {
         });
 
         if (!saveResponse.ok) {
-            // Si hay error de SHA, forzar lectura y reintentar
-            if (saveResponse.status === 409) {
-                mostrarNotificacion('🔄 Conflicto, reintentando...', 'info');
-                // Esperar 1 segundo y reintentar
-                await new Promise(r => setTimeout(r, 1000));
-                return guardarEnGitHub(); // Reintentar
-            }
-            
             const error = await saveResponse.json();
-            throw new Error(error.message || 'Error al guardar');
+            if (saveResponse.status === 403) throw new Error('Token sin permiso public_repo');
+            if (saveResponse.status === 404) throw new Error('Repositorio no encontrado o privado');
+            throw new Error(error.message);
         }
 
-        // Éxito
         localStorage.setItem('version', config.version);
         ultimaVersion = config.version;
-        mostrarNotificacion('✅ Cambios publicados');
+        mostrarNotificacion('✅ Cambios publicados en GitHub');
         return true;
         
     } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion('❌ Error: ' + error.message, 'error');
+        console.error(error);
+        mostrarNotificacion('❌ ' + error.message, 'error');
         
-        // Guardar local
-        guardarLocalmente();
-        
-        // Si error de token, borrarlo para pedir otro
-        if (error.message.includes('token') || error.message.includes('401') || error.message.includes('403')) {
-            sessionStorage.removeItem('github_token');
-        }
+        // Guardado local de respaldo
+        localStorage.setItem('estados', JSON.stringify(estados));
+        localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
+        localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
+        localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
         
         alert('❌ Error: ' + error.message + '\n\nLos cambios se guardaron LOCALMENTE.');
         return false;
     }
-}
-
-function guardarLocalmente() {
-    localStorage.setItem('estados', JSON.stringify(estados));
-    localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
-    localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
-    localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
-    localStorage.setItem('history', JSON.stringify(history));
-}
 }
 
 // ========== AUTENTICACIÓN ==========
@@ -1382,6 +1361,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
 
