@@ -604,15 +604,20 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
     }, 5000);
 }
 
-// ========== SINCRONIZACIÓN CON GITHUB - SIN TOKENS EN EL CÓDIGO ==========
+// ========== GUARDAR EN GITHUB - VERSIÓN CORREGIDA ==========
 async function guardarEnGitHub() {
-    // Solicitar token al usuario (seguro, no está en el código)
+    // 1. Verificar que el repositorio existe
+    if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
+        alert('❌ Configura primero tu usuario de GitHub en GITHUB_CONFIG.repoOwner');
+        return false;
+    }
+
+    // 2. Pedir token
     const token = prompt(
-        "🔐 Introduce tu token de GitHub:\n\n" +
-        "1. Ve a: GitHub → Settings → Developer settings → Tokens\n" +
-        "2. Crea un token con permiso 'public_repo'\n" +
-        "3. Pégalo aquí\n\n" +
-        "⚠️ El token se guarda solo para esta sesión",
+        "🔐 TOKEN DE GITHUB (permiso public_repo):\n\n" +
+        "1. Ve a: https://github.com/settings/tokens\n" +
+        "2. Crea token con SOLO 'public_repo'\n" +
+        "3. Pega el token AQUÍ:\n",
         sessionStorage.getItem('github_token') || ''
     );
     
@@ -621,12 +626,13 @@ async function guardarEnGitHub() {
         return false;
     }
 
-    // Guardar token en sessionStorage (solo para esta sesión)
+    // Guardar token en sesión
     sessionStorage.setItem('github_token', token);
     
     try {
         mostrarNotificacion('🔄 Publicando cambios en GitHub...', 'info');
         
+        // Preparar configuración
         const config = {
             version: Date.now().toString(),
             timestamp: Date.now(),
@@ -642,57 +648,103 @@ async function guardarEnGitHub() {
         // Obtener SHA del archivo actual
         let sha = '';
         try {
+            console.log('📡 Obteniendo SHA del archivo...');
             const getResponse = await fetch(fileUrl, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'Guardias-Alsi-App'
                 }
             });
+            
             if (getResponse.ok) {
                 const fileData = await getResponse.json();
                 sha = fileData.sha;
+                console.log('✅ SHA obtenido:', sha);
+            } else if (getResponse.status === 404) {
+                console.log('📄 Archivo no existe, se creará uno nuevo');
+            } else {
+                const error = await getResponse.json();
+                throw new Error(error.message || 'Error obteniendo SHA');
             }
-        } catch (e) {}
+        } catch (e) {
+            console.log('⚠️ No se pudo obtener SHA, se creará archivo nuevo:', e.message);
+        }
 
         // Preparar contenido
         const contenidoJSON = JSON.stringify(config, null, 2);
         const contenidoBase64 = btoa(unescape(encodeURIComponent(contenidoJSON)));
 
-        // Guardar en GitHub
+        // Crear commit
         const commitData = {
             message: `Actualización guardias - ${new Date().toLocaleString('es-ES')}`,
             content: contenidoBase64,
             branch: GITHUB_CONFIG.branch
         };
         
-        if (sha) commitData.sha = sha;
+        if (sha) {
+            commitData.sha = sha;
+            console.log('📝 Actualizando archivo existente');
+        } else {
+            console.log('📝 Creando archivo nuevo');
+        }
 
+        // Guardar en GitHub
+        console.log('📤 Enviando a GitHub...');
         const saveResponse = await fetch(fileUrl, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'User-Agent': 'Guardias-Alsi-App'
             },
             body: JSON.stringify(commitData)
         });
 
+        const responseData = await saveResponse.json();
+
         if (!saveResponse.ok) {
-            const error = await saveResponse.json();
-            throw new Error(error.message);
+            console.error('❌ Error respuesta GitHub:', responseData);
+            
+            // Mensajes de error específicos
+            if (saveResponse.status === 403) {
+                throw new Error('Token sin permisos - Marca SOLO "public_repo"');
+            } else if (saveResponse.status === 401) {
+                throw new Error('Token inválido o expirado');
+            } else if (saveResponse.status === 404) {
+                throw new Error('Repositorio no encontrado - ¿Es público?');
+            } else {
+                throw new Error(responseData.message || 'Error desconocido');
+            }
         }
 
+        // ÉXITO
+        console.log('✅ Respuesta exitosa:', responseData);
         localStorage.setItem('version', config.version);
-        mostrarNotificacion('✅ Cambios publicados para todos los usuarios');
+        mostrarNotificacion('✅ Cambios publicados en GitHub', 'success');
+        
+        // Actualizar versión local
+        if (typeof ultimaVersion !== 'undefined') {
+            ultimaVersion = config.version;
+        }
+        
         return true;
         
     } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion('❌ Error: ' + error.message, 'error');
+        console.error('❌ Error completo:', error);
+        mostrarNotificacion('❌ ' + error.message, 'error');
+        
+        // Guardar en localStorage como respaldo
+        localStorage.setItem('estados', JSON.stringify(estados));
+        localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
+        localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
+        localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
+        
+        alert('❌ Error: ' + error.message + '\n\nLos cambios se guardaron LOCALMENTE.');
         return false;
     }
 }
-
 // ========== FUNCIONES DE AUTENTICACIÓN ==========
 function checkAdminAuth() {
     if (!adminAuthenticated) {
@@ -1366,6 +1418,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
 
