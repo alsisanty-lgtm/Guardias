@@ -494,9 +494,9 @@ select{
 </div>
 
 <script>
-// ========== CONFIGURACIÓN DE GITHUB - SIN TOKENS ==========
+// ========== CONFIGURACIÓN DE GITHUB - CORREGIDA ==========
 const GITHUB_CONFIG = {
-    repoOwner: 'alsisanty-lgtm', // ⚠️ CAMBIA ESTO POR TU USUARIO DE GITHUB
+    repoOwner: 'alsisanty-lgtm',
     repoName: 'guardias-alsi-data',
     branch: 'main'
 };
@@ -507,6 +507,7 @@ const ADMIN_PASS = "alsi2026";
 let offset = 0;
 let calendarMonth = new Date();
 let adminWeekOffset = 0;
+let ultimaVersion = localStorage.getItem('version') || '0';
 
 // ========== DATOS DE PERSONAL ==========
 let electricos = ["Jose", "Dani", "Abde", "Fran", "Fran Ruiz", "Hicham"];
@@ -604,17 +605,17 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
     }, 5000);
 }
 
-// ========== GUARDAR EN GITHUB - VERSIÓN CORREGIDA ==========
+// ========== GUARDAR EN GITHUB - VERSIÓN DEFINITIVA ==========
 async function guardarEnGitHub() {
-    // 1. Verificar que el repositorio existe
-    if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'alsisanty-lgtm') {
-        alert('❌ Configura primero tu usuario de GitHub en GITHUB_CONFIG.repoOwner');
+    // Verificar usuario
+    if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
+        alert('❌ El usuario de GitHub no está configurado.\n\nVe a GITHUB_CONFIG.repoOwner y pon tu usuario.');
         return false;
     }
 
-    // 2. Pedir token
+    // Pedir token
     const token = prompt(
-        "🔐 TOKEN DE GITHUB (permiso public_repo):\n\n" +
+        "🔐 TOKEN DE GITHUB:\n\n" +
         "1. Ve a: https://github.com/settings/tokens\n" +
         "2. Crea token con SOLO 'public_repo'\n" +
         "3. Pega el token AQUÍ:\n",
@@ -626,13 +627,11 @@ async function guardarEnGitHub() {
         return false;
     }
 
-    // Guardar token en sesión
     sessionStorage.setItem('github_token', token);
     
     try {
-        mostrarNotificacion('🔄 Publicando cambios en GitHub...', 'info');
+        mostrarNotificacion('🔄 Publicando cambios...', 'info');
         
-        // Preparar configuración
         const config = {
             version: Date.now().toString(),
             timestamp: Date.now(),
@@ -645,97 +644,60 @@ async function guardarEnGitHub() {
 
         const fileUrl = `https://api.github.com/repos/${GITHUB_CONFIG.repoOwner}/${GITHUB_CONFIG.repoName}/contents/config.json`;
         
-        // Obtener SHA del archivo actual
+        // Obtener SHA
         let sha = '';
         try {
-            console.log('📡 Obteniendo SHA del archivo...');
             const getResponse = await fetch(fileUrl, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'User-Agent': 'Guardias-Alsi-App'
+                    'Accept': 'application/vnd.github.v3+json'
                 }
             });
-            
             if (getResponse.ok) {
                 const fileData = await getResponse.json();
                 sha = fileData.sha;
-                console.log('✅ SHA obtenido:', sha);
-            } else if (getResponse.status === 404) {
-                console.log('📄 Archivo no existe, se creará uno nuevo');
-            } else {
-                const error = await getResponse.json();
-                throw new Error(error.message || 'Error obteniendo SHA');
             }
-        } catch (e) {
-            console.log('⚠️ No se pudo obtener SHA, se creará archivo nuevo:', e.message);
-        }
+        } catch (e) {}
 
-        // Preparar contenido
+        // Preparar y guardar
         const contenidoJSON = JSON.stringify(config, null, 2);
         const contenidoBase64 = btoa(unescape(encodeURIComponent(contenidoJSON)));
 
-        // Crear commit
         const commitData = {
             message: `Actualización guardias - ${new Date().toLocaleString('es-ES')}`,
             content: contenidoBase64,
             branch: GITHUB_CONFIG.branch
         };
         
-        if (sha) {
-            commitData.sha = sha;
-            console.log('📝 Actualizando archivo existente');
-        } else {
-            console.log('📝 Creando archivo nuevo');
-        }
+        if (sha) commitData.sha = sha;
 
-        // Guardar en GitHub
-        console.log('📤 Enviando a GitHub...');
         const saveResponse = await fetch(fileUrl, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json',
-                'User-Agent': 'Guardias-Alsi-App'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(commitData)
         });
 
-        const responseData = await saveResponse.json();
-
         if (!saveResponse.ok) {
-            console.error('❌ Error respuesta GitHub:', responseData);
-            
-            // Mensajes de error específicos
-            if (saveResponse.status === 403) {
-                throw new Error('Token sin permisos - Marca SOLO "public_repo"');
-            } else if (saveResponse.status === 401) {
-                throw new Error('Token inválido o expirado');
-            } else if (saveResponse.status === 404) {
-                throw new Error('Repositorio no encontrado - ¿Es público?');
-            } else {
-                throw new Error(responseData.message || 'Error desconocido');
-            }
+            const error = await saveResponse.json();
+            if (saveResponse.status === 403) throw new Error('Token sin permiso public_repo');
+            if (saveResponse.status === 404) throw new Error('Repositorio no encontrado o privado');
+            throw new Error(error.message);
         }
 
-        // ÉXITO
-        console.log('✅ Respuesta exitosa:', responseData);
         localStorage.setItem('version', config.version);
-        mostrarNotificacion('✅ Cambios publicados en GitHub', 'success');
-        
-        // Actualizar versión local
-        if (typeof ultimaVersion !== 'undefined') {
-            ultimaVersion = config.version;
-        }
-        
+        ultimaVersion = config.version;
+        mostrarNotificacion('✅ Cambios publicados en GitHub');
         return true;
         
     } catch (error) {
-        console.error('❌ Error completo:', error);
+        console.error(error);
         mostrarNotificacion('❌ ' + error.message, 'error');
         
-        // Guardar en localStorage como respaldo
+        // Guardado local de respaldo
         localStorage.setItem('estados', JSON.stringify(estados));
         localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
         localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
@@ -745,7 +707,8 @@ async function guardarEnGitHub() {
         return false;
     }
 }
-// ========== FUNCIONES DE AUTENTICACIÓN ==========
+
+// ========== AUTENTICACIÓN ==========
 function checkAdminAuth() {
     if (!adminAuthenticated) {
         const password = prompt("🔐 Contraseña administrador:");
@@ -763,7 +726,7 @@ function checkAdminAuth() {
     }
 }
 
-// ========== RENDERIZADO DE ADMIN ==========
+// ========== RENDERIZADO ADMIN ==========
 function renderAdmin() {
     let adminElecHTML = '';
     ordenElectricos.forEach(persona => {
@@ -804,7 +767,6 @@ function renderAdmin() {
     document.getElementById('admin-mec').innerHTML = adminMecHTML;
 }
 
-// ========== ACTUALIZAR ESTADO DE PERSONA ==========
 function updatePersonStatus(persona, estado) {
     estados[persona] = estado;
     renderRotationLists();
@@ -817,36 +779,36 @@ function updatePersonStatus(persona, estado) {
 // ========== RENDERIZAR ROTACIONES ==========
 function renderRotationLists() {
     const rotationElec = document.getElementById('rotation-elec');
-    if (!rotationElec) return;
-    rotationElec.innerHTML = '';
-    
-    ordenElectricos.forEach((persona, index) => {
-        const estado = estados[persona] || 'activo';
-        rotationElec.innerHTML += `
-            <div class="rotation-item" data-persona="${persona}" data-type="electricos" draggable="true">
-                <div class="handle">☰</div>
-                <div class="index">${index + 1}</div>
-                <div class="name">${persona}</div>
-                <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
-            </div>
-        `;
-    });
+    if (rotationElec) {
+        rotationElec.innerHTML = '';
+        ordenElectricos.forEach((persona, index) => {
+            const estado = estados[persona] || 'activo';
+            rotationElec.innerHTML += `
+                <div class="rotation-item" data-persona="${persona}" data-type="electricos" draggable="true">
+                    <div class="handle">☰</div>
+                    <div class="index">${index + 1}</div>
+                    <div class="name">${persona}</div>
+                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
+                </div>
+            `;
+        });
+    }
     
     const rotationMec = document.getElementById('rotation-mec');
-    if (!rotationMec) return;
-    rotationMec.innerHTML = '';
-    
-    ordenMecanicos.forEach((persona, index) => {
-        const estado = estados[persona] || 'activo';
-        rotationMec.innerHTML += `
-            <div class="rotation-item" data-persona="${persona}" data-type="mecanicos" draggable="true">
-                <div class="handle">☰</div>
-                <div class="index">${index + 1}</div>
-                <div class="name">${persona}</div>
-                <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
-            </div>
-        `;
-    });
+    if (rotationMec) {
+        rotationMec.innerHTML = '';
+        ordenMecanicos.forEach((persona, index) => {
+            const estado = estados[persona] || 'activo';
+            rotationMec.innerHTML += `
+                <div class="rotation-item" data-persona="${persona}" data-type="mecanicos" draggable="true">
+                    <div class="handle">☰</div>
+                    <div class="index">${index + 1}</div>
+                    <div class="name">${persona}</div>
+                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
+                </div>
+            `;
+        });
+    }
     
     setupDragAndDrop();
     updateRotationPreview();
@@ -929,7 +891,6 @@ function saveRotationOrder(type) {
     renderCalendar();
     renderRotationLists();
     guardarEnGitHub();
-    mostrarNotificacion(`✅ Orden de ${type} guardado y publicado`);
 }
 
 function resetRotationOrder(type) {
@@ -988,7 +949,7 @@ function updateRotationPreview() {
     preview.innerHTML = html;
 }
 
-// ========== ADMIN: GESTIÓN DE GUARDIAS ==========
+// ========== ADMIN: GUARDIAS ==========
 function renderAdminGuardias() {
     const hoy = new Date();
     const numeroSemanaActual = calcularNumeroSemana(hoy);
@@ -1068,10 +1029,9 @@ function saveManualChanges() {
     renderCalendar();
     renderAdminGuardias();
     guardarEnGitHub();
-    mostrarNotificacion('✅ Cambios manuales guardados y publicados');
 }
 
-// ========== INTERCAMBIO DE PERSONAS ==========
+// ========== INTERCAMBIO ==========
 function populateSwapSelects() {
     const select1 = document.getElementById('swap-person1');
     const select2 = document.getElementById('swap-person2');
@@ -1115,10 +1075,8 @@ function swapPersons() {
     renderCalendar();
     renderAdminGuardias();
     guardarEnGitHub();
-    mostrarNotificacion(`✅ ${persona1} y ${persona2} intercambiados`);
 }
 
-// ========== REINICIAR ROTACIÓN ==========
 function resetToDefault() {
     if (confirm("¿Eliminar todos los cambios manuales?")) {
         manualOverrides = {};
@@ -1137,7 +1095,7 @@ function resetToDefault() {
     }
 }
 
-// ========== RENDERIZAR CALENDARIO ==========
+// ========== CALENDARIO ==========
 function renderCalendar() {
     const calendarGrid = document.getElementById('calendarGrid');
     if (!calendarGrid) return;
@@ -1194,7 +1152,7 @@ function changeMonth(delta) {
     renderCalendar();
 }
 
-// ========== RENDERIZAR SEMANAS ==========
+// ========== RENDER ==========
 function render() {
     const carousel = document.getElementById('carousel');
     if (!carousel) return;
@@ -1291,7 +1249,6 @@ function exportConfig() {
         manualOverrides: manualOverrides,
         history: history
     };
-    
     const configStr = JSON.stringify(config, null, 2);
     navigator.clipboard.writeText(configStr);
     alert('✅ Configuración copiada al portapapeles');
@@ -1309,7 +1266,6 @@ function closeImportModal() {
 function applyImport() {
     try {
         const config = JSON.parse(document.getElementById('importData').value);
-        
         if (config.ordenElectricos) {
             ordenElectricos = config.ordenElectricos;
             localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
@@ -1326,7 +1282,6 @@ function applyImport() {
             manualOverrides = config.manualOverrides;
             localStorage.manualOverrides = JSON.stringify(manualOverrides);
         }
-        
         closeImportModal();
         renderRotationLists();
         render();
@@ -1340,7 +1295,7 @@ function applyImport() {
     }
 }
 
-// ========== CÓDIGOS QR ==========
+// ========== QR ==========
 function generateQRCode(elementId, url) {
     const element = document.getElementById(elementId);
     if (element) {
@@ -1387,18 +1342,6 @@ document.getElementById('save').onclick = async function() {
 
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', function() {
-    // Preguntar usuario de GitHub si no está configurado
-    if (GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
-        const usuario = prompt(
-            "🔧 Configuración de GitHub\n\n" +
-            "Introduce tu nombre de usuario de GitHub:",
-            ""
-        );
-        if (usuario) {
-            GITHUB_CONFIG.repoOwner = usuario;
-        }
-    }
-    
     // Generar QR
     const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', '');
     generateQRCode('qr-usuario', baseUrl + 'index.html');
@@ -1413,11 +1356,12 @@ document.addEventListener('DOMContentLoaded', function() {
     populateSwapSelects();
     logCompletedWeek();
     
-    console.log('🚀 Admin con GitHub sincronizado (sin tokens en el código)');
+    console.log('🚀 Admin configurado con usuario:', GITHUB_CONFIG.repoOwner);
 });
 </script>
 </body>
 </html>
+
 
 
 
