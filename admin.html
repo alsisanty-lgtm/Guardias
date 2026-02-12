@@ -607,7 +607,7 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
 // ========== GUARDAR EN GITHUB - VERSIÓN CORREGIDA ==========
 async function guardarEnGitHub() {
     // 1. Verificar que el repositorio existe
-    if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
+    if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'alsisanty-lgtm') {
         alert('❌ Configura primero tu usuario de GitHub en GITHUB_CONFIG.repoOwner');
         return false;
     }
@@ -1418,6 +1418,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 
 
 
