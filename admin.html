@@ -494,11 +494,11 @@ select{
 </div>
 
 <script>
-// ========== CONFIGURACIÓN DE GITHUB - CORREGIDA ==========
-const GITHUB_CONFIG = {
-    repoOwner: 'alsisanty-lgtm',
-    repoName: 'guardias-alsi-data',
-    branch: 'main'
+// ========== CONFIGURACIÓN GIST - YA CONFIGURADO ==========
+const GIST_CONFIG = {
+    usuario: 'alsisanty-lgtm',
+    id: '0540f0550bdf2456f2a25ae965fa7725',
+    archivo: 'guardias-alsi-data.json'
 };
 
 // ========== VARIABLES GLOBALES ==========
@@ -605,33 +605,12 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
     }, 5000);
 }
 
-// ========== GUARDAR EN GITHUB - VERSIÓN DEFINITIVA ==========
-async function guardarEnGitHub() {
-    // Verificar usuario
-    if (!GITHUB_CONFIG.repoOwner || GITHUB_CONFIG.repoOwner === 'TU_USUARIO') {
-        alert('❌ El usuario de GitHub no está configurado.\n\nVe a GITHUB_CONFIG.repoOwner y pon tu usuario.');
-        return false;
-    }
-
-    // Pedir token
-    const token = prompt(
-        "🔐 TOKEN DE GITHUB:\n\n" +
-        "1. Ve a: https://github.com/settings/tokens\n" +
-        "2. Crea token con SOLO 'public_repo'\n" +
-        "3. Pega el token AQUÍ:\n",
-        sessionStorage.getItem('github_token') || ''
-    );
-    
-    if (!token) {
-        mostrarNotificacion('❌ Publicación cancelada', 'error');
-        return false;
-    }
-
-    sessionStorage.setItem('github_token', token);
-    
+// ========== GUARDAR EN GIST - SIN TOKENS, SIN PROBLEMAS ==========
+async function guardarEnGist() {
     try {
-        mostrarNotificacion('🔄 Publicando cambios...', 'info');
+        mostrarNotificacion('🔄 Preparando archivo...', 'info');
         
+        // Preparar datos
         const config = {
             version: Date.now().toString(),
             timestamp: Date.now(),
@@ -642,68 +621,38 @@ async function guardarEnGitHub() {
             history: history
         };
 
-        const fileUrl = `https://api.github.com/repos/${GITHUB_CONFIG.repoOwner}/${GITHUB_CONFIG.repoName}/contents/config.json`;
-        
-        // Obtener SHA
-        let sha = '';
-        try {
-            const getResponse = await fetch(fileUrl, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            if (getResponse.ok) {
-                const fileData = await getResponse.json();
-                sha = fileData.sha;
-            }
-        } catch (e) {}
-
-        // Preparar y guardar
-        const contenidoJSON = JSON.stringify(config, null, 2);
-        const contenidoBase64 = btoa(unescape(encodeURIComponent(contenidoJSON)));
-
-        const commitData = {
-            message: `Actualización guardias - ${new Date().toLocaleString('es-ES')}`,
-            content: contenidoBase64,
-            branch: GITHUB_CONFIG.branch
-        };
-        
-        if (sha) commitData.sha = sha;
-
-        const saveResponse = await fetch(fileUrl, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(commitData)
-        });
-
-        if (!saveResponse.ok) {
-            const error = await saveResponse.json();
-            if (saveResponse.status === 403) throw new Error('Token sin permiso public_repo');
-            if (saveResponse.status === 404) throw new Error('Repositorio no encontrado o privado');
-            throw new Error(error.message);
-        }
-
-        localStorage.setItem('version', config.version);
-        ultimaVersion = config.version;
-        mostrarNotificacion('✅ Cambios publicados en GitHub');
-        return true;
-        
-    } catch (error) {
-        console.error(error);
-        mostrarNotificacion('❌ ' + error.message, 'error');
-        
-        // Guardado local de respaldo
+        // Guardar en localStorage SIEMPRE
         localStorage.setItem('estados', JSON.stringify(estados));
         localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
         localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
         localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
+        localStorage.setItem('history', JSON.stringify(history));
+        localStorage.setItem('version', config.version);
+        ultimaVersion = config.version;
+
+        // Crear archivo para descargar
+        const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'guardias-alsi-data.json';
+        a.click();
+        URL.revokeObjectURL(url);
         
-        alert('❌ Error: ' + error.message + '\n\nLos cambios se guardaron LOCALMENTE.');
+        mostrarNotificacion('✅ Archivo guardado en Descargas', 'success');
+        
+        // Abrir Gist para subir manualmente
+        const gistUrl = `https://gist.github.com/${GIST_CONFIG.usuario}/${GIST_CONFIG.id}`;
+        
+        if (confirm('✅ Archivo guardado en tu PC.\n\n¿Quieres abrir Gist para SUBIRLO manualmente?')) {
+            window.open(gistUrl, '_blank');
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error(error);
+        mostrarNotificacion('❌ Error: ' + error.message, 'error');
         return false;
     }
 }
@@ -773,7 +722,7 @@ function updatePersonStatus(persona, estado) {
     render();
     renderCalendar();
     renderAdminGuardias();
-    guardarEnGitHub();
+    guardarEnGist();
 }
 
 // ========== RENDERIZAR ROTACIONES ==========
@@ -890,7 +839,7 @@ function saveRotationOrder(type) {
     render();
     renderCalendar();
     renderRotationLists();
-    guardarEnGitHub();
+    guardarEnGist();
 }
 
 function resetRotationOrder(type) {
@@ -905,7 +854,7 @@ function resetRotationOrder(type) {
         renderRotationLists();
         render();
         renderCalendar();
-        guardarEnGitHub();
+        guardarEnGist();
     }
 }
 
@@ -918,7 +867,7 @@ function reverseRotationOrder(type) {
     renderRotationLists();
     render();
     renderCalendar();
-    guardarEnGitHub();
+    guardarEnGist();
 }
 
 function updateRotationPreview() {
@@ -1028,7 +977,7 @@ function saveManualChanges() {
     render();
     renderCalendar();
     renderAdminGuardias();
-    guardarEnGitHub();
+    guardarEnGist();
 }
 
 // ========== INTERCAMBIO ==========
@@ -1074,7 +1023,7 @@ function swapPersons() {
     render();
     renderCalendar();
     renderAdminGuardias();
-    guardarEnGitHub();
+    guardarEnGist();
 }
 
 function resetToDefault() {
@@ -1091,7 +1040,7 @@ function resetToDefault() {
         render();
         renderCalendar();
         renderAdminGuardias();
-        guardarEnGitHub();
+        guardarEnGist();
     }
 }
 
@@ -1288,7 +1237,7 @@ function applyImport() {
         renderCalendar();
         renderAdmin();
         renderAdminGuardias();
-        guardarEnGitHub();
+        guardarEnGist();
         alert('✅ Configuración importada');
     } catch (error) {
         alert('❌ Error: ' + error.message);
@@ -1337,11 +1286,48 @@ document.getElementById('save').onclick = async function() {
     renderAdmin();
     renderAdminGuardias();
     
-    await guardarEnGitHub();
+    await guardarEnGist();
 };
 
+// ========== LEER DE GIST (para sincronizar con index) ==========
+async function leerDeGist() {
+    try {
+        const url = `https://gist.githubusercontent.com/${GIST_CONFIG.usuario}/${GIST_CONFIG.id}/raw/${GIST_CONFIG.archivo}?t=${Date.now()}`;
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.log('Error leyendo Gist:', error);
+        return null;
+    }
+}
+
 // ========== INICIALIZACIÓN ==========
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Cargar datos desde Gist si hay una versión más nueva
+    const config = await leerDeGist();
+    if (config && config.version !== ultimaVersion) {
+        console.log('📥 Cargando última versión desde Gist');
+        if (config.ordenElectricos) {
+            ordenElectricos = config.ordenElectricos;
+            localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
+        }
+        if (config.ordenMecanicos) {
+            ordenMecanicos = config.ordenMecanicos;
+            localStorage.ordenMecanicos = JSON.stringify(ordenMecanicos);
+        }
+        if (config.estados) {
+            estados = config.estados;
+            localStorage.estados = JSON.stringify(estados);
+        }
+        if (config.manualOverrides) {
+            manualOverrides = config.manualOverrides;
+            localStorage.manualOverrides = JSON.stringify(manualOverrides);
+        }
+        localStorage.setItem('version', config.version);
+        ultimaVersion = config.version;
+    }
+    
     // Generar QR
     const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', '');
     generateQRCode('qr-usuario', baseUrl + 'index.html');
@@ -1356,11 +1342,12 @@ document.addEventListener('DOMContentLoaded', function() {
     populateSwapSelects();
     logCompletedWeek();
     
-    console.log('🚀 Admin configurado con usuario:', GITHUB_CONFIG.repoOwner);
+    console.log('🚀 Admin con GIST configurado - ID:', GIST_CONFIG.id);
 });
 </script>
 </body>
 </html>
+
 
 
 
