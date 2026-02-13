@@ -493,8 +493,7 @@ select{
 </div>
 </div>
 
-<script>
-// ========== CONFIGURACIÓN GIST - YA CONFIGURADO ==========
+<script>// ========== CONFIGURACIÓN GIST - CON SUBIDA DIRECTA ==========
 const GIST_CONFIG = {
     usuario: 'alsisanty-lgtm',
     id: '0540f0550bdf2456f2a25ae965fa7725',
@@ -508,6 +507,7 @@ let offset = 0;
 let calendarMonth = new Date();
 let adminWeekOffset = 0;
 let ultimaVersion = localStorage.getItem('version') || '0';
+let gistToken = localStorage.getItem('gist_token') || '';
 
 // ========== DATOS DE PERSONAL ==========
 let electricos = ["Jose", "Dani", "Abde", "Fran", "Fran Ruiz", "Hicham"];
@@ -605,10 +605,39 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
     }, 5000);
 }
 
-// ========== GUARDAR EN GIST - SIN TOKENS, SIN PROBLEMAS ==========
-async function guardarEnGist() {
+// ========== CONFIGURAR TOKEN DE GIST ==========
+function configurarTokenGist() {
+    const token = prompt(
+        "🔐 TOKEN DE GITHUB PARA GIST:\n\n" +
+        "1. Ve a: https://github.com/settings/tokens\n" +
+        "2. Crea token con SOLO 'gist' (una casilla)\n" +
+        "3. Pega el token AQUÍ:\n\n" +
+        "⚠️ Este token solo sirve para Gist, es más seguro",
+        gistToken
+    );
+    
+    if (token) {
+        gistToken = token;
+        localStorage.setItem('gist_token', token);
+        mostrarNotificacion('✅ Token guardado', 'success');
+        return true;
+    }
+    return false;
+}
+
+// ========== GUARDAR DIRECTAMENTE EN GIST ==========
+async function guardarEnGistDirecto() {
+    // Verificar si hay token
+    if (!gistToken) {
+        const configurado = configurarTokenGist();
+        if (!configurado) {
+            mostrarNotificacion('❌ Necesitas token para guardar', 'error');
+            return false;
+        }
+    }
+    
     try {
-        mostrarNotificacion('🔄 Preparando archivo...', 'info');
+        mostrarNotificacion('🔄 Guardando en Gist...', 'info');
         
         // Preparar datos
         const config = {
@@ -630,29 +659,73 @@ async function guardarEnGist() {
         localStorage.setItem('version', config.version);
         ultimaVersion = config.version;
 
-        // Crear archivo para descargar
-        const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'guardias-alsi-data.json';
-        a.click();
-        URL.revokeObjectURL(url);
+        // 1. Obtener el Gist actual para conocer los archivos
+        const gistUrl = `https://api.github.com/gists/${GIST_CONFIG.id}`;
         
-        mostrarNotificacion('✅ Archivo guardado en Descargas', 'success');
+        const getResponse = await fetch(gistUrl, {
+            headers: {
+                'Authorization': `Bearer ${gistToken}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
         
-        // Abrir Gist para subir manualmente
-        const gistUrl = `https://gist.github.com/${GIST_CONFIG.usuario}/${GIST_CONFIG.id}`;
-        
-        if (confirm('✅ Archivo guardado en tu PC.\n\n¿Quieres abrir Gist para SUBIRLO manualmente?')) {
-            window.open(gistUrl, '_blank');
+        if (!getResponse.ok) {
+            if (getResponse.status === 401 || getResponse.status === 403) {
+                localStorage.removeItem('gist_token');
+                gistToken = '';
+                throw new Error('Token inválido o sin permiso "gist"');
+            }
+            throw new Error('Error al obtener Gist');
         }
         
+        const gistData = await getResponse.json();
+        
+        // 2. Actualizar el archivo en el Gist
+        const updateData = {
+            description: `Guardias Alsi - Actualización ${new Date().toLocaleString('es-ES')}`,
+            files: {
+                [GIST_CONFIG.archivo]: {
+                    content: JSON.stringify(config, null, 2)
+                }
+            }
+        };
+        
+        const updateResponse = await fetch(gistUrl, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${gistToken}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        if (!updateResponse.ok) {
+            const error = await updateResponse.json();
+            throw new Error(error.message || 'Error al actualizar Gist');
+        }
+        
+        mostrarNotificacion('✅ Gist actualizado correctamente', 'success');
         return true;
         
     } catch (error) {
-        console.error(error);
-        mostrarNotificacion('❌ Error: ' + error.message, 'error');
+        console.error('Error:', error);
+        mostrarNotificacion('❌ ' + error.message, 'error');
+        
+        // Fallback: descargar archivo
+        if (confirm('❌ Error al subir a Gist.\n\n¿Quieres descargar el archivo para subirlo manualmente?')) {
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'guardias-alsi-data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            // Abrir Gist
+            window.open(`https://gist.github.com/${GIST_CONFIG.usuario}/${GIST_CONFIG.id}`, '_blank');
+        }
+        
         return false;
     }
 }
@@ -668,6 +741,15 @@ function checkAdminAuth() {
             renderAdminGuardias();
             renderRotationLists();
             populateSwapSelects();
+            
+            // Preguntar si quiere configurar token para subida directa
+            setTimeout(() => {
+                if (!gistToken) {
+                    if (confirm('¿Quieres configurar un token de Gist para subir automáticamente desde el móvil?')) {
+                        configurarTokenGist();
+                    }
+                }
+            }, 1000);
         } else {
             document.getElementById('admin-content').style.display = 'none';
             document.querySelector('#admin summary').textContent = '🔒 Administrador (acceso restringido)';
@@ -722,7 +804,7 @@ function updatePersonStatus(persona, estado) {
     render();
     renderCalendar();
     renderAdminGuardias();
-    guardarEnGist();
+    guardarEnGistDirecto();
 }
 
 // ========== RENDERIZAR ROTACIONES ==========
@@ -839,7 +921,7 @@ function saveRotationOrder(type) {
     render();
     renderCalendar();
     renderRotationLists();
-    guardarEnGist();
+    guardarEnGistDirecto();
 }
 
 function resetRotationOrder(type) {
@@ -854,7 +936,7 @@ function resetRotationOrder(type) {
         renderRotationLists();
         render();
         renderCalendar();
-        guardarEnGist();
+        guardarEnGistDirecto();
     }
 }
 
@@ -867,7 +949,7 @@ function reverseRotationOrder(type) {
     renderRotationLists();
     render();
     renderCalendar();
-    guardarEnGist();
+    guardarEnGistDirecto();
 }
 
 function updateRotationPreview() {
@@ -977,7 +1059,7 @@ function saveManualChanges() {
     render();
     renderCalendar();
     renderAdminGuardias();
-    guardarEnGist();
+    guardarEnGistDirecto();
 }
 
 // ========== INTERCAMBIO ==========
@@ -1023,7 +1105,7 @@ function swapPersons() {
     render();
     renderCalendar();
     renderAdminGuardias();
-    guardarEnGist();
+    guardarEnGistDirecto();
 }
 
 function resetToDefault() {
@@ -1040,7 +1122,7 @@ function resetToDefault() {
         render();
         renderCalendar();
         renderAdminGuardias();
-        guardarEnGist();
+        guardarEnGistDirecto();
     }
 }
 
@@ -1237,7 +1319,7 @@ function applyImport() {
         renderCalendar();
         renderAdmin();
         renderAdminGuardias();
-        guardarEnGist();
+        guardarEnGistDirecto();
         alert('✅ Configuración importada');
     } catch (error) {
         alert('❌ Error: ' + error.message);
@@ -1286,10 +1368,23 @@ document.getElementById('save').onclick = async function() {
     renderAdmin();
     renderAdminGuardias();
     
-    await guardarEnGist();
+    await guardarEnGistDirecto();
 };
 
-// ========== LEER DE GIST (para sincronizar con index) ==========
+// ========== BOTÓN PARA CONFIGURAR TOKEN ==========
+function setupTokenButton() {
+    const adminSection = document.querySelector('.admin-section');
+    if (adminSection) {
+        const tokenBtn = document.createElement('button');
+        tokenBtn.innerHTML = '🔑 Configurar Token Gist';
+        tokenBtn.className = 'secondary';
+        tokenBtn.style.marginLeft = '10px';
+        tokenBtn.onclick = configurarTokenGist;
+        document.querySelector('#save').parentNode.appendChild(tokenBtn);
+    }
+}
+
+// ========== LEER DE GIST ==========
 async function leerDeGist() {
     try {
         const url = `https://gist.githubusercontent.com/${GIST_CONFIG.usuario}/${GIST_CONFIG.id}/raw/${GIST_CONFIG.archivo}?t=${Date.now()}`;
@@ -1304,7 +1399,10 @@ async function leerDeGist() {
 
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', async function() {
-    // Cargar datos desde Gist si hay una versión más nueva
+    // Cargar token guardado
+    gistToken = localStorage.getItem('gist_token') || '';
+    
+    // Cargar datos desde Gist
     const config = await leerDeGist();
     if (config && config.version !== ultimaVersion) {
         console.log('📥 Cargando última versión desde Gist');
@@ -1342,11 +1440,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     populateSwapSelects();
     logCompletedWeek();
     
-    console.log('🚀 Admin con GIST configurado - ID:', GIST_CONFIG.id);
+    // Añadir botón de token
+    setupTokenButton();
+    
+    console.log('🚀 Admin con GIST + subida directa - ID:', GIST_CONFIG.id);
+    if (gistToken) {
+        console.log('🔑 Token configurado');
+    } else {
+        console.log('🔑 Token NO configurado (usa subida manual)');
+    }
 });
 </script>
 </body>
 </html>
+
 
 
 
