@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guardias Alsi</title>
+<title>Guardias Alsi - Usuarios</title>
 
 <!-- ========== META TAGS PWA ========== -->
 <meta name="theme-color" content="#1e88e5">
@@ -39,6 +39,9 @@ button{
  transition:opacity 0.3s;
 }
 button:hover{opacity:0.9}
+button.secondary{
+ background:#6b7280;
+}
 #night{position:fixed;top:12px;right:12px;z-index:200}
 .nav{display:flex;justify-content:space-between;padding:10px}
 .container{max-width:960px;margin:auto;padding:10px}
@@ -52,12 +55,14 @@ button:hover{opacity:0.9}
  border-radius:var(--radius);
  box-shadow:var(--shadow);
  padding:20px;scroll-snap-align:center;
+ position:relative;
 }
 .guardias{display:flex;gap:14px;margin-top:14px}
 .guardia{
  flex:1;text-align:center;
  background:rgba(0,0,0,.05);
  border-radius:14px;padding:14px;
+ position:relative;
 }
 body.dark .guardia{background:rgba(255,255,255,.06)}
 .icono{font-size:2.2em}
@@ -117,28 +122,6 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
  margin-top:2px;
 }
 
-/* ===== INFO ===== */
-.info-section{
- margin:20px;background:var(--card);
- padding:16px;border-radius:var(--radius);
-}
-.info-section h3{margin-top:0}
-.personas-grid{
- display:grid;
- grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
- gap:10px;
- margin-top:10px;
-}
-.persona-item{
- padding:8px 12px;
- border-radius:8px;
- background:rgba(0,0,0,.03);
- display:flex;
- align-items:center;
- gap:8px;
-}
-.persona-item .icon{font-size:1.2em}
-
 /* ===== HISTORIAL ===== */
 #history{
  margin:20px;background:var(--card);
@@ -146,15 +129,11 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 }
 .history-item{
  font-size:.9em;border-bottom:1px dashed rgba(0,0,0,.2);
- padding:6px 0;
- display:flex;
- justify-content:space-between;
+ padding:6px 0
 }
 
 @media(max-width:480px){
  .calendar-day{font-size:.6rem;min-height:60px}
- .personas-grid{grid-template-columns:1fr}
- .guardia-info{font-size:8px}
 }
 
 /* ========== ESTILOS PWA ========== */
@@ -165,24 +144,17 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
   top: calc(env(safe-area-inset-top, 12px) + 12px);
 }
 @media (display-mode: standalone) {
-  button, select, .calendar-day { min-height: 44px; }
+  button, .calendar-day { min-height: 44px; }
   .guardia { padding: 20px; }
   body { -webkit-tap-highlight-color: transparent; }
 }
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-#install-button { animation: pulse 2s infinite; }
-#install-button:hover { animation: none; }
 
 /* ===== NOTIFICACIONES ===== */
 .notificacion-github {
   position: fixed;
   top: 70px;
   right: 10px;
-  background: #1e88e5;
+  background: #4CAF50;
   color: white;
   padding: 12px 20px;
   border-radius: 10px;
@@ -197,6 +169,117 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 @keyframes slideIn {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== LOGIN PARA USUARIOS ===== */
+.menu-simple {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 200;
+    background: var(--card);
+    padding: 8px 15px;
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.login-container-simple {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 30px;
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+.login-container-simple h2 {
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 30px;
+}
+
+.login-container-simple h3 {
+    margin: 20px 0 10px;
+    font-size: 1.1em;
+}
+
+.user-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.user-button {
+    padding: 10px;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.user-button.electrico {
+    background: #1e88e5;
+}
+
+.user-button.mecanico {
+    background: #f59e0b;
+}
+
+.user-button.admin {
+    background: #8b5cf6;
+}
+
+.add-user-section {
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.add-user-input {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.add-user-input input {
+    flex: 2;
+    min-width: 150px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: var(--card);
+    color: var(--text);
+}
+
+.add-user-input select {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: var(--card);
+    color: var(--text);
+}
+
+.add-user-input button {
+    padding: 10px 20px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
 }
 </style>
 </head>
@@ -222,18 +305,13 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <div class="calendar-grid" id="calendarGrid"></div>
 </div>
 
-<div class="info-section">
-<h3>👥 Personal Actual</h3>
-<div class="personas-grid" id="personasList"></div>
-</div>
-
 <div id="history">
-<h3>📜 Historial de Guardias</h3>
+<h3>📜 Historial real</h3>
 <div id="historyList"></div>
 </div>
 
 <script>
-// ========== CONFIGURACIÓN GIST - YA CONFIGURADO ==========
+// ========== CONFIGURACIÓN GIST ==========
 const GIST_CONFIG = {
     usuario: 'alsisanty-lgtm',
     id: '0540f0550bdf2456f2a25ae965fa7725',
@@ -243,16 +321,190 @@ const GIST_CONFIG = {
 // ========== VARIABLES GLOBALES ==========
 let offset = 0;
 let calendarMonth = new Date();
+let ultimaVersion = localStorage.getItem('version') || '0';
 
 // ========== DATOS DE PERSONAL ==========
-let electricos = ["Jose", "Dani", "Abde", "Fran", "Fran Ruiz", "Hicham"];
-let mecanicos = ["Fran Alba", "Manu", "Cele", "Santy", "Ramon", "Traian"];
+let electricos = JSON.parse(localStorage.getItem('electricos') || '["Jose", "Dani", "Abde", "Fran", "Fran Ruiz", "Hicham"]');
+let mecanicos = JSON.parse(localStorage.getItem('mecanicos') || '["Fran Alba", "Manu", "Cele", "Santy", "Ramon", "Traian"]');
 
 // ========== CARGAR DATOS GUARDADOS ==========
+let ordenElectricos = JSON.parse(localStorage.getItem('ordenElectricos') || 'null') || [...electricos];
+let ordenMecanicos = JSON.parse(localStorage.getItem('ordenMecanicos') || 'null') || [...mecanicos];
 let estados = JSON.parse(localStorage.getItem('estados') || '{}');
 let manualOverrides = JSON.parse(localStorage.getItem('manualOverrides') || '{}');
 let history = JSON.parse(localStorage.getItem('history') || '[]');
-let ultimaVersion = localStorage.getItem('version') || '0';
+
+// ========== USUARIOS ==========
+let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+// ========== FUNCIONES DE USUARIOS ==========
+function loginSimple(nombre) {
+    const user = usuarios.find(u => u.nombre === nombre);
+    if (user) {
+        currentUser = user;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        mostrarNotificacion(`👋 Bienvenido ${nombre}`, 'success');
+        location.reload();
+        return true;
+    }
+    mostrarNotificacion('❌ Usuario no existe', 'error');
+    return false;
+}
+
+function logoutSimple() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    mostrarNotificacion('👋 Hasta luego', 'info');
+    location.reload();
+}
+
+function agregarUsuarioSimple(nombre, departamento) {
+    if (!nombre || !nombre.trim()) {
+        mostrarNotificacion('❌ Escribe un nombre', 'error');
+        return false;
+    }
+    
+    if (!departamento) {
+        mostrarNotificacion('❌ Selecciona un departamento', 'error');
+        return false;
+    }
+    
+    nombre = nombre.trim();
+    
+    if (usuarios.some(u => u.nombre === nombre)) {
+        mostrarNotificacion('❌ El usuario ya existe', 'error');
+        return false;
+    }
+    
+    // AÑADIR A LA LISTA DE PERSONAL
+    if (departamento === 'electrico') {
+        if (!electricos.includes(nombre)) {
+            electricos.push(nombre);
+            ordenElectricos.push(nombre);
+            localStorage.setItem('electricos', JSON.stringify(electricos));
+            localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
+        }
+    } else if (departamento === 'mecanico') {
+        if (!mecanicos.includes(nombre)) {
+            mecanicos.push(nombre);
+            ordenMecanicos.push(nombre);
+            localStorage.setItem('mecanicos', JSON.stringify(mecanicos));
+            localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
+        }
+    }
+    
+    usuarios.push({
+        nombre: nombre,
+        departamento: departamento
+    });
+    
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    mostrarNotificacion(`✅ Usuario ${nombre} (${departamento}) añadido`, 'success');
+    renderLoginSimple();
+    return true;
+}
+
+// ========== PANTALLA LOGIN ==========
+function renderLoginSimple() {
+    document.querySelector('header').style.display = 'none';
+    document.querySelector('.nav').style.display = 'none';
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('calendar').style.display = 'none';
+    document.getElementById('history').style.display = 'none';
+    document.getElementById('night').style.display = 'none';
+    
+    const oldLogin = document.querySelector('.login-container-simple');
+    if (oldLogin) oldLogin.remove();
+    
+    const admins = usuarios.filter(u => u.departamento === 'admin');
+    const electricosUsers = usuarios.filter(u => u.departamento === 'electrico');
+    const mecanicosUsers = usuarios.filter(u => u.departamento === 'mecanico');
+    
+    const loginDiv = document.createElement('div');
+    loginDiv.className = 'login-container-simple';
+    
+    let html = `<h2>🔐 Guardias Alsi</h2>`;
+    
+    if (admins.length > 0) {
+        html += `<h3>👑 Administradores</h3>`;
+        html += `<div class="user-buttons">`;
+        admins.forEach(u => {
+            html += `<button onclick="loginSimple('${u.nombre}')" class="user-button admin">👑 ${u.nombre}</button>`;
+        });
+        html += `</div>`;
+    }
+    
+    if (electricosUsers.length > 0) {
+        html += `<h3>⚡ Eléctricos</h3>`;
+        html += `<div class="user-buttons">`;
+        electricosUsers.forEach(u => {
+            html += `<button onclick="loginSimple('${u.nombre}')" class="user-button electrico">⚡ ${u.nombre}</button>`;
+        });
+        html += `</div>`;
+    }
+    
+    if (mecanicosUsers.length > 0) {
+        html += `<h3>🔧 Mecánicos</h3>`;
+        html += `<div class="user-buttons">`;
+        mecanicosUsers.forEach(u => {
+            html += `<button onclick="loginSimple('${u.nombre}')" class="user-button mecanico">🔧 ${u.nombre}</button>`;
+        });
+        html += `</div>`;
+    }
+    
+    html += `
+        <div class="add-user-section">
+            <h3>📝 Registrarse</h3>
+            <div class="add-user-input">
+                <input type="text" id="nuevo-usuario" placeholder="Tu nombre" onkeypress="if(event.key==='Enter') agregarUsuarioSimple(this.value, document.getElementById('nuevo-departamento').value)">
+                <select id="nuevo-departamento">
+                    <option value="">Selecciona...</option>
+                    <option value="electrico">⚡ Eléctrico</option>
+                    <option value="mecanico">🔧 Mecánico</option>
+                </select>
+                <button onclick="agregarUsuarioSimple(document.getElementById('nuevo-usuario').value, document.getElementById('nuevo-departamento').value)">Registrarse</button>
+            </div>
+        </div>
+    `;
+    
+    loginDiv.innerHTML = html;
+    document.body.insertAdjacentElement('afterbegin', loginDiv);
+}
+
+// ========== MENÚ USUARIO ==========
+function renderMenuSimple() {
+    if (!currentUser) return;
+    
+    const oldMenu = document.querySelector('.menu-simple');
+    if (oldMenu) oldMenu.remove();
+    
+    let icono = '👤';
+    let color = '';
+    
+    if (currentUser.departamento === 'admin') {
+        icono = '👑';
+        color = '#8b5cf6';
+    } else if (currentUser.departamento === 'electrico') {
+        icono = '⚡';
+        color = '#1e88e5';
+    } else if (currentUser.departamento === 'mecanico') {
+        icono = '🔧';
+        color = '#f59e0b';
+    }
+    
+    const menuDiv = document.createElement('div');
+    menuDiv.className = 'menu-simple';
+    menuDiv.innerHTML = `
+        <span style="font-weight:bold; color:${color};">${icono} ${currentUser.nombre}</span>
+        <span style="background:rgba(0,0,0,0.05); padding:2px 8px; border-radius:12px; font-size:0.8em;">
+            ${currentUser.departamento === 'admin' ? 'Admin' : (currentUser.departamento === 'electrico' ? 'Electricidad' : 'Mecánica')}
+        </span>
+        <button onclick="logoutSimple()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.2em;padding:0 5px;" title="Cerrar sesión">🚪</button>
+    `;
+    
+    document.body.insertAdjacentElement('afterbegin', menuDiv);
+}
 
 // ========== FUNCIONES DE FECHA ==========
 const FECHA_BASE = new Date(2024, 0, 1);
@@ -281,10 +533,7 @@ const fd = d => {
 
 // ========== FUNCIONES DE ROTACIÓN ==========
 const activos = l => {
-    const ordenPersonalizado = l === electricos ? 
-        JSON.parse(localStorage.getItem('ordenElectricos') || 'null') : 
-        JSON.parse(localStorage.getItem('ordenMecanicos') || 'null');
-    const lista = ordenPersonalizado || l;
+    const lista = l === electricos ? ordenElectricos : ordenMecanicos;
     return lista.filter(p => !estados[p] || estados[p] === "activo");
 };
 
@@ -315,15 +564,23 @@ function getEstadoTexto(estado) {
     }
 }
 
-// ========== NOTIFICACIONES ==========
-function mostrarNotificacion(mensaje) {
+// ========== FUNCIONES DE NOTIFICACIÓN ==========
+function mostrarNotificacion(mensaje, tipo = 'success') {
     const notif = document.createElement('div');
     notif.className = 'notificacion-github';
+    
+    let color, icono;
+    if (tipo === 'success') { color = '#4CAF50'; icono = '✅'; }
+    else if (tipo === 'error') { color = '#f44336'; icono = '❌'; }
+    else { color = '#2196F3'; icono = '🔄'; }
+    
+    notif.style.background = color;
     notif.innerHTML = `
-        <span>🔄</span>
+        <span>${icono}</span>
         <span>${mensaje}</span>
         <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;margin-left:10px;">×</button>
     `;
+    
     document.body.appendChild(notif);
     setTimeout(() => {
         if (notif.parentNode) {
@@ -334,100 +591,7 @@ function mostrarNotificacion(mensaje) {
     }, 5000);
 }
 
-// ========== LEER DE GIST ==========
-async function leerDeGist() {
-    try {
-        const url = `https://gist.githubusercontent.com/${GIST_CONFIG.usuario}/${GIST_CONFIG.id}/raw/${GIST_CONFIG.archivo}?t=${Date.now()}`;
-        const response = await fetch(url);
-        if (!response.ok) return null;
-        return await response.json();
-    } catch (error) {
-        console.log('Error leyendo Gist:', error);
-        return null;
-    }
-}
-
-// ========== VERIFICAR CAMBIOS CADA 5 SEGUNDOS ==========
-async function verificarCambios() {
-    const config = await leerDeGist();
-    if (!config) return;
-    
-    const versionGist = config.version || '0';
-    
-    if (versionGist !== ultimaVersion) {
-        console.log(`🔄 Actualizando: ${ultimaVersion} → ${versionGist}`);
-        
-        if (config.ordenElectricos) {
-            localStorage.setItem('ordenElectricos', JSON.stringify(config.ordenElectricos));
-        }
-        if (config.ordenMecanicos) {
-            localStorage.setItem('ordenMecanicos', JSON.stringify(config.ordenMecanicos));
-        }
-        if (config.estados) {
-            estados = config.estados;
-            localStorage.setItem('estados', JSON.stringify(config.estados));
-        }
-        if (config.manualOverrides) {
-            manualOverrides = config.manualOverrides;
-            localStorage.setItem('manualOverrides', JSON.stringify(config.manualOverrides));
-        }
-        if (config.history) {
-            history = config.history;
-            localStorage.setItem('history', JSON.stringify(config.history));
-        }
-        
-        localStorage.setItem('version', versionGist);
-        ultimaVersion = versionGist;
-        
-        renderCalendar();
-        renderPersonasList();
-        render();
-        renderHistory();
-        
-        mostrarNotificacion('✅ Guardias actualizadas');
-    }
-}
-
-// ========== RENDERIZAR LISTA DE PERSONAS ==========
-function renderPersonasList() {
-    const personasList = document.getElementById('personasList');
-    if (!personasList) return;
-    
-    let html = '';
-    
-    const ordenElec = JSON.parse(localStorage.getItem('ordenElectricos') || 'null') || electricos;
-    const ordenMec = JSON.parse(localStorage.getItem('ordenMecanicos') || 'null') || mecanicos;
-    
-    ordenElec.forEach(persona => {
-        const estado = estados[persona] || 'activo';
-        if (estado !== 'inactivo') {
-            html += `
-                <div class="persona-item">
-                    <span class="icon">⚡</span>
-                    <span>${persona}</span>
-                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
-                </div>
-            `;
-        }
-    });
-    
-    ordenMec.forEach(persona => {
-        const estado = estados[persona] || 'activo';
-        if (estado !== 'inactivo') {
-            html += `
-                <div class="persona-item">
-                    <span class="icon">🔧</span>
-                    <span>${persona}</span>
-                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
-                </div>
-            `;
-        }
-    });
-    
-    personasList.innerHTML = html;
-}
-
-// ========== RENDERIZAR CALENDARIO ==========
+// ========== CALENDARIO ==========
 function renderCalendar() {
     const calendarGrid = document.getElementById('calendarGrid');
     if (!calendarGrid) return;
@@ -484,7 +648,7 @@ function changeMonth(delta) {
     renderCalendar();
 }
 
-// ========== RENDERIZAR SEMANAS ==========
+// ========== RENDER ==========
 function render() {
     const carousel = document.getElementById('carousel');
     if (!carousel) return;
@@ -537,6 +701,8 @@ function render() {
             </div>
         `;
     }
+    
+    renderHistory();
 }
 
 // ========== HISTORIAL ==========
@@ -566,105 +732,72 @@ function renderHistory() {
     
     historyList.innerHTML = "";
     history.forEach(h => {
-        const [fecha, ...resto] = h.split(' ');
-        const guardias = resto.join(' ');
-        historyList.innerHTML += `
-            <div class="history-item">
-                <span>${fecha}</span>
-                <span>${guardias}</span>
-            </div>
-        `;
+        historyList.innerHTML += `<div class="history-item">${h}</div>`;
     });
+}
+
+// ========== LEER DE GIST ==========
+async function leerDeGist() {
+    try {
+        const url = `https://gist.githubusercontent.com/${GIST_CONFIG.usuario}/${GIST_CONFIG.id}/raw/${GIST_CONFIG.archivo}?t=${Date.now()}`;
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.log('Error leyendo Gist:', error);
+        return null;
+    }
 }
 
 // ========== MODO OSCURO ==========
 document.getElementById('night').onclick = () => {
     document.body.classList.toggle('dark');
-    localStorage.dark = document.body.classList.contains('dark');
+    localStorage.setItem('dark', document.body.classList.contains('dark'));
 };
-if (localStorage.dark === 'true') document.body.classList.add('dark');
+if (localStorage.getItem('dark') === 'true') document.body.classList.add('dark');
 
 // ========== EVENT LISTENERS ==========
 document.getElementById('prev').onclick = () => { offset--; render(); };
 document.getElementById('next').onclick = () => { offset++; render(); };
 
-// ========== PWA INSTALLATION ==========
-let deferredPrompt;
-let installButton = null;
-
-function createInstallButton() {
-    if (installButton) return;
-    installButton = document.createElement('button');
-    installButton.id = 'install-button';
-    installButton.innerHTML = '📱 Instalar App';
-    installButton.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: linear-gradient(135deg, #4CAF50, #2E7D32);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 25px;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 1000;
-        cursor: pointer;
-        display: none;
-        font-size: 14px;
-    `;
-    installButton.onclick = installPWA;
-    document.body.appendChild(installButton);
-}
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    createInstallButton();
-    setTimeout(() => {
-        if (installButton && deferredPrompt) {
-            installButton.style.display = 'block';
-        }
-    }, 3000);
-});
-
-function installPWA() {
-    if (!deferredPrompt) {
-        alert('La aplicación ya está instalada');
+// ========== INICIALIZACIÓN ==========
+document.addEventListener('DOMContentLoaded', async function() {
+    // Verificar si hay usuario logueado
+    if (!currentUser) {
+        renderLoginSimple();
         return;
     }
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => {
-        deferredPrompt = null;
-        if (installButton) installButton.style.display = 'none';
-    });
-}
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js').catch(console.log);
-    });
-}
-
-// ========== INICIALIZACIÓN ==========
-document.addEventListener('DOMContentLoaded', async () => {
+    
+    // Mostrar menú de usuario
+    renderMenuSimple();
+    
+    // Mostrar contenido
+    document.querySelector('header').style.display = 'block';
+    document.querySelector('.nav').style.display = 'flex';
+    document.querySelector('.container').style.display = 'block';
+    document.getElementById('calendar').style.display = 'block';
+    document.getElementById('history').style.display = 'block';
+    document.getElementById('night').style.display = 'block';
+    
     // Cargar datos desde Gist
     const config = await leerDeGist();
     if (config && config.version !== ultimaVersion) {
-        console.log('📥 Cargando datos desde Gist');
-        if (config.ordenElectricos) localStorage.setItem('ordenElectricos', JSON.stringify(config.ordenElectricos));
-        if (config.ordenMecanicos) localStorage.setItem('ordenMecanicos', JSON.stringify(config.ordenMecanicos));
+        console.log('📥 Cargando última versión desde Gist');
+        if (config.ordenElectricos) {
+            ordenElectricos = config.ordenElectricos;
+            localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
+        }
+        if (config.ordenMecanicos) {
+            ordenMecanicos = config.ordenMecanicos;
+            localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
+        }
         if (config.estados) {
             estados = config.estados;
-            localStorage.setItem('estados', JSON.stringify(config.estados));
+            localStorage.setItem('estados', JSON.stringify(estados));
         }
         if (config.manualOverrides) {
             manualOverrides = config.manualOverrides;
-            localStorage.setItem('manualOverrides', JSON.stringify(config.manualOverrides));
-        }
-        if (config.history) {
-            history = config.history;
-            localStorage.setItem('history', JSON.stringify(config.history));
+            localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
         }
         localStorage.setItem('version', config.version);
         ultimaVersion = config.version;
@@ -672,16 +805,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Renderizar todo
     renderCalendar();
-    renderPersonasList();
-    logCompletedWeek();
     render();
-    renderHistory();
+    logCompletedWeek();
     
-    // Verificar cambios CADA 5 SEGUNDOS
-    setInterval(verificarCambios, 5000);
-    window.addEventListener('focus', verificarCambios);
-    
-    console.log('👥 Usuario con GIST configurado - ID:', GIST_CONFIG.id);
+    console.log('🚀 Versión usuarios');
 });
 </script>
 </body>
