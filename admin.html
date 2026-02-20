@@ -336,6 +336,155 @@ select{
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* ===== USUARIOS SIMPLE ===== */
+.user-management-simple {
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(30, 136, 229, 0.05);
+    border-radius: 12px;
+}
+
+.user-list-simple {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.user-item-simple {
+    background: var(--card);
+    padding: 12px 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.user-name-simple {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-actions-simple {
+    display: flex;
+    gap: 5px;
+}
+
+.user-btn-simple {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85em;
+}
+
+.user-btn-add {
+    background: var(--primary);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.user-input-simple {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: var(--card);
+    color: var(--text);
+    margin-right: 10px;
+    width: 200px;
+}
+
+.menu-simple {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 200;
+    background: var(--card);
+    padding: 8px 15px;
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.login-container-simple {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 30px;
+    background: var(--card);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+.login-container-simple h2 {
+    text-align: center;
+    color: var(--primary);
+    margin-bottom: 30px;
+}
+
+.login-container-simple h3 {
+    margin: 20px 0 10px;
+    font-size: 1.1em;
+}
+
+.user-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.user-button {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.user-button.admin {
+    background: #8b5cf6;
+}
+
+.add-user-section {
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.add-user-input {
+    display: flex;
+    gap: 10px;
+}
+
+.add-user-input input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: var(--card);
+    color: var(--text);
+}
+
+.add-user-input button {
+    padding: 10px 20px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -493,7 +642,8 @@ select{
 </div>
 </div>
 
-<script>// ========== CONFIGURACIÓN GIST - CON SUBIDA DIRECTA ==========
+<script>
+// ========== CONFIGURACIÓN GIST - CON SUBIDA DIRECTA ==========
 const GIST_CONFIG = {
     usuario: 'alsisanty-lgtm',
     id: '0540f0550bdf2456f2a25ae965fa7725',
@@ -502,7 +652,6 @@ const GIST_CONFIG = {
 
 // ========== VARIABLES GLOBALES ==========
 let adminAuthenticated = false;
-const ADMIN_PASS = "alsi2026";
 let offset = 0;
 let calendarMonth = new Date();
 let adminWeekOffset = 0;
@@ -519,6 +668,186 @@ let ordenMecanicos = JSON.parse(localStorage.getItem('ordenMecanicos') || 'null'
 let estados = JSON.parse(localStorage.getItem('estados') || '{}');
 let manualOverrides = JSON.parse(localStorage.getItem('manualOverrides') || '{}');
 let history = JSON.parse(localStorage.getItem('history') || '[]');
+
+// ========== USUARIOS SIMPLE (SÓLO NOMBRES) ==========
+let usuariosSimples = JSON.parse(localStorage.getItem('usuariosSimples') || '[]');
+
+// Usuario administrador por defecto
+if (usuariosSimples.length === 0) {
+    usuariosSimples.push('admin');
+    localStorage.setItem('usuariosSimples', JSON.stringify(usuariosSimples));
+}
+
+let currentUserSimple = localStorage.getItem('currentUserSimple') || null;
+
+// ========== FUNCIONES DE USUARIOS SIMPLES ==========
+function loginSimple(nombre) {
+    if (usuariosSimples.includes(nombre)) {
+        currentUserSimple = nombre;
+        localStorage.setItem('currentUserSimple', nombre);
+        mostrarNotificacion(`👋 Bienvenido ${nombre}`, 'success');
+        location.reload();
+        return true;
+    }
+    mostrarNotificacion('❌ Usuario no existe', 'error');
+    return false;
+}
+
+function logoutSimple() {
+    currentUserSimple = null;
+    localStorage.removeItem('currentUserSimple');
+    mostrarNotificacion('👋 Hasta luego', 'info');
+    location.reload();
+}
+
+function agregarUsuarioSimple(nombre) {
+    if (!nombre || !nombre.trim()) {
+        mostrarNotificacion('❌ Escribe un nombre', 'error');
+        return false;
+    }
+    
+    nombre = nombre.trim();
+    
+    if (usuariosSimples.includes(nombre)) {
+        mostrarNotificacion('❌ El usuario ya existe', 'error');
+        return false;
+    }
+    
+    usuariosSimples.push(nombre);
+    localStorage.setItem('usuariosSimples', JSON.stringify(usuariosSimples));
+    mostrarNotificacion(`✅ Usuario ${nombre} añadido`, 'success');
+    
+    // Actualizar vista si estamos en admin
+    if (currentUserSimple === 'admin') {
+        renderUsuariosSimples();
+    } else {
+        renderLoginSimple();
+    }
+    return true;
+}
+
+function eliminarUsuarioSimple(nombre) {
+    if (nombre === 'admin') {
+        mostrarNotificacion('❌ No puedes eliminar a admin', 'error');
+        return false;
+    }
+    
+    if (nombre === currentUserSimple) {
+        logoutSimple();
+        return true;
+    }
+    
+    usuariosSimples = usuariosSimples.filter(u => u !== nombre);
+    localStorage.setItem('usuariosSimples', JSON.stringify(usuariosSimples));
+    mostrarNotificacion(`✅ Usuario ${nombre} eliminado`, 'success');
+    renderUsuariosSimples();
+    return true;
+}
+
+// ========== PANTALLA LOGIN SIMPLE ==========
+function renderLoginSimple() {
+    // Ocultar todo
+    document.querySelector('header').style.display = 'none';
+    document.querySelector('.nav').style.display = 'none';
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('calendar').style.display = 'none';
+    document.getElementById('admin').style.display = 'none';
+    document.getElementById('history').style.display = 'none';
+    document.getElementById('night').style.display = 'none';
+    
+    // Eliminar login anterior
+    const oldLogin = document.querySelector('.login-container-simple');
+    if (oldLogin) oldLogin.remove();
+    
+    const loginDiv = document.createElement('div');
+    loginDiv.className = 'login-container-simple';
+    loginDiv.innerHTML = `
+        <h2>🔐 Guardias Alsi</h2>
+        
+        <h3>Selecciona usuario:</h3>
+        <div class="user-buttons">
+            ${usuariosSimples.map(u => `
+                <button onclick="loginSimple('${u}')" class="user-button ${u === 'admin' ? 'admin' : ''}">
+                    ${u === 'admin' ? '👑 ' : '👤 '}${u}
+                </button>
+            `).join('')}
+        </div>
+        
+        <div class="add-user-section">
+            <h3>Nuevo usuario:</h3>
+            <div class="add-user-input">
+                <input type="text" id="nuevo-usuario" placeholder="Nombre" onkeypress="if(event.key==='Enter') agregarUsuarioSimple(this.value)">
+                <button onclick="agregarUsuarioSimple(document.getElementById('nuevo-usuario').value)">Añadir</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentElement('afterbegin', loginDiv);
+}
+
+// ========== MENÚ USUARIO SIMPLE ==========
+function renderMenuSimple() {
+    // Eliminar menú anterior
+    const oldMenu = document.querySelector('.menu-simple');
+    if (oldMenu) oldMenu.remove();
+    
+    const menuDiv = document.createElement('div');
+    menuDiv.className = 'menu-simple';
+    menuDiv.innerHTML = `
+        <span style="font-weight:bold;">${currentUserSimple === 'admin' ? '👑' : '👤'} ${currentUserSimple}</span>
+        ${currentUserSimple === 'admin' ? '<span style="background:rgba(139,92,246,0.1);color:#8b5cf6;padding:2px 8px;border-radius:12px;font-size:0.8em;">Admin</span>' : ''}
+        <button onclick="logoutSimple()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.2em;padding:0 5px;" title="Cerrar sesión">🚪</button>
+    `;
+    
+    document.body.insertAdjacentElement('afterbegin', menuDiv);
+}
+
+// ========== GESTIÓN USUARIOS EN ADMIN ==========
+function renderUsuariosSimples() {
+    if (currentUserSimple !== 'admin') return;
+    
+    const adminContent = document.getElementById('admin-content');
+    if (!adminContent) return;
+    
+    let userSection = document.querySelector('.user-management-simple');
+    
+    if (!userSection) {
+        userSection = document.createElement('div');
+        userSection.className = 'user-management-simple';
+        userSection.innerHTML = `
+            <h3>👥 Usuarios</h3>
+            <div style="display:flex;gap:10px;margin:15px 0;">
+                <input type="text" id="nuevo-user-admin" placeholder="Nombre usuario" class="user-input-simple" onkeypress="if(event.key==='Enter') agregarUsuarioSimple(this.value)">
+                <button class="user-btn-add" onclick="agregarUsuarioSimple(document.getElementById('nuevo-user-admin').value)">➕ Añadir</button>
+            </div>
+            <div id="lista-usuarios-simple" class="user-list-simple"></div>
+        `;
+        
+        // Insertar después de la sección de rotaciones
+        const rotationSection = document.querySelector('.admin-section:nth-child(2)');
+        if (rotationSection) {
+            rotationSection.after(userSection);
+        } else {
+            adminContent.appendChild(userSection);
+        }
+    }
+    
+    const lista = document.getElementById('lista-usuarios-simple');
+    if (lista) {
+        lista.innerHTML = usuariosSimples.map(nombre => `
+            <div class="user-item-simple">
+                <div class="user-name-simple">
+                    ${nombre === 'admin' ? '👑' : '👤'} ${nombre}
+                </div>
+                <div class="user-actions-simple">
+                    ${nombre !== 'admin' ? `
+                        <button onclick="if(confirm('¿Eliminar a ${nombre}?')) eliminarUsuarioSimple('${nombre}')" class="user-btn-simple" style="background:#ef4444;color:white;">🗑️</button>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+}
 
 // ========== FUNCIONES DE FECHA ==========
 const FECHA_BASE = new Date(2024, 0, 1);
@@ -727,33 +1056,6 @@ async function guardarEnGistDirecto() {
         }
         
         return false;
-    }
-}
-
-// ========== AUTENTICACIÓN ==========
-function checkAdminAuth() {
-    if (!adminAuthenticated) {
-        const password = prompt("🔐 Contraseña administrador:");
-        if (password === ADMIN_PASS) {
-            adminAuthenticated = true;
-            document.getElementById('admin-content').style.display = 'block';
-            renderAdmin();
-            renderAdminGuardias();
-            renderRotationLists();
-            populateSwapSelects();
-            
-            // Preguntar si quiere configurar token para subida directa
-            setTimeout(() => {
-                if (!gistToken) {
-                    if (confirm('¿Quieres configurar un token de Gist para subir automáticamente desde el móvil?')) {
-                        configurarTokenGist();
-                    }
-                }
-            }, 1000);
-        } else {
-            document.getElementById('admin-content').style.display = 'none';
-            document.querySelector('#admin summary').textContent = '🔒 Administrador (acceso restringido)';
-        }
     }
 }
 
@@ -1345,15 +1647,9 @@ if (localStorage.dark === 'true') document.body.classList.add('dark');
 document.getElementById('prev').onclick = () => { offset--; render(); };
 document.getElementById('next').onclick = () => { offset++; render(); };
 
-document.querySelector('#admin summary').addEventListener('click', function(e) {
-    if (this.parentNode.open && !adminAuthenticated) {
-        checkAdminAuth();
-    }
-});
-
 document.getElementById('save').onclick = async function() {
-    if (!adminAuthenticated) {
-        alert('❌ No tienes permisos');
+    if (currentUserSimple !== 'admin') {
+        alert('❌ Solo admin puede guardar');
         return;
     }
     
@@ -1373,6 +1669,8 @@ document.getElementById('save').onclick = async function() {
 
 // ========== BOTÓN PARA CONFIGURAR TOKEN ==========
 function setupTokenButton() {
+    if (currentUserSimple !== 'admin') return;
+    
     const adminSection = document.querySelector('.admin-section');
     if (adminSection) {
         const tokenBtn = document.createElement('button');
@@ -1401,6 +1699,22 @@ async function leerDeGist() {
 document.addEventListener('DOMContentLoaded', async function() {
     // Cargar token guardado
     gistToken = localStorage.getItem('gist_token') || '';
+    
+    // Verificar si hay usuario logueado
+    if (!currentUserSimple) {
+        renderLoginSimple();
+        return;
+    }
+    
+    // Mostrar menú de usuario
+    renderMenuSimple();
+    
+    // Solo admin ve el panel de administración
+    if (currentUserSimple === 'admin') {
+        document.getElementById('admin').style.display = 'block';
+    } else {
+        document.getElementById('admin').style.display = 'none';
+    }
     
     // Cargar datos desde Gist
     const config = await leerDeGist();
@@ -1440,19 +1754,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     populateSwapSelects();
     logCompletedWeek();
     
-    // Añadir botón de token
-    setupTokenButton();
-    
-    console.log('🚀 Admin con GIST + subida directa - ID:', GIST_CONFIG.id);
-    if (gistToken) {
-        console.log('🔑 Token configurado');
-    } else {
-        console.log('🔑 Token NO configurado (usa subida manual)');
+    // Añadir gestión de usuarios solo para admin
+    if (currentUserSimple === 'admin') {
+        renderUsuariosSimples();
+        setupTokenButton();
     }
+    
+    console.log('🚀 Admin con sistema de usuarios simple');
 });
 </script>
 </body>
 </html>
+
 
 
 
