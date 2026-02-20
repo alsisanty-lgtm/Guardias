@@ -198,6 +198,17 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* ===== VERSIÓN INFO ===== */
+.version-info {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.5;
+    z-index: 100;
+}
 </style>
 </head>
 <body>
@@ -232,6 +243,8 @@ body.dark .weekend{background:rgba(255,255,255,.03)}
 <div id="historyList"></div>
 </div>
 
+<div class="version-info" id="versionInfo"></div>
+
 <script>
 // ========== CONFIGURACIÓN GIST - YA CONFIGURADO ==========
 const GIST_CONFIG = {
@@ -253,6 +266,12 @@ let estados = JSON.parse(localStorage.getItem('estados') || '{}');
 let manualOverrides = JSON.parse(localStorage.getItem('manualOverrides') || '{}');
 let history = JSON.parse(localStorage.getItem('history') || '[]');
 let ultimaVersion = localStorage.getItem('version') || '0';
+let ordenElectricosGuardado = JSON.parse(localStorage.getItem('ordenElectricos') || 'null');
+let ordenMecanicosGuardado = JSON.parse(localStorage.getItem('ordenMecanicos') || 'null');
+
+// Si hay órdenes guardados, actualizar
+if (ordenElectricosGuardado) electricos = ordenElectricosGuardado;
+if (ordenMecanicosGuardado) mecanicos = ordenMecanicosGuardado;
 
 // ========== FUNCIONES DE FECHA ==========
 const FECHA_BASE = new Date(2024, 0, 1);
@@ -280,21 +299,17 @@ const fd = d => {
 };
 
 // ========== FUNCIONES DE ROTACIÓN ==========
-const activos = l => {
-    const ordenPersonalizado = l === electricos ? 
-        JSON.parse(localStorage.getItem('ordenElectricos') || 'null') : 
-        JSON.parse(localStorage.getItem('ordenMecanicos') || 'null');
-    const lista = ordenPersonalizado || l;
+const activos = (lista) => {
     return lista.filter(p => !estados[p] || estados[p] === "activo");
 };
 
-const guardia = (l, numeroSemana) => {
-    const a = activos(l);
+const guardia = (lista, numeroSemana) => {
+    const a = activos(lista);
     if (a.length === 0) return "Nadie";
     
     const semanaKey = numeroSemana.toString();
     if (manualOverrides[semanaKey]) {
-        const tipo = l === electricos ? 'electrico' : 'mecanico';
+        const tipo = lista === electricos ? 'electrico' : 'mecanico';
         if (manualOverrides[semanaKey][tipo]) {
             return manualOverrides[semanaKey][tipo];
         }
@@ -358,9 +373,11 @@ async function verificarCambios() {
         console.log(`🔄 Actualizando: ${ultimaVersion} → ${versionGist}`);
         
         if (config.ordenElectricos) {
+            electricos = config.ordenElectricos;
             localStorage.setItem('ordenElectricos', JSON.stringify(config.ordenElectricos));
         }
         if (config.ordenMecanicos) {
+            mecanicos = config.ordenMecanicos;
             localStorage.setItem('ordenMecanicos', JSON.stringify(config.ordenMecanicos));
         }
         if (config.estados) {
@@ -395,33 +412,29 @@ function renderPersonasList() {
     
     let html = '';
     
-    const ordenElec = JSON.parse(localStorage.getItem('ordenElectricos') || 'null') || electricos;
-    const ordenMec = JSON.parse(localStorage.getItem('ordenMecanicos') || 'null') || mecanicos;
+    const activosElec = activos(electricos);
+    const activosMec = activos(mecanicos);
     
-    ordenElec.forEach(persona => {
+    activosElec.forEach(persona => {
         const estado = estados[persona] || 'activo';
-        if (estado !== 'inactivo') {
-            html += `
-                <div class="persona-item">
-                    <span class="icon">⚡</span>
-                    <span>${persona}</span>
-                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
-                </div>
-            `;
-        }
+        html += `
+            <div class="persona-item">
+                <span class="icon">⚡</span>
+                <span>${persona}</span>
+                <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
+            </div>
+        `;
     });
     
-    ordenMec.forEach(persona => {
+    activosMec.forEach(persona => {
         const estado = estados[persona] || 'activo';
-        if (estado !== 'inactivo') {
-            html += `
-                <div class="persona-item">
-                    <span class="icon">🔧</span>
-                    <span>${persona}</span>
-                    <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
-                </div>
-            `;
-        }
+        html += `
+            <div class="persona-item">
+                <span class="icon">🔧</span>
+                <span>${persona}</span>
+                <span class="status-${estado}" style="margin-left:auto;font-size:0.8em;">${getEstadoTexto(estado)}</span>
+            </div>
+        `;
     });
     
     personasList.innerHTML = html;
@@ -646,14 +659,28 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// ========== MOSTRAR VERSIÓN ==========
+function mostrarVersion() {
+    const versionInfo = document.getElementById('versionInfo');
+    if (versionInfo) {
+        versionInfo.textContent = `v. ${new Date(parseInt(ultimaVersion)).toLocaleString()}`;
+    }
+}
+
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', async () => {
     // Cargar datos desde Gist
     const config = await leerDeGist();
     if (config && config.version !== ultimaVersion) {
         console.log('📥 Cargando datos desde Gist');
-        if (config.ordenElectricos) localStorage.setItem('ordenElectricos', JSON.stringify(config.ordenElectricos));
-        if (config.ordenMecanicos) localStorage.setItem('ordenMecanicos', JSON.stringify(config.ordenMecanicos));
+        if (config.ordenElectricos) {
+            electricos = config.ordenElectricos;
+            localStorage.setItem('ordenElectricos', JSON.stringify(config.ordenElectricos));
+        }
+        if (config.ordenMecanicos) {
+            mecanicos = config.ordenMecanicos;
+            localStorage.setItem('ordenMecanicos', JSON.stringify(config.ordenMecanicos));
+        }
         if (config.estados) {
             estados = config.estados;
             localStorage.setItem('estados', JSON.stringify(config.estados));
@@ -676,12 +703,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     logCompletedWeek();
     render();
     renderHistory();
+    mostrarVersion();
     
     // Verificar cambios CADA 5 SEGUNDOS
     setInterval(verificarCambios, 5000);
     window.addEventListener('focus', verificarCambios);
     
-    console.log('👥 Usuario con GIST configurado - ID:', GIST_CONFIG.id);
+    console.log('👥 Usuario con GIST configurado - Solo visualización');
 });
 </script>
 </body>
