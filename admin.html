@@ -14,7 +14,7 @@
 <meta name="msapplication-TileImage" content="icon-144-admin.png">
 <meta name="msapplication-TileColor" content="#8b5cf6">
 <meta name="msapplication-config" content="browserconfig-admin.xml">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="mobile-web-web-app-capable" content="yes">
 <link rel="manifest" href="manifest-admin.json">
 <link rel="icon" href="icon-192.png">
 
@@ -337,7 +337,7 @@ select{
   to { transform: translateX(0); opacity: 1; }
 }
 
-/* ===== USUARIOS SIMPLE ===== */
+/* ===== USUARIOS CON DEPARTAMENTOS ===== */
 .user-management-simple {
     margin: 20px 0;
     padding: 20px;
@@ -347,7 +347,7 @@ select{
 
 .user-list-simple {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 10px;
     margin: 15px 0;
 }
@@ -360,6 +360,15 @@ select{
     align-items: center;
     justify-content: space-between;
     border: 1px solid rgba(0,0,0,0.1);
+    border-left: 4px solid;
+}
+
+.user-item-simple.electrico {
+    border-left-color: #1e88e5;
+}
+
+.user-item-simple.mecanico {
+    border-left-color: #f59e0b;
 }
 
 .user-name-simple {
@@ -367,6 +376,23 @@ select{
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.user-departamento {
+    font-size: 0.75em;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.05);
+}
+
+.user-departamento.electrico {
+    background: rgba(30, 136, 229, 0.1);
+    color: #1e88e5;
+}
+
+.user-departamento.mecanico {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
 }
 
 .user-actions-simple {
@@ -389,7 +415,6 @@ select{
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    margin-bottom: 15px;
 }
 
 .user-input-simple {
@@ -398,8 +423,15 @@ select{
     border: 1px solid #ddd;
     background: var(--card);
     color: var(--text);
-    margin-right: 10px;
     width: 200px;
+}
+
+.user-select-simple {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: var(--card);
+    color: var(--text);
 }
 
 .menu-simple {
@@ -417,8 +449,8 @@ select{
 }
 
 .login-container-simple {
-    max-width: 400px;
-    margin: 100px auto;
+    max-width: 450px;
+    margin: 50px auto;
     padding: 30px;
     background: var(--card);
     border-radius: 20px;
@@ -437,20 +469,35 @@ select{
 }
 
 .user-buttons {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 10px;
     margin: 15px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 5px;
 }
 
 .user-button {
-    padding: 10px 20px;
+    padding: 10px;
     background: var(--primary);
     color: white;
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 1em;
+    font-size: 0.9em;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.user-button.electrico {
+    background: #1e88e5;
+}
+
+.user-button.mecanico {
+    background: #f59e0b;
 }
 
 .user-button.admin {
@@ -466,10 +513,22 @@ select{
 .add-user-input {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .add-user-input input {
+    flex: 2;
+    min-width: 150px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: var(--card);
+    color: var(--text);
+}
+
+.add-user-input select {
     flex: 1;
+    min-width: 120px;
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #ddd;
@@ -669,23 +728,27 @@ let estados = JSON.parse(localStorage.getItem('estados') || '{}');
 let manualOverrides = JSON.parse(localStorage.getItem('manualOverrides') || '{}');
 let history = JSON.parse(localStorage.getItem('history') || '[]');
 
-// ========== USUARIOS SIMPLE (SÓLO NOMBRES) ==========
-let usuariosSimples = JSON.parse(localStorage.getItem('usuariosSimples') || '[]');
+// ========== USUARIOS CON DEPARTAMENTOS ==========
+let usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
 
 // Usuario administrador por defecto
-if (usuariosSimples.length === 0) {
-    usuariosSimples.push('admin');
-    localStorage.setItem('usuariosSimples', JSON.stringify(usuariosSimples));
+if (usuarios.length === 0) {
+    usuarios.push({
+        nombre: 'admin',
+        departamento: 'admin'
+    });
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
 }
 
-let currentUserSimple = localStorage.getItem('currentUserSimple') || null;
+let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
 
-// ========== FUNCIONES DE USUARIOS SIMPLES ==========
+// ========== FUNCIONES DE USUARIOS ==========
 function loginSimple(nombre) {
-    if (usuariosSimples.includes(nombre)) {
-        currentUserSimple = nombre;
-        localStorage.setItem('currentUserSimple', nombre);
-        mostrarNotificacion(`👋 Bienvenido ${nombre}`, 'success');
+    const user = usuarios.find(u => u.nombre === nombre);
+    if (user) {
+        currentUser = user;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        mostrarNotificacion(`👋 Bienvenido ${nombre} (${user.departamento === 'admin' ? 'Administrador' : (user.departamento === 'electrico' ? 'Electricidad' : 'Mecánica')})`, 'success');
         location.reload();
         return true;
     }
@@ -694,31 +757,40 @@ function loginSimple(nombre) {
 }
 
 function logoutSimple() {
-    currentUserSimple = null;
-    localStorage.removeItem('currentUserSimple');
+    currentUser = null;
+    localStorage.removeItem('currentUser');
     mostrarNotificacion('👋 Hasta luego', 'info');
     location.reload();
 }
 
-function agregarUsuarioSimple(nombre) {
+function agregarUsuarioSimple(nombre, departamento) {
     if (!nombre || !nombre.trim()) {
         mostrarNotificacion('❌ Escribe un nombre', 'error');
         return false;
     }
     
+    if (!departamento) {
+        mostrarNotificacion('❌ Selecciona un departamento', 'error');
+        return false;
+    }
+    
     nombre = nombre.trim();
     
-    if (usuariosSimples.includes(nombre)) {
+    if (usuarios.some(u => u.nombre === nombre)) {
         mostrarNotificacion('❌ El usuario ya existe', 'error');
         return false;
     }
     
-    usuariosSimples.push(nombre);
-    localStorage.setItem('usuariosSimples', JSON.stringify(usuariosSimples));
-    mostrarNotificacion(`✅ Usuario ${nombre} añadido`, 'success');
+    usuarios.push({
+        nombre: nombre,
+        departamento: departamento
+    });
     
-    // Actualizar vista si estamos en admin
-    if (currentUserSimple === 'admin') {
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    mostrarNotificacion(`✅ Usuario ${nombre} (${departamento}) añadido`, 'success');
+    
+    // Actualizar vista
+    if (currentUser && currentUser.nombre === 'admin') {
         renderUsuariosSimples();
     } else {
         renderLoginSimple();
@@ -732,19 +804,19 @@ function eliminarUsuarioSimple(nombre) {
         return false;
     }
     
-    if (nombre === currentUserSimple) {
+    if (currentUser && currentUser.nombre === nombre) {
         logoutSimple();
         return true;
     }
     
-    usuariosSimples = usuariosSimples.filter(u => u !== nombre);
-    localStorage.setItem('usuariosSimples', JSON.stringify(usuariosSimples));
+    usuarios = usuarios.filter(u => u.nombre !== nombre);
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
     mostrarNotificacion(`✅ Usuario ${nombre} eliminado`, 'success');
     renderUsuariosSimples();
     return true;
 }
 
-// ========== PANTALLA LOGIN SIMPLE ==========
+// ========== PANTALLA LOGIN ==========
 function renderLoginSimple() {
     // Ocultar todo
     document.querySelector('header').style.display = 'none';
@@ -759,43 +831,96 @@ function renderLoginSimple() {
     const oldLogin = document.querySelector('.login-container-simple');
     if (oldLogin) oldLogin.remove();
     
+    // Separar usuarios por departamento
+    const admins = usuarios.filter(u => u.departamento === 'admin');
+    const electricos = usuarios.filter(u => u.departamento === 'electrico');
+    const mecanicos = usuarios.filter(u => u.departamento === 'mecanico');
+    
     const loginDiv = document.createElement('div');
     loginDiv.className = 'login-container-simple';
-    loginDiv.innerHTML = `
-        <h2>🔐 Guardias Alsi</h2>
-        
-        <h3>Selecciona usuario:</h3>
-        <div class="user-buttons">
-            ${usuariosSimples.map(u => `
-                <button onclick="loginSimple('${u}')" class="user-button ${u === 'admin' ? 'admin' : ''}">
-                    ${u === 'admin' ? '👑 ' : '👤 '}${u}
-                </button>
-            `).join('')}
-        </div>
-        
+    
+    let html = `<h2>🔐 Guardias Alsi</h2>`;
+    
+    // Mostrar administradores
+    if (admins.length > 0) {
+        html += `<h3>👑 Administradores</h3>`;
+        html += `<div class="user-buttons">`;
+        admins.forEach(u => {
+            html += `<button onclick="loginSimple('${u.nombre}')" class="user-button admin">👑 ${u.nombre}</button>`;
+        });
+        html += `</div>`;
+    }
+    
+    // Mostrar eléctricos
+    if (electricos.length > 0) {
+        html += `<h3>⚡ Eléctricos</h3>`;
+        html += `<div class="user-buttons">`;
+        electricos.forEach(u => {
+            html += `<button onclick="loginSimple('${u.nombre}')" class="user-button electrico">⚡ ${u.nombre}</button>`;
+        });
+        html += `</div>`;
+    }
+    
+    // Mostrar mecánicos
+    if (mecanicos.length > 0) {
+        html += `<h3>🔧 Mecánicos</h3>`;
+        html += `<div class="user-buttons">`;
+        mecanicos.forEach(u => {
+            html += `<button onclick="loginSimple('${u.nombre}')" class="user-button mecanico">🔧 ${u.nombre}</button>`;
+        });
+        html += `</div>`;
+    }
+    
+    // Formulario para añadir usuario (solo visible si no hay admin logueado)
+    html += `
         <div class="add-user-section">
-            <h3>Nuevo usuario:</h3>
+            <h3>📝 Registrarse</h3>
             <div class="add-user-input">
-                <input type="text" id="nuevo-usuario" placeholder="Nombre" onkeypress="if(event.key==='Enter') agregarUsuarioSimple(this.value)">
-                <button onclick="agregarUsuarioSimple(document.getElementById('nuevo-usuario').value)">Añadir</button>
+                <input type="text" id="nuevo-usuario" placeholder="Tu nombre" onkeypress="if(event.key==='Enter') agregarUsuarioSimple(this.value, document.getElementById('nuevo-departamento').value)">
+                <select id="nuevo-departamento">
+                    <option value="">Selecciona...</option>
+                    <option value="electrico">⚡ Eléctrico</option>
+                    <option value="mecanico">🔧 Mecánico</option>
+                </select>
+                <button onclick="agregarUsuarioSimple(document.getElementById('nuevo-usuario').value, document.getElementById('nuevo-departamento').value)">Registrarse</button>
             </div>
+            <p style="font-size:0.8em; color:var(--muted); margin-top:10px;">Regístrate con tu nombre y departamento para acceder</p>
         </div>
     `;
     
+    loginDiv.innerHTML = html;
     document.body.insertAdjacentElement('afterbegin', loginDiv);
 }
 
-// ========== MENÚ USUARIO SIMPLE ==========
+// ========== MENÚ USUARIO ==========
 function renderMenuSimple() {
+    if (!currentUser) return;
+    
     // Eliminar menú anterior
     const oldMenu = document.querySelector('.menu-simple');
     if (oldMenu) oldMenu.remove();
     
+    let icono = '👤';
+    let color = '';
+    
+    if (currentUser.departamento === 'admin') {
+        icono = '👑';
+        color = '#8b5cf6';
+    } else if (currentUser.departamento === 'electrico') {
+        icono = '⚡';
+        color = '#1e88e5';
+    } else if (currentUser.departamento === 'mecanico') {
+        icono = '🔧';
+        color = '#f59e0b';
+    }
+    
     const menuDiv = document.createElement('div');
     menuDiv.className = 'menu-simple';
     menuDiv.innerHTML = `
-        <span style="font-weight:bold;">${currentUserSimple === 'admin' ? '👑' : '👤'} ${currentUserSimple}</span>
-        ${currentUserSimple === 'admin' ? '<span style="background:rgba(139,92,246,0.1);color:#8b5cf6;padding:2px 8px;border-radius:12px;font-size:0.8em;">Admin</span>' : ''}
+        <span style="font-weight:bold; color:${color};">${icono} ${currentUser.nombre}</span>
+        <span style="background:rgba(0,0,0,0.05); padding:2px 8px; border-radius:12px; font-size:0.8em;">
+            ${currentUser.departamento === 'admin' ? 'Admin' : (currentUser.departamento === 'electrico' ? 'Electricidad' : 'Mecánica')}
+        </span>
         <button onclick="logoutSimple()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.2em;padding:0 5px;" title="Cerrar sesión">🚪</button>
     `;
     
@@ -804,7 +929,7 @@ function renderMenuSimple() {
 
 // ========== GESTIÓN USUARIOS EN ADMIN ==========
 function renderUsuariosSimples() {
-    if (currentUserSimple !== 'admin') return;
+    if (!currentUser || currentUser.nombre !== 'admin') return;
     
     const adminContent = document.getElementById('admin-content');
     if (!adminContent) return;
@@ -816,9 +941,16 @@ function renderUsuariosSimples() {
         userSection.className = 'user-management-simple';
         userSection.innerHTML = `
             <h3>👥 Usuarios</h3>
-            <div style="display:flex;gap:10px;margin:15px 0;">
-                <input type="text" id="nuevo-user-admin" placeholder="Nombre usuario" class="user-input-simple" onkeypress="if(event.key==='Enter') agregarUsuarioSimple(this.value)">
-                <button class="user-btn-add" onclick="agregarUsuarioSimple(document.getElementById('nuevo-user-admin').value)">➕ Añadir</button>
+            <div style="display:flex; gap:10px; margin:15px 0; flex-wrap:wrap;">
+                <input type="text" id="nuevo-user-admin" placeholder="Nombre usuario" class="user-input-simple">
+                <select id="nuevo-dept-admin" class="user-select-simple">
+                    <option value="electrico">⚡ Eléctrico</option>
+                    <option value="mecanico">🔧 Mecánico</option>
+                </select>
+                <button class="user-btn-add" onclick="agregarUsuarioSimple(
+                    document.getElementById('nuevo-user-admin').value,
+                    document.getElementById('nuevo-dept-admin').value
+                )">➕ Añadir</button>
             </div>
             <div id="lista-usuarios-simple" class="user-list-simple"></div>
         `;
@@ -834,18 +966,26 @@ function renderUsuariosSimples() {
     
     const lista = document.getElementById('lista-usuarios-simple');
     if (lista) {
-        lista.innerHTML = usuariosSimples.map(nombre => `
-            <div class="user-item-simple">
-                <div class="user-name-simple">
-                    ${nombre === 'admin' ? '👑' : '👤'} ${nombre}
+        lista.innerHTML = usuarios.map(u => {
+            const icono = u.departamento === 'admin' ? '👑' : (u.departamento === 'electrico' ? '⚡' : '🔧');
+            const clase = u.departamento === 'electrico' ? 'electrico' : (u.departamento === 'mecanico' ? 'mecanico' : '');
+            
+            return `
+                <div class="user-item-simple ${clase}">
+                    <div class="user-name-simple">
+                        ${icono} ${u.nombre}
+                        <span class="user-departamento ${clase}">
+                            ${u.departamento === 'admin' ? 'Admin' : (u.departamento === 'electrico' ? 'Electricidad' : 'Mecánica')}
+                        </span>
+                    </div>
+                    <div class="user-actions-simple">
+                        ${u.nombre !== 'admin' ? `
+                            <button onclick="if(confirm('¿Eliminar a ${u.nombre}?')) eliminarUsuarioSimple('${u.nombre}')" class="user-btn-simple" style="background:#ef4444;color:white;">🗑️</button>
+                        ` : ''}
+                    </div>
                 </div>
-                <div class="user-actions-simple">
-                    ${nombre !== 'admin' ? `
-                        <button onclick="if(confirm('¿Eliminar a ${nombre}?')) eliminarUsuarioSimple('${nombre}')" class="user-btn-simple" style="background:#ef4444;color:white;">🗑️</button>
-                    ` : ''}
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 }
 
@@ -1648,7 +1788,7 @@ document.getElementById('prev').onclick = () => { offset--; render(); };
 document.getElementById('next').onclick = () => { offset++; render(); };
 
 document.getElementById('save').onclick = async function() {
-    if (currentUserSimple !== 'admin') {
+    if (!currentUser || currentUser.nombre !== 'admin') {
         alert('❌ Solo admin puede guardar');
         return;
     }
@@ -1669,7 +1809,7 @@ document.getElementById('save').onclick = async function() {
 
 // ========== BOTÓN PARA CONFIGURAR TOKEN ==========
 function setupTokenButton() {
-    if (currentUserSimple !== 'admin') return;
+    if (!currentUser || currentUser.nombre !== 'admin') return;
     
     const adminSection = document.querySelector('.admin-section');
     if (adminSection) {
@@ -1701,7 +1841,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     gistToken = localStorage.getItem('gist_token') || '';
     
     // Verificar si hay usuario logueado
-    if (!currentUserSimple) {
+    if (!currentUser) {
         renderLoginSimple();
         return;
     }
@@ -1709,10 +1849,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Mostrar menú de usuario
     renderMenuSimple();
     
-    // Solo admin ve el panel de administración
-    if (currentUserSimple === 'admin') {
+    // Solo admin ve el panel de administración completo
+    if (currentUser.nombre === 'admin') {
         document.getElementById('admin').style.display = 'block';
     } else {
+        // Usuarios normales no ven el panel de admin
         document.getElementById('admin').style.display = 'none';
     }
     
@@ -1755,16 +1896,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     logCompletedWeek();
     
     // Añadir gestión de usuarios solo para admin
-    if (currentUserSimple === 'admin') {
+    if (currentUser.nombre === 'admin') {
         renderUsuariosSimples();
         setupTokenButton();
     }
     
-    console.log('🚀 Admin con sistema de usuarios simple');
+    console.log('🚀 Admin con sistema de usuarios por departamentos');
 });
 </script>
 </body>
 </html>
+
 
 
 
