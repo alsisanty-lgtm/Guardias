@@ -14,7 +14,7 @@
 <meta name="msapplication-TileImage" content="icon-144-admin.png">
 <meta name="msapplication-TileColor" content="#8b5cf6">
 <meta name="msapplication-config" content="browserconfig-admin.xml">
-<meta name="mobile-web-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest-admin.json">
 <link rel="icon" href="icon-192.png">
 
@@ -376,6 +376,7 @@ select{
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .user-departamento {
@@ -480,7 +481,6 @@ select{
 
 .user-button {
     padding: 10px;
-    background: var(--primary);
     color: white;
     border: none;
     border-radius: 10px;
@@ -702,7 +702,7 @@ select{
 </div>
 
 <script>
-// ========== CONFIGURACIÓN GIST - CON SUBIDA DIRECTA ==========
+// ========== CONFIGURACIÓN GIST ==========
 const GIST_CONFIG = {
     usuario: 'alsisanty-lgtm',
     id: '0540f0550bdf2456f2a25ae965fa7725',
@@ -710,16 +710,15 @@ const GIST_CONFIG = {
 };
 
 // ========== VARIABLES GLOBALES ==========
-let adminAuthenticated = false;
 let offset = 0;
 let calendarMonth = new Date();
 let adminWeekOffset = 0;
 let ultimaVersion = localStorage.getItem('version') || '0';
 let gistToken = localStorage.getItem('gist_token') || '';
 
-// ========== DATOS DE PERSONAL ==========
-let electricos = ["Jose", "Dani", "Abde", "Fran", "Fran Ruiz", "Hicham"];
-let mecanicos = ["Fran Alba", "Manu", "Cele", "Santy", "Ramon", "Traian"];
+// ========== DATOS DE PERSONAL (GUARDADOS EN LOCALSTORAGE) ==========
+let electricos = JSON.parse(localStorage.getItem('electricos') || '["Jose", "Dani", "Abde", "Fran", "Fran Ruiz", "Hicham"]');
+let mecanicos = JSON.parse(localStorage.getItem('mecanicos') || '["Fran Alba", "Manu", "Cele", "Santy", "Ramon", "Traian"]');
 
 // ========== CARGAR DATOS GUARDADOS ==========
 let ordenElectricos = JSON.parse(localStorage.getItem('ordenElectricos') || 'null') || [...electricos];
@@ -748,7 +747,7 @@ function loginSimple(nombre) {
     if (user) {
         currentUser = user;
         localStorage.setItem('currentUser', JSON.stringify(user));
-        mostrarNotificacion(`👋 Bienvenido ${nombre} (${user.departamento === 'admin' ? 'Administrador' : (user.departamento === 'electrico' ? 'Electricidad' : 'Mecánica')})`, 'success');
+        mostrarNotificacion(`👋 Bienvenido ${nombre}`, 'success');
         location.reload();
         return true;
     }
@@ -763,6 +762,7 @@ function logoutSimple() {
     location.reload();
 }
 
+// ========== FUNCIÓN AGREGAR USUARIO (CORREGIDA) ==========
 function agregarUsuarioSimple(nombre, departamento) {
     if (!nombre || !nombre.trim()) {
         mostrarNotificacion('❌ Escribe un nombre', 'error');
@@ -776,43 +776,118 @@ function agregarUsuarioSimple(nombre, departamento) {
     
     nombre = nombre.trim();
     
+    // Verificar si ya existe como usuario
     if (usuarios.some(u => u.nombre === nombre)) {
         mostrarNotificacion('❌ El usuario ya existe', 'error');
         return false;
     }
     
+    // AÑADIR A LA LISTA DE PERSONAL SEGÚN DEPARTAMENTO
+    if (departamento === 'electrico') {
+        if (!electricos.includes(nombre)) {
+            electricos.push(nombre);
+            ordenElectricos.push(nombre);
+            localStorage.setItem('electricos', JSON.stringify(electricos));
+            localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
+        }
+    } else if (departamento === 'mecanico') {
+        if (!mecanicos.includes(nombre)) {
+            mecanicos.push(nombre);
+            ordenMecanicos.push(nombre);
+            localStorage.setItem('mecanicos', JSON.stringify(mecanicos));
+            localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
+        }
+    }
+    
+    // Añadir a la lista de usuarios
     usuarios.push({
         nombre: nombre,
         departamento: departamento
     });
     
     localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    
     mostrarNotificacion(`✅ Usuario ${nombre} (${departamento}) añadido`, 'success');
     
-    // Actualizar vista
+    // Actualizar todas las vistas
     if (currentUser && currentUser.nombre === 'admin') {
         renderUsuariosSimples();
+        renderAdmin();
+        renderRotationLists();
+        render();
+        renderCalendar();
+        renderAdminGuardias();
+        populateSwapSelects();
     } else {
         renderLoginSimple();
     }
+    
     return true;
 }
 
+// ========== FUNCIÓN ELIMINAR USUARIO (CORREGIDA) ==========
 function eliminarUsuarioSimple(nombre) {
     if (nombre === 'admin') {
         mostrarNotificacion('❌ No puedes eliminar a admin', 'error');
         return false;
     }
     
+    // Buscar el usuario para saber su departamento
+    const usuario = usuarios.find(u => u.nombre === nombre);
+    
     if (currentUser && currentUser.nombre === nombre) {
         logoutSimple();
         return true;
     }
     
+    // ELIMINAR DE LAS LISTAS DE PERSONAL
+    if (usuario) {
+        if (usuario.departamento === 'electrico') {
+            const index = electricos.indexOf(nombre);
+            if (index !== -1) {
+                electricos.splice(index, 1);
+                // También del orden de rotación
+                const ordenIndex = ordenElectricos.indexOf(nombre);
+                if (ordenIndex !== -1) ordenElectricos.splice(ordenIndex, 1);
+                localStorage.setItem('electricos', JSON.stringify(electricos));
+                localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
+            }
+        } else if (usuario.departamento === 'mecanico') {
+            const index = mecanicos.indexOf(nombre);
+            if (index !== -1) {
+                mecanicos.splice(index, 1);
+                // También del orden de rotación
+                const ordenIndex = ordenMecanicos.indexOf(nombre);
+                if (ordenIndex !== -1) ordenMecanicos.splice(ordenIndex, 1);
+                localStorage.setItem('mecanicos', JSON.stringify(mecanicos));
+                localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
+            }
+        }
+    }
+    
+    // Eliminar estados si existen
+    if (estados[nombre]) {
+        delete estados[nombre];
+        localStorage.setItem('estados', JSON.stringify(estados));
+    }
+    
+    // Eliminar de la lista de usuarios
     usuarios = usuarios.filter(u => u.nombre !== nombre);
     localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    
     mostrarNotificacion(`✅ Usuario ${nombre} eliminado`, 'success');
-    renderUsuariosSimples();
+    
+    // Actualizar todas las vistas
+    if (currentUser && currentUser.nombre === 'admin') {
+        renderUsuariosSimples();
+        renderAdmin();
+        renderRotationLists();
+        render();
+        renderCalendar();
+        renderAdminGuardias();
+        populateSwapSelects();
+    }
+    
     return true;
 }
 
@@ -833,8 +908,8 @@ function renderLoginSimple() {
     
     // Separar usuarios por departamento
     const admins = usuarios.filter(u => u.departamento === 'admin');
-    const electricos = usuarios.filter(u => u.departamento === 'electrico');
-    const mecanicos = usuarios.filter(u => u.departamento === 'mecanico');
+    const electricosUsers = usuarios.filter(u => u.departamento === 'electrico');
+    const mecanicosUsers = usuarios.filter(u => u.departamento === 'mecanico');
     
     const loginDiv = document.createElement('div');
     loginDiv.className = 'login-container-simple';
@@ -852,26 +927,26 @@ function renderLoginSimple() {
     }
     
     // Mostrar eléctricos
-    if (electricos.length > 0) {
+    if (electricosUsers.length > 0) {
         html += `<h3>⚡ Eléctricos</h3>`;
         html += `<div class="user-buttons">`;
-        electricos.forEach(u => {
+        electricosUsers.forEach(u => {
             html += `<button onclick="loginSimple('${u.nombre}')" class="user-button electrico">⚡ ${u.nombre}</button>`;
         });
         html += `</div>`;
     }
     
     // Mostrar mecánicos
-    if (mecanicos.length > 0) {
+    if (mecanicosUsers.length > 0) {
         html += `<h3>🔧 Mecánicos</h3>`;
         html += `<div class="user-buttons">`;
-        mecanicos.forEach(u => {
+        mecanicosUsers.forEach(u => {
             html += `<button onclick="loginSimple('${u.nombre}')" class="user-button mecanico">🔧 ${u.nombre}</button>`;
         });
         html += `</div>`;
     }
     
-    // Formulario para añadir usuario (solo visible si no hay admin logueado)
+    // Formulario para añadir usuario
     html += `
         <div class="add-user-section">
             <h3>📝 Registrarse</h3>
@@ -884,7 +959,7 @@ function renderLoginSimple() {
                 </select>
                 <button onclick="agregarUsuarioSimple(document.getElementById('nuevo-usuario').value, document.getElementById('nuevo-departamento').value)">Registrarse</button>
             </div>
-            <p style="font-size:0.8em; color:var(--muted); margin-top:10px;">Regístrate con tu nombre y departamento para acceder</p>
+            <p style="font-size:0.8em; color:var(--muted); margin-top:10px;">Regístrate con tu nombre y departamento</p>
         </div>
     `;
     
@@ -940,7 +1015,7 @@ function renderUsuariosSimples() {
         userSection = document.createElement('div');
         userSection.className = 'user-management-simple';
         userSection.innerHTML = `
-            <h3>👥 Usuarios</h3>
+            <h3>👥 Gestión de Usuarios</h3>
             <div style="display:flex; gap:10px; margin:15px 0; flex-wrap:wrap;">
                 <input type="text" id="nuevo-user-admin" placeholder="Nombre usuario" class="user-input-simple">
                 <select id="nuevo-dept-admin" class="user-select-simple">
@@ -950,7 +1025,7 @@ function renderUsuariosSimples() {
                 <button class="user-btn-add" onclick="agregarUsuarioSimple(
                     document.getElementById('nuevo-user-admin').value,
                     document.getElementById('nuevo-dept-admin').value
-                )">➕ Añadir</button>
+                )">➕ Añadir Usuario</button>
             </div>
             <div id="lista-usuarios-simple" class="user-list-simple"></div>
         `;
@@ -1094,9 +1169,8 @@ function configurarTokenGist() {
     return false;
 }
 
-// ========== GUARDAR DIRECTAMENTE EN GIST ==========
+// ========== GUARDAR EN GIST ==========
 async function guardarEnGistDirecto() {
-    // Verificar si hay token
     if (!gistToken) {
         const configurado = configurarTokenGist();
         if (!configurado) {
@@ -1108,7 +1182,6 @@ async function guardarEnGistDirecto() {
     try {
         mostrarNotificacion('🔄 Guardando en Gist...', 'info');
         
-        // Preparar datos
         const config = {
             version: Date.now().toString(),
             timestamp: Date.now(),
@@ -1119,7 +1192,6 @@ async function guardarEnGistDirecto() {
             history: history
         };
 
-        // Guardar en localStorage SIEMPRE
         localStorage.setItem('estados', JSON.stringify(estados));
         localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
         localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
@@ -1128,7 +1200,6 @@ async function guardarEnGistDirecto() {
         localStorage.setItem('version', config.version);
         ultimaVersion = config.version;
 
-        // 1. Obtener el Gist actual para conocer los archivos
         const gistUrl = `https://api.github.com/gists/${GIST_CONFIG.id}`;
         
         const getResponse = await fetch(gistUrl, {
@@ -1139,17 +1210,9 @@ async function guardarEnGistDirecto() {
         });
         
         if (!getResponse.ok) {
-            if (getResponse.status === 401 || getResponse.status === 403) {
-                localStorage.removeItem('gist_token');
-                gistToken = '';
-                throw new Error('Token inválido o sin permiso "gist"');
-            }
             throw new Error('Error al obtener Gist');
         }
         
-        const gistData = await getResponse.json();
-        
-        // 2. Actualizar el archivo en el Gist
         const updateData = {
             description: `Guardias Alsi - Actualización ${new Date().toLocaleString('es-ES')}`,
             files: {
@@ -1170,8 +1233,7 @@ async function guardarEnGistDirecto() {
         });
         
         if (!updateResponse.ok) {
-            const error = await updateResponse.json();
-            throw new Error(error.message || 'Error al actualizar Gist');
+            throw new Error('Error al actualizar Gist');
         }
         
         mostrarNotificacion('✅ Gist actualizado correctamente', 'success');
@@ -1180,21 +1242,6 @@ async function guardarEnGistDirecto() {
     } catch (error) {
         console.error('Error:', error);
         mostrarNotificacion('❌ ' + error.message, 'error');
-        
-        // Fallback: descargar archivo
-        if (confirm('❌ Error al subir a Gist.\n\n¿Quieres descargar el archivo para subirlo manualmente?')) {
-            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'guardias-alsi-data.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            // Abrir Gist
-            window.open(`https://gist.github.com/${GIST_CONFIG.usuario}/${GIST_CONFIG.id}`, '_blank');
-        }
-        
         return false;
     }
 }
@@ -1242,6 +1289,7 @@ function renderAdmin() {
 
 function updatePersonStatus(persona, estado) {
     estados[persona] = estado;
+    localStorage.setItem('estados', JSON.stringify(estados));
     renderRotationLists();
     render();
     renderCalendar();
@@ -1347,8 +1395,10 @@ function updateRotationOrder(type) {
     
     if (type === 'electricos') {
         ordenElectricos = newOrder;
+        localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
     } else {
         ordenMecanicos = newOrder;
+        localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
     }
     
     updateRotationPreview();
@@ -1356,9 +1406,9 @@ function updateRotationOrder(type) {
 
 function saveRotationOrder(type) {
     if (type === 'electricos') {
-        localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
+        localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
     } else {
-        localStorage.ordenMecanicos = JSON.stringify(ordenMecanicos);
+        localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
     }
     render();
     renderCalendar();
@@ -1370,10 +1420,10 @@ function resetRotationOrder(type) {
     if (confirm(`¿Restaurar el orden original?`)) {
         if (type === 'electricos') {
             ordenElectricos = [...electricos];
-            localStorage.removeItem('ordenElectricos');
+            localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
         } else {
             ordenMecanicos = [...mecanicos];
-            localStorage.removeItem('ordenMecanicos');
+            localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
         }
         renderRotationLists();
         render();
@@ -1385,8 +1435,10 @@ function resetRotationOrder(type) {
 function reverseRotationOrder(type) {
     if (type === 'electricos') {
         ordenElectricos.reverse();
+        localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
     } else {
         ordenMecanicos.reverse();
+        localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
     }
     renderRotationLists();
     render();
@@ -1481,7 +1533,7 @@ function saveManualChanges() {
     if (!elecValue && !mecValue) {
         if (manualOverrides[semanaKey]) {
             delete manualOverrides[semanaKey];
-            localStorage.manualOverrides = JSON.stringify(manualOverrides);
+            localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
         }
     } else {
         if (!manualOverrides[semanaKey]) manualOverrides[semanaKey] = {};
@@ -1493,9 +1545,9 @@ function saveManualChanges() {
         if (!manualOverrides[semanaKey].electrico && !manualOverrides[semanaKey].mecanico) {
             delete manualOverrides[semanaKey];
         }
+        localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
     }
     
-    localStorage.manualOverrides = JSON.stringify(manualOverrides);
     updateRotationPreview();
     renderRotationLists();
     render();
@@ -1532,16 +1584,15 @@ function swapPersons() {
     const index2Elec = ordenElectricos.indexOf(persona2);
     if (index1Elec !== -1 && index2Elec !== -1) {
         [ordenElectricos[index1Elec], ordenElectricos[index2Elec]] = [ordenElectricos[index2Elec], ordenElectricos[index1Elec]];
+        localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
     }
     
     const index1Mec = ordenMecanicos.indexOf(persona1);
     const index2Mec = ordenMecanicos.indexOf(persona2);
     if (index1Mec !== -1 && index2Mec !== -1) {
         [ordenMecanicos[index1Mec], ordenMecanicos[index2Mec]] = [ordenMecanicos[index2Mec], ordenMecanicos[index1Mec]];
+        localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
     }
-    
-    localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
-    localStorage.ordenMecanicos = JSON.stringify(ordenMecanicos);
     
     renderRotationLists();
     render();
@@ -1556,9 +1607,9 @@ function resetToDefault() {
         ordenElectricos = [...electricos];
         ordenMecanicos = [...mecanicos];
         
-        localStorage.manualOverrides = JSON.stringify({});
-        localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
-        localStorage.ordenMecanicos = JSON.stringify(ordenMecanicos);
+        localStorage.setItem('manualOverrides', JSON.stringify({}));
+        localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
+        localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
         
         renderRotationLists();
         render();
@@ -1700,7 +1751,7 @@ function logCompletedWeek() {
     
     history.unshift(`${clave} ⚡ ${elecGuardia} · 🔧 ${mecGuardia}`);
     history = history.slice(0, 30);
-    localStorage.history = JSON.stringify(history);
+    localStorage.setItem('history', JSON.stringify(history));
 }
 
 function renderHistory() {
@@ -1716,11 +1767,14 @@ function renderHistory() {
 // ========== EXPORTAR/IMPORTAR ==========
 function exportConfig() {
     const config = {
+        electricos: electricos,
+        mecanicos: mecanicos,
         ordenElectricos: ordenElectricos,
         ordenMecanicos: ordenMecanicos,
         estados: estados,
         manualOverrides: manualOverrides,
-        history: history
+        history: history,
+        usuarios: usuarios
     };
     const configStr = JSON.stringify(config, null, 2);
     navigator.clipboard.writeText(configStr);
@@ -1739,28 +1793,48 @@ function closeImportModal() {
 function applyImport() {
     try {
         const config = JSON.parse(document.getElementById('importData').value);
+        
+        if (config.electricos) {
+            electricos = config.electricos;
+            localStorage.setItem('electricos', JSON.stringify(electricos));
+        }
+        if (config.mecanicos) {
+            mecanicos = config.mecanicos;
+            localStorage.setItem('mecanicos', JSON.stringify(mecanicos));
+        }
         if (config.ordenElectricos) {
             ordenElectricos = config.ordenElectricos;
-            localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
+            localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
         }
         if (config.ordenMecanicos) {
             ordenMecanicos = config.ordenMecanicos;
-            localStorage.ordenMecanicos = JSON.stringify(ordenMecanicos);
+            localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
         }
         if (config.estados) {
             estados = config.estados;
-            localStorage.estados = JSON.stringify(estados);
+            localStorage.setItem('estados', JSON.stringify(estados));
         }
         if (config.manualOverrides) {
             manualOverrides = config.manualOverrides;
-            localStorage.manualOverrides = JSON.stringify(manualOverrides);
+            localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
         }
+        if (config.history) {
+            history = config.history;
+            localStorage.setItem('history', JSON.stringify(history));
+        }
+        if (config.usuarios) {
+            usuarios = config.usuarios;
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+        }
+        
         closeImportModal();
         renderRotationLists();
         render();
         renderCalendar();
         renderAdmin();
         renderAdminGuardias();
+        renderUsuariosSimples();
+        populateSwapSelects();
         guardarEnGistDirecto();
         alert('✅ Configuración importada');
     } catch (error) {
@@ -1779,9 +1853,9 @@ function generateQRCode(elementId, url) {
 // ========== MODO OSCURO ==========
 document.getElementById('night').onclick = () => {
     document.body.classList.toggle('dark');
-    localStorage.dark = document.body.classList.contains('dark');
+    localStorage.setItem('dark', document.body.classList.contains('dark'));
 };
-if (localStorage.dark === 'true') document.body.classList.add('dark');
+if (localStorage.getItem('dark') === 'true') document.body.classList.add('dark');
 
 // ========== EVENT LISTENERS ==========
 document.getElementById('prev').onclick = () => { offset--; render(); };
@@ -1793,10 +1867,12 @@ document.getElementById('save').onclick = async function() {
         return;
     }
     
-    localStorage.estados = JSON.stringify(estados);
-    localStorage.manualOverrides = JSON.stringify(manualOverrides);
-    localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
-    localStorage.ordenMecanicos = JSON.stringify(ordenMecanicos);
+    localStorage.setItem('estados', JSON.stringify(estados));
+    localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
+    localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
+    localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
+    localStorage.setItem('electricos', JSON.stringify(electricos));
+    localStorage.setItem('mecanicos', JSON.stringify(mecanicos));
     
     renderRotationLists();
     render();
@@ -1853,7 +1929,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (currentUser.nombre === 'admin') {
         document.getElementById('admin').style.display = 'block';
     } else {
-        // Usuarios normales no ven el panel de admin
         document.getElementById('admin').style.display = 'none';
     }
     
@@ -1863,19 +1938,19 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('📥 Cargando última versión desde Gist');
         if (config.ordenElectricos) {
             ordenElectricos = config.ordenElectricos;
-            localStorage.ordenElectricos = JSON.stringify(ordenElectricos);
+            localStorage.setItem('ordenElectricos', JSON.stringify(ordenElectricos));
         }
         if (config.ordenMecanicos) {
             ordenMecanicos = config.ordenMecanicos;
-            localStorage.ordenMecanicos = JSON.stringify(ordenMecanicos);
+            localStorage.setItem('ordenMecanicos', JSON.stringify(ordenMecanicos));
         }
         if (config.estados) {
             estados = config.estados;
-            localStorage.estados = JSON.stringify(estados);
+            localStorage.setItem('estados', JSON.stringify(estados));
         }
         if (config.manualOverrides) {
             manualOverrides = config.manualOverrides;
-            localStorage.manualOverrides = JSON.stringify(manualOverrides);
+            localStorage.setItem('manualOverrides', JSON.stringify(manualOverrides));
         }
         localStorage.setItem('version', config.version);
         ultimaVersion = config.version;
@@ -1906,6 +1981,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 </script>
 </body>
 </html>
+
 
 
 
